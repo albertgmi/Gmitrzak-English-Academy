@@ -1,0 +1,15 @@
+# Folder ustawień Visual Studio
+.vs/
+
+# Pliki binarne i skompilowane
+[Bb]in/
+[Oo]bj/
+
+# Pliki użytkownika
+*.user
+*.userosscache
+*.sln.docuser
+
+# Logi i pliki tymczasowe
+*.log
+.DS_Store
