@@ -1,0 +1,6 @@
+@inzBackend_HostAddress = http://localhost:5049
+
+GET {{inzBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
