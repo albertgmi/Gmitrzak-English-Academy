@@ -1,6 +1,6 @@
 @inzBackend_HostAddress = http://localhost:5049
 
-GET {{inzBackend_HostAddress}}/weatherforecast/
+GET {{inzBackend_HostAddress}}
 Accept: application/json
 
 ###

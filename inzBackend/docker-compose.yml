@@ -1,5 +1,4 @@
 services:
-  # Baza danych PostgreSQL
   db:
     image: postgres:16-alpine
     container_name: inz_postgres_db
@@ -12,8 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  # Twój backend .NET
+      
   inz_backend:
     image: inz_backend_image
     build:
@@ -23,7 +21,6 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      # Kluczowe: Connection String wskazujący na kontener "db"
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=inz_database;Username=admin;Password=DinoPies12
     depends_on:
       - db
