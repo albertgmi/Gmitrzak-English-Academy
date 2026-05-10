@@ -5,6 +5,8 @@ using inzBackend.Middlewares;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
+using inzBackend.Profiles;
+using inzBackend.Services.ProfileServices;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
@@ -38,6 +40,7 @@ namespace inzBackend
 
 
             builder.Services.AddControllers().AddFluentValidation();
+            builder.Services.AddAutoMapper(typeof(GmitrzakEnglishAppMappingProfile).Assembly);
 
             var authenticationSettings = new AuthenticationSettings();
             builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
@@ -63,6 +66,7 @@ namespace inzBackend
             // Dependency injection
 
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
@@ -71,6 +75,7 @@ namespace inzBackend
             var app = builder.Build();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
+            app.UseStaticFiles();
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

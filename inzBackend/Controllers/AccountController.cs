@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace inzBackend.Controllers
 {
-    [Route("api/account")]
+    [Route("api/auth")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -25,7 +25,7 @@ namespace inzBackend.Controllers
         [HttpPost("login")]
         public ActionResult<string> login([FromBody] LoginUserRequest request)
         {
-            string jwtToken = _userService.Login(request);
+            string jwtToken = _userService.login(request);
             return jwtToken;
         }
     }

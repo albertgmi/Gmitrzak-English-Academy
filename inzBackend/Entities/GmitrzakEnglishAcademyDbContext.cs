@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using inzBackend.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 
 namespace inzBackend.Models
@@ -26,6 +27,7 @@ namespace inzBackend.Models
         public DbSet<Catalogue> Catalogues { get; set; }
         public DbSet<CatalogueEntry> CatalogueEntries { get; set; }
         public DbSet<StreamEntry> StreamEntries { get; set; }
+        public DbSet<Entities.Profile> Profiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
