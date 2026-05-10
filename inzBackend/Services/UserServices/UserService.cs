@@ -1,4 +1,5 @@
-﻿using inzBackend.Exceptions;
+﻿using AutoMapper;
+using inzBackend.Exceptions;
 using inzBackend.Jwt;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
@@ -16,11 +17,13 @@ namespace inzBackend.Services.UserServices
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
-        public UserService(GmitrzakEnglishAcademyDbContext dbContext, IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings)
+        private readonly IMapper _mapper;
+        public UserService(GmitrzakEnglishAcademyDbContext dbContext, IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings, IMapper mapper)
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
+            _mapper = mapper;
         }
 
         public AppUser registerUser(RegisterUserRequest request)
@@ -36,10 +39,13 @@ namespace inzBackend.Services.UserServices
             newUser.PasswordHash = passwordHashed;
             _dbContext.Users.Add(newUser);
             _dbContext.SaveChanges();
+            var profile = new Entities.Profile { UserId = newUser.Id, CurrentSemester = 1, EnglishLevel = Enums.EnglishLevel.Communicative };
+            _dbContext.Profiles.Add(profile);
+            _dbContext.SaveChanges();
             return newUser;
         }
 
-        public string Login(LoginUserRequest request)
+        public string login(LoginUserRequest request)
         {
             var user = _dbContext
                 .Users
@@ -69,6 +75,56 @@ namespace inzBackend.Services.UserServices
                 signingCredentials: cred);
             var tokenhandler = new JwtSecurityTokenHandler();
             return tokenhandler.WriteToken(token);
+        }
+
+        public List<AppUserDto> getAllUsers()
+        {
+            var users = _dbContext.Users.ToList();
+            if (users is null || users.Count == 0)
+                throw new BadRequestException("No users found");
+            return _mapper.Map<List<AppUserDto>>(users);
+        }
+
+        public void updateUser(UpdateUserRequest request, int userId)
+        {
+            var user = _dbContext
+                .Users
+                .FirstOrDefault(x => x.Id == userId);
+            if (user is null)
+                throw new NotFoundException("User was not found");
+            user.Username = request.Username;
+            user.Email = request.Email;
+            user.Role = request.Role;
+            if (!string.IsNullOrWhiteSpace(request.Password))
+            {
+                var passwordHashed = _passwordHasher.HashPassword(user, request.Password);
+                user.PasswordHash = passwordHashed;
+            }
+            _dbContext.SaveChanges();
+        }
+
+        public void deleteUser(int userId)
+        {
+            var user = _dbContext
+                .Users
+                .FirstOrDefault(x => x.Id == userId);
+            if (user is null)
+                throw new NotFoundException("User was not found");
+            _dbContext.Users.Remove(user);
+            _dbContext.SaveChanges();
+        }
+
+        public void deleteManyUsers(List<int> userIds)
+        {
+            var usersToDelete = _dbContext.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToList();
+
+            if (usersToDelete.Count != userIds.Count)
+                throw new NotFoundException("Not all users had been found");
+
+            _dbContext.Users.RemoveRange(usersToDelete);
+            _dbContext.SaveChanges();
         }
     }
 }
