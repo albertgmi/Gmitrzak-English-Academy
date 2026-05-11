@@ -1,4 +1,5 @@
 ﻿using inzBackend.Entities;
+using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -6,7 +7,11 @@ namespace inzBackend.Models
 {
     public class GmitrzakEnglishAcademyDbContext : DbContext
     {
-        public GmitrzakEnglishAcademyDbContext(DbContextOptions<GmitrzakEnglishAcademyDbContext> options) : base(options) { }
+        private readonly IUserContextService _userContextService;
+        public GmitrzakEnglishAcademyDbContext(DbContextOptions<GmitrzakEnglishAcademyDbContext> options, IUserContextService userContextService) : base(options) 
+        {
+            _userContextService = userContextService;
+        }
         public DbSet<AppUser> Users { get; set; }
         public DbSet<Program> Programs { get; set; }
         public DbSet<Course> Courses { get; set; }
@@ -28,6 +33,31 @@ namespace inzBackend.Models
         public DbSet<CatalogueEntry> CatalogueEntries { get; set; }
         public DbSet<StreamEntry> StreamEntries { get; set; }
         public DbSet<Entities.Profile> Profiles { get; set; }
+
+        public override int SaveChanges()
+        {
+            ApplyAuditInfo();
+            return base.SaveChanges();
+        }
+
+        private void ApplyAuditInfo()
+        {
+            var entries = ChangeTracker
+                .Entries<AuditableEntity>()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+            var currentUsername = _userContextService.GetUserName ?? "System";
+            var now = DateTimeOffset.UtcNow;
+
+            foreach (var entityEntry in entries)
+            {
+                entityEntry.Entity.LastModifiedAt = now;
+                entityEntry.Entity.LastModifiedBy = currentUsername;
+
+                if (entityEntry.State == EntityState.Added)
+                    entityEntry.Entity.CreatedBy = currentUsername;
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

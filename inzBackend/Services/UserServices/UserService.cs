@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using inzBackend.Entities;
 using inzBackend.Exceptions;
 using inzBackend.Jwt;
 using inzBackend.Models;
@@ -18,7 +19,9 @@ namespace inzBackend.Services.UserServices
         private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IMapper _mapper;
-        public UserService(GmitrzakEnglishAcademyDbContext dbContext, IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings, IMapper mapper)
+        public UserService(GmitrzakEnglishAcademyDbContext dbContext, 
+            IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings, 
+            IMapper mapper)
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
@@ -52,6 +55,9 @@ namespace inzBackend.Services.UserServices
                 .FirstOrDefault(x => x.Username == request.Username);
             if (user is null)
                 throw new BadRequestException("Invalid username or password");
+
+            if (!user.IsActive)
+                throw new BadRequestException("User is not active");
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (result == PasswordVerificationResult.Failed)

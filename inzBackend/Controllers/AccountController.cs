@@ -1,6 +1,7 @@
 ﻿using inzBackend.Models;
 using inzBackend.Models.UserModels;
 using inzBackend.Services.UserServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace inzBackend.Controllers
@@ -16,6 +17,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("register")]
+        [Authorize(Roles = "Admin")]
         public ActionResult<AppUser> register([FromBody] RegisterUserRequest request)
         {
             var user = _userService.registerUser(request);
@@ -23,6 +25,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public ActionResult<string> login([FromBody] LoginUserRequest request)
         {
             string jwtToken = _userService.login(request);
