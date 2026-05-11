@@ -7,6 +7,7 @@ using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
 using inzBackend.Services.ProfileServices;
+using inzBackend.Services.ProgramServices;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
@@ -67,10 +68,14 @@ namespace inzBackend
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
+            builder.Services.AddScoped<IProgramService, ProgramService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
+            builder.Services.AddScoped<IUserContextService, UserContextService>();
             builder.Services.AddSingleton(authenticationSettings);
+
+            builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
             app.UseMiddleware<ExceptionHandlingMiddleware>();

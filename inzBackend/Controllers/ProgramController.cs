@@ -1,11 +1,51 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using inzBackend.Models.ProgramModels;
+using inzBackend.Services.ProgramServices;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace inzBackend.Controllers
 {
     [Route("api/program")]
     [ApiController]
-    public class ProgramController
+    public class ProgramController : ControllerBase
     {
+        private readonly IProgramService _programService;
+        public ProgramController(IProgramService programService)
+        {
+            _programService = programService;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<ProgramDto> getAllPrograms()
+        {
+            var programs = _programService.getAllPrograms();
+            return Ok(programs);
+        }
+
+        [HttpPut("{programId}")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult updateProgram([FromRoute] int programId, [FromBody] UpdateProgramRequest request)
+        {
+            _programService.updateProgram(programId, request);
+            return Ok();
+        }
+
+        [HttpDelete("{programId}")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult deleteProgram([FromRoute] int programId)
+        {
+            _programService.deleteProgram(programId);
+            return NoContent();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<Models.Program> createProgram([FromBody] CreateProgramRequest request)
+        {
+            var createdProgram = _programService.createProgram(request);
+            return Ok(createdProgram);
+        }
 
     }
 }

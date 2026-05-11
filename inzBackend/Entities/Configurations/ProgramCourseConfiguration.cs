@@ -8,8 +8,14 @@ namespace inzBackend.Models.Configurations
         public void Configure(EntityTypeBuilder<ProgramCourse> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.HasOne<Program>().WithMany(p => p.ProgramCourses).HasForeignKey(x => x.ProgramId);
-            builder.HasOne<Course>().WithMany().HasForeignKey(x => x.CourseId);
+
+            builder.HasOne(pc => pc.Program)
+                .WithMany(p => p.ProgramCourses)
+                .HasForeignKey(pc => pc.ProgramId);
+
+            builder.HasOne(pc => pc.Course)
+                .WithMany()
+                .HasForeignKey(pc => pc.CourseId);
         }
     }
 }
