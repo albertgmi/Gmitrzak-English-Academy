@@ -100,6 +100,7 @@ namespace inzBackend.Services.UserServices
                 var passwordHashed = _passwordHasher.HashPassword(user, request.Password);
                 user.PasswordHash = passwordHashed;
             }
+            user.IsActive = request.isActive;
             _dbContext.SaveChanges();
         }
 
