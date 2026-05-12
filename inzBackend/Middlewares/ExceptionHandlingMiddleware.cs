@@ -20,10 +20,10 @@ namespace inzBackend.Middlewares
                 context.Response.StatusCode = 404;
                 await context.Response.WriteAsync(notFoundException.Message);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 context.Response.StatusCode = 500;
-                await context.Response.WriteAsync("Something went wrong");
+                await context.Response.WriteAsync($"Something went wrong: {e.Message}");
             }
         }
     }
