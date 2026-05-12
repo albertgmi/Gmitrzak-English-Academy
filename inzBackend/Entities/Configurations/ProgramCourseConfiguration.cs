@@ -14,7 +14,7 @@ namespace inzBackend.Models.Configurations
                 .HasForeignKey(pc => pc.ProgramId);
 
             builder.HasOne(pc => pc.Course)
-                .WithMany()
+                .WithMany(c=>c.ProgramCourses)
                 .HasForeignKey(pc => pc.CourseId);
         }
     }

@@ -6,6 +6,7 @@ using inzBackend.Models;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
+using inzBackend.Services.CourseServices;
 using inzBackend.Services.ProfileServices;
 using inzBackend.Services.ProgramServices;
 using inzBackend.Services.UserServices;
@@ -69,6 +70,7 @@ namespace inzBackend
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IProgramService, ProgramService>();
+            builder.Services.AddScoped<ICourseService, CourseService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
