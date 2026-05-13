@@ -6,5 +6,6 @@
         public int MatrixId { get; set; }
         public int Order { get; set; }
         public Matrix Matrix { get; set; }
+        public Course Course { get; set; }
     }
 }

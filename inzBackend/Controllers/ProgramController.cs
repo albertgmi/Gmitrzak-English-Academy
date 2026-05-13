@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace inzBackend.Controllers
 {
     [Route("api/program")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class ProgramController : ControllerBase
     {
@@ -16,7 +17,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public ActionResult<ProgramDto> getAllPrograms()
         {
             var programs = _programService.getAllPrograms();
@@ -24,7 +24,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpPut("{programId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult updateProgram([FromRoute] int programId, [FromBody] UpdateProgramRequest request)
         {
             _programService.updateProgram(programId, request);
@@ -32,7 +31,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("{programId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult deleteProgram([FromRoute] int programId)
         {
             _programService.deleteProgram(programId);
@@ -40,7 +38,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public ActionResult<Models.Program> createProgram([FromBody] CreateProgramRequest request)
         {
             var createdProgram = _programService.createProgram(request);

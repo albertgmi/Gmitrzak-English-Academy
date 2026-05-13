@@ -29,6 +29,19 @@ namespace inzBackend.Services.CourseServices
             return _mapper.Map<List<CourseDto>>(courses);
         }
         
+        public Course createCourse(CreateCourseRequest request)
+        {
+            var newCourse = new Course
+            {
+                Name = request.Name,
+                Description = request.Description,
+                IsHidden = request.IsHidden
+            };
+            _dbContext.Courses.Add(newCourse);
+            _dbContext.SaveChanges();
+            return newCourse;
+        }
+
         public void updateCourse(int courseId, UpdateCourseRequest request)
         {
             var course = _dbContext
@@ -101,7 +114,7 @@ namespace inzBackend.Services.CourseServices
                 .ProgramCourses
                 .FirstOrDefault(pc => pc.CourseId == courseId && pc.ProgramId == programId);
             if (programCourse is null)
-                throw new BadRequestException($"Course {course.Name} is not assigned to program: {program.Name}");
+                throw new NotFoundException($"Course {course.Name} is not assigned to program: {program.Name}");
 
             _dbContext.ProgramCourses.Remove(programCourse);
             _dbContext.SaveChanges();

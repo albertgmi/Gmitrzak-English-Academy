@@ -2,6 +2,7 @@
 using inzBackend.Models;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixModels;
+using inzBackend.Models.ModuleModels;
 using inzBackend.Models.ProfileModels;
 using inzBackend.Models.ProgramModels;
 using inzBackend.Models.UserModels;
@@ -26,14 +27,25 @@ namespace inzBackend.Profiles
                     src.ProgramCourses.Select(pc => pc.Course)));
 
             CreateMap<Models.Program, ProgramSimpleDto>();
-
-            CreateMap<Matrix, MatrixDto>();
+            CreateMap<Module, ModuleSimpleDto>();
+            CreateMap<Course, CourseSimpleDto>();
+            CreateMap<Matrix, MatrixSimpleDto>();
 
             CreateMap<Course, CourseDto>()
                 .ForMember(dest => dest.MatrixDtos, opt => opt.MapFrom(src =>
                     src.CourseMatrices.Select(cm => cm.Matrix)))
                 .ForMember(dest => dest.Programs, opt => opt.MapFrom(src =>
-                    src.ProgramCourses.Select(pc => pc.Program)));  
+                    src.ProgramCourses.Select(pc => pc.Program)));
+
+            CreateMap<Matrix, MatrixDto>()
+                .ForMember(dest => dest.Modules, opt => opt.MapFrom(src =>
+                    src.MatrixModules.Select(mm => mm.Module)))
+                .ForMember(dest => dest.Courses, opt => opt.MapFrom(src =>
+                    src.CourseMatrices.Select(cm => cm.Course)));
+
+            CreateMap<Module, ModuleDto>()
+                .ForMember(dest => dest.Matrices, opt => opt.MapFrom(src =>
+                    src.MatrixModules.Select(mm => mm.Matrix)));
         }
     }
 }

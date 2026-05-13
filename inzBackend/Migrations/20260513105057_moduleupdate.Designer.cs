@@ -12,8 +12,8 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    [Migration("20260509131552_init")]
-    partial class init
+    [Migration("20260513105057_moduleupdate")]
+    partial class moduleupdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,157 @@ namespace inzBackend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("inzBackend.Entities.Profile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CurrentSemester")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("EnglishLevel")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Semester1")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester10")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester11")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester12")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester13")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester14")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester15")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester16")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester17")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester18")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester19")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester2")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester20")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester3")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester4")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester5")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester6")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester7")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester8")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Semester9")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Profiles");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.UserModuleAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserModuleAssignments");
+                });
 
             modelBuilder.Entity("inzBackend.Models.ActivityPoint", b =>
                 {
@@ -203,7 +354,7 @@ namespace inzBackend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsHidden")
+                    b.Property<bool?>("IsHidden")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
@@ -458,7 +609,14 @@ namespace inzBackend.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsHidden")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
@@ -491,18 +649,38 @@ namespace inzBackend.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
                     b.Property<int>("MatrixId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MatrixId1")
                         .HasColumnType("integer");
 
                     b.Property<int>("ModuleId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Order")
+                    b.Property<int>("WeekNumber")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MatrixId");
+
+                    b.HasIndex("MatrixId1");
 
                     b.HasIndex("ModuleId");
 
@@ -610,7 +788,7 @@ namespace inzBackend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsHidden")
+                    b.Property<bool?>("IsHidden")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
@@ -818,6 +996,36 @@ namespace inzBackend.Migrations
                     b.ToTable("UserMatrixAssignments");
                 });
 
+            modelBuilder.Entity("inzBackend.Entities.Profile", b =>
+                {
+                    b.HasOne("inzBackend.Models.AppUser", "User")
+                        .WithOne()
+                        .HasForeignKey("inzBackend.Entities.Profile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.UserModuleAssignment", b =>
+                {
+                    b.HasOne("inzBackend.Models.Module", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("inzBackend.Models.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("inzBackend.Models.ActivityPoint", b =>
                 {
                     b.HasOne("inzBackend.Models.AppUser", null)
@@ -847,17 +1055,21 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.CourseMatrix", b =>
                 {
-                    b.HasOne("inzBackend.Models.Course", null)
+                    b.HasOne("inzBackend.Models.Course", "Course")
                         .WithMany("CourseMatrices")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Models.Matrix", null)
-                        .WithMany()
+                    b.HasOne("inzBackend.Models.Matrix", "Matrix")
+                        .WithMany("CourseMatrices")
                         .HasForeignKey("MatrixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Matrix");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Flashcard", b =>
@@ -910,11 +1122,21 @@ namespace inzBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Models.Module", null)
+                    b.HasOne("inzBackend.Models.Matrix", "Matrix")
+                        .WithMany()
+                        .HasForeignKey("MatrixId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("inzBackend.Models.Module", "Module")
                         .WithMany()
                         .HasForeignKey("ModuleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Matrix");
+
+                    b.Navigation("Module");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Memory", b =>
@@ -928,17 +1150,21 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.ProgramCourse", b =>
                 {
-                    b.HasOne("inzBackend.Models.Course", null)
-                        .WithMany()
+                    b.HasOne("inzBackend.Models.Course", "Course")
+                        .WithMany("ProgramCourses")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Models.Program", null)
+                    b.HasOne("inzBackend.Models.Program", "Program")
                         .WithMany("ProgramCourses")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Program");
                 });
 
             modelBuilder.Entity("inzBackend.Models.PronunciationEntry", b =>
@@ -970,17 +1196,21 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.UserMatrixAssignment", b =>
                 {
-                    b.HasOne("inzBackend.Models.Matrix", null)
+                    b.HasOne("inzBackend.Models.Matrix", "Matrix")
                         .WithMany()
                         .HasForeignKey("MatrixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Models.AppUser", null)
+                    b.HasOne("inzBackend.Models.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Matrix");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Catalogue", b =>
@@ -991,10 +1221,14 @@ namespace inzBackend.Migrations
             modelBuilder.Entity("inzBackend.Models.Course", b =>
                 {
                     b.Navigation("CourseMatrices");
+
+                    b.Navigation("ProgramCourses");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Matrix", b =>
                 {
+                    b.Navigation("CourseMatrices");
+
                     b.Navigation("MatrixModules");
                 });
 

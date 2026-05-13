@@ -4,9 +4,9 @@ namespace inzBackend.Services.ProgramServices
 {
     public interface IProgramService
     {
-        public List<ProgramDto> getAllPrograms();
-        public void updateProgram(int programId, UpdateProgramRequest request);
-        public void deleteProgram(int programId);
-        public Models.Program createProgram(CreateProgramRequest request);
+        List<ProgramDto> getAllPrograms();
+        void updateProgram(int programId, UpdateProgramRequest request);
+        void deleteProgram(int programId);
+        Models.Program createProgram(CreateProgramRequest request);
     }
 }

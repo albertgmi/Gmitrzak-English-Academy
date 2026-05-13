@@ -2,10 +2,12 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace inzBackend.Controllers
 {
     [Route("api/user")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -16,9 +18,9 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("users")]
-        public ActionResult<List<AppUserDto>> getAllUsers()
+        public ActionResult<List<AppUserDto>> getAllUsers([FromQuery] bool? active)
         {
-            return _userService.getAllUsers();
+            return Ok(_userService.getAllUsers(active));
         }
 
         [HttpPut("update/{userId}")]

@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 
-namespace inzBackend.Models.Configurations
+namespace inzBackend.Entities.Configurations
 {
-    public class UserMatrixAssignmentConfiguration : IEntityTypeConfiguration<UserMatrixAssignment>
+    public class UserModuleAssignmentConfiguration : IEntityTypeConfiguration<UserModuleAssignment>
     {
-        public void Configure(EntityTypeBuilder<UserMatrixAssignment> builder)
+        public void Configure(EntityTypeBuilder<UserModuleAssignment> builder)
         {
             builder.HasKey(x => x.Id);
 
@@ -14,9 +14,9 @@ namespace inzBackend.Models.Configurations
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(x => x.Matrix)
+            builder.HasOne(x => x.Module)
                 .WithMany()
-                .HasForeignKey(x => x.MatrixId)
+                .HasForeignKey(x => x.ModuleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasQueryFilter(x => !x.IsDeleted);

@@ -1,4 +1,5 @@
-﻿using inzBackend.Models.CourseModels;
+﻿using inzBackend.Models;
+using inzBackend.Models.CourseModels;
 using inzBackend.Services.CourseServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace inzBackend.Controllers
 {
     [Route("api/course")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class CourseController : ControllerBase
     {
@@ -22,8 +24,13 @@ namespace inzBackend.Controllers
             return _courseService.getAllCourses();
         }
 
+        [HttpPost]
+        public ActionResult<Course> createCourse(CreateCourseRequest request)
+        {
+            return _courseService.createCourse(request);
+        }
+
         [HttpPut("{courseId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult updateCourse([FromRoute] int courseId, [FromBody] UpdateCourseRequest request)
         {
             _courseService.updateCourse(courseId, request);
@@ -31,7 +38,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("{courseId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult deleteCourse([FromRoute] int courseId)
         {
             _courseService.deleteCourse(courseId);
@@ -39,7 +45,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("{courseId}/programs/{programId}")]
-        [Authorize]
         public ActionResult assignProgram([FromRoute] int courseId, [FromRoute] int programId)
         {
             _courseService.assignProgram(courseId, programId);
@@ -47,7 +52,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("{courseId}/programs/{programId}")]
-        [Authorize]
         public ActionResult removeProgram([FromRoute] int courseId, [FromRoute] int programId)
         {
             _courseService.removeProgram(courseId, programId);
