@@ -1,13 +1,15 @@
-﻿using inzBackend.Models.CourseModels;
+﻿using inzBackend.Models;
+using inzBackend.Models.CourseModels;
 
 namespace inzBackend.Services.CourseServices
 {
     public interface ICourseService
     {
-        public List<CourseDto> getAllCourses();
-        public void updateCourse(int courseId, UpdateCourseRequest request);
-        public void deleteCourse(int courseId);
-        public void assignProgram(int courseId, int programId);
-        public void removeProgram(int courseId, int programId);
+        List<CourseDto> getAllCourses();
+        void updateCourse(int courseId, UpdateCourseRequest request);
+        Course createCourse(CreateCourseRequest request);
+        void deleteCourse(int courseId);
+        void assignProgram(int courseId, int programId);
+        void removeProgram(int courseId, int programId);
     }
 }

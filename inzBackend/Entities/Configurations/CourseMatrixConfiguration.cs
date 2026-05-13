@@ -9,13 +9,13 @@ namespace inzBackend.Models.Configurations
         {
             builder.HasKey(x => x.Id);
 
-            builder.HasOne<Course>()
+            builder.HasOne(cm => cm.Course)
                 .WithMany(c => c.CourseMatrices)
-                .HasForeignKey(x => x.CourseId);
+                .HasForeignKey(cm => cm.CourseId);
 
             builder.HasOne(cm => cm.Matrix)
-                .WithMany()
-                .HasForeignKey(x => x.MatrixId);
+                .WithMany(m => m.CourseMatrices)
+                .HasForeignKey(cm => cm.MatrixId);
         }
     }
 }

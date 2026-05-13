@@ -12,8 +12,8 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    [Migration("20260512173255_nullableAdded")]
-    partial class nullableAdded
+    [Migration("20260512231224_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -565,7 +565,14 @@ namespace inzBackend.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsHidden")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
@@ -965,17 +972,19 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.CourseMatrix", b =>
                 {
-                    b.HasOne("inzBackend.Models.Course", null)
+                    b.HasOne("inzBackend.Models.Course", "Course")
                         .WithMany("CourseMatrices")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("inzBackend.Models.Matrix", "Matrix")
-                        .WithMany()
+                        .WithMany("CourseMatrices")
                         .HasForeignKey("MatrixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Course");
 
                     b.Navigation("Matrix");
                 });
@@ -1030,11 +1039,13 @@ namespace inzBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Models.Module", null)
+                    b.HasOne("inzBackend.Models.Module", "Module")
                         .WithMany()
                         .HasForeignKey("ModuleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Module");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Memory", b =>
@@ -1094,17 +1105,21 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.UserMatrixAssignment", b =>
                 {
-                    b.HasOne("inzBackend.Models.Matrix", null)
+                    b.HasOne("inzBackend.Models.Matrix", "Matrix")
                         .WithMany()
                         .HasForeignKey("MatrixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Models.AppUser", null)
+                    b.HasOne("inzBackend.Models.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Matrix");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Catalogue", b =>
@@ -1121,6 +1136,8 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.Matrix", b =>
                 {
+                    b.Navigation("CourseMatrices");
+
                     b.Navigation("MatrixModules");
                 });
 

@@ -83,12 +83,17 @@ namespace inzBackend.Services.UserServices
             return tokenhandler.WriteToken(token);
         }
 
-        public List<AppUserDto> getAllUsers()
+        public List<AppUserDto> getAllUsers(bool? active)
         {
-            var users = _dbContext.Users.ToList();
-            if (users is null || users.Count == 0)
-                throw new BadRequestException("No users found");
-            return _mapper.Map<List<AppUserDto>>(users);
+            var query = _dbContext
+                .Users
+                .AsQueryable();
+
+            if (active.HasValue)
+                query = query
+                    .Where(u => u.IsActive == active.Value);
+
+            return _mapper.Map<List<AppUserDto>>(query.ToList());
         }
 
         public void updateUser(UpdateUserRequest request, int userId)

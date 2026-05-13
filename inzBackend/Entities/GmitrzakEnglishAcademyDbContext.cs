@@ -33,6 +33,7 @@ namespace inzBackend.Models
         public DbSet<CatalogueEntry> CatalogueEntries { get; set; }
         public DbSet<StreamEntry> StreamEntries { get; set; }
         public DbSet<Entities.Profile> Profiles { get; set; }
+        public DbSet<UserModuleAssignment> UserModuleAssignments { get; set; }
 
         public override int SaveChanges()
         {

@@ -7,7 +7,7 @@ namespace inzBackend.Services.UserServices
     {
         AppUser registerUser(RegisterUserRequest request);
         string login(LoginUserRequest request);
-        List<AppUserDto> getAllUsers();
+        List<AppUserDto> getAllUsers(bool? active);
         void updateUser(UpdateUserRequest request, int userId);
         void deleteUser(int userId);
         void deleteManyUsers(List<int> userIds);

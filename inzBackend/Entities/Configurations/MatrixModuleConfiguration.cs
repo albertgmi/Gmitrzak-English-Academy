@@ -8,8 +8,15 @@ namespace inzBackend.Models.Configurations
         public void Configure(EntityTypeBuilder<MatrixModule> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.HasOne<Matrix>().WithMany(m => m.MatrixModules).HasForeignKey(x => x.MatrixId);
-            builder.HasOne<Module>().WithMany().HasForeignKey(x => x.ModuleId);
+
+            builder.HasOne(x => x.Matrix)
+                .WithMany(m => m.MatrixModules)
+                .HasForeignKey(x => x.MatrixId);
+
+            builder.HasOne(x => x.Module)
+                .WithMany(m => m.MatrixModules)
+                .HasForeignKey(x => x.ModuleId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
