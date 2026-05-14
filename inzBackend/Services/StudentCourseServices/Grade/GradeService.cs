@@ -3,7 +3,7 @@ using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using AutoMapper;
 
-namespace inzBackend.Services.StudentCourseServices
+namespace inzBackend.Services.StudentCourseServices.Grade
 {
     public class GradesService : IGradesService
     {

@@ -1,5 +1,9 @@
 ﻿using inzBackend.Models.StudentCourseModels;
 using inzBackend.Services.StudentCourseServices;
+using inzBackend.Services.StudentCourseServices.ActivityPoint;
+using inzBackend.Services.StudentCourseServices.Grade;
+using inzBackend.Services.StudentCourseServices.LastWeek;
+using inzBackend.Services.StudentCourseServices.Stats;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +12,7 @@ namespace inzBackend.Controllers
     [Route("api/student")]
     [ApiController]
     [Authorize(Roles = "User")]
-    public class StudentController : ControllerBase
+    public class StudentCourseController : ControllerBase
     {
         private readonly IStudentCourseService _studentCourseService;
         private readonly ILastWeekService _lastWeekService;
@@ -16,7 +20,7 @@ namespace inzBackend.Controllers
         private readonly IGradesService _gradesService;
         private readonly IStatsService _statsService;
 
-        public StudentController(
+        public StudentCourseController(
             IStudentCourseService studentCourseService,
             ILastWeekService lastWeekService,
             IActivityPointService activityPointService,
