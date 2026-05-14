@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using inzBackend.Entities;
 using inzBackend.Models;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixModels;
@@ -6,11 +7,16 @@ using inzBackend.Models.ModuleModels;
 using inzBackend.Models.ProfileModels;
 using inzBackend.Models.ProgramModels;
 using inzBackend.Models.StudentCourseModels;
+using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using inzBackend.Models.StudentLearningModels.MemoryModels;
+using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
+using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Models.UserModels;
 
 namespace inzBackend.Profiles
 {
-    public class GmitrzakEnglishAppMappingProfile : Profile
+    public class GmitrzakEnglishAppMappingProfile : AutoMapper.Profile
     {
         public GmitrzakEnglishAppMappingProfile()
         {
@@ -49,6 +55,13 @@ namespace inzBackend.Profiles
                     src.MatrixModules.Select(mm => mm.Matrix)));
 
             CreateMap<Grade, GradeDto>();
+            CreateMap<Sentence, SentenceDto>();
+            CreateMap<Flashcard, FlashcardDto>();
+            CreateMap<Memory, MemoryDto>();
+            CreateMap<PronunciationEntry, PronunciationEntryDto>();
+            CreateMap<UserModuleAssignment, AssignmentStudentDto>()
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module.Name))
+                .ForMember(dest => dest.ModuleDescription, opt => opt.MapFrom(src => src.Module.Description));
         }
     }
 }

@@ -20,63 +20,63 @@ namespace inzBackend.Controllers
 
 
         [HttpGet("matrix")]
-        public List<MatrixAssignmentDto> GetAllMatrixAssignments()
+        public List<MatrixAssignmentDto> getAllMatrixAssignments()
         {
-            return _assignmentService.GetAllMatrixAssignments();
+            return _assignmentService.getAllMatrixAssignments();
         }
 
         [HttpGet("matrix/user/{userId}")]
-        public List<MatrixAssignmentDto> GetMatrixAssignmentsByUser(int userId)
+        public List<MatrixAssignmentDto> getMatrixAssignmentsByUser(int userId)
         {
-            return _assignmentService.GetMatrixAssignmentsByUser(userId);
+            return _assignmentService.getMatrixAssignmentsByUser(userId);
         }
 
         [HttpPost("matrix")]
-        public void CreateMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
+        public void createMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
         {
-            _assignmentService.CreateMatrixAssignment(request);
+            _assignmentService.createMatrixAssignment(request);
         }
 
         [HttpDelete("matrix/{id}")]
-        public void DeleteMatrixAssignment(int id)
+        public void deleteMatrixAssignment(int id)
         {
-            _assignmentService.DeleteMatrixAssignment(id);
+            _assignmentService.deleteMatrixAssignment(id);
         }
 
         [HttpGet("module")]
-        public List<ModuleAssignmentDto> GetAllModuleAssignments()
+        public List<ModuleAssignmentDto> getAllModuleAssignments()
         {
-            return _assignmentService.GetAllModuleAssignments();
+            return _assignmentService.getAllModuleAssignments();
         }
 
         [HttpGet("module/user/{userId}")]
-        public List<ModuleAssignmentDto> GetModuleAssignmentsByUser(int userId)
+        public List<ModuleAssignmentDto> getModuleAssignmentsByUser(int userId)
         {
-            return _assignmentService.GetModuleAssignmentsByUser(userId);
+            return _assignmentService.getModuleAssignmentsByUser(userId);
         }
 
         [HttpPost("module")]
-        public void CreateModuleAssignment([FromBody] CreateModuleAssignmentRequest request)
+        public void createModuleAssignment([FromBody] CreateModuleAssignmentRequest request)
         {
-            _assignmentService.CreateModuleAssignment(request);
+            _assignmentService.createModuleAssignment(request);
         }
 
         [HttpDelete("module/{id}")]
-        public void DeleteModuleAssignment(int id)
+        public void deleteModuleAssignment(int id)
         {
-            _assignmentService.DeleteModuleAssignment(id);
+            _assignmentService.deleteModuleAssignment(id);
         }
 
         [HttpPatch("module/{id}/complete")]
-        public void CompleteModuleAssignment(int id)
+        public void completeModuleAssignment(int id)
         {
-            _assignmentService.CompleteModuleAssignment(id);
+            _assignmentService.completeModuleAssignment(id);
         }
 
         [HttpPatch("module/{id}/uncomplete")]
-        public void UncompleteModuleAssignment(int id)
+        public void uncompleteModuleAssignment(int id)
         {
-            _assignmentService.UncompleteModuleAssignment(id);
+            _assignmentService.uncompleteModuleAssignment(id);
         }
     }
 }

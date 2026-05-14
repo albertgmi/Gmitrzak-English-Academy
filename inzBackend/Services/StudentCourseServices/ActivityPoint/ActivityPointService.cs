@@ -2,7 +2,7 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 
-namespace inzBackend.Services.StudentCourseServices
+namespace inzBackend.Services.StudentCourseServices.ActivityPoint
 {
     public class ActivityPointService : IActivityPointService
     {
