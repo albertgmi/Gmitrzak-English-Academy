@@ -11,7 +11,8 @@ namespace inzBackend.Models.Configurations
 
             builder.HasOne(x => x.Matrix)
                 .WithMany(m => m.MatrixModules)
-                .HasForeignKey(x => x.MatrixId);
+                .HasForeignKey(x => x.MatrixId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(x => x.Module)
                 .WithMany(m => m.MatrixModules)

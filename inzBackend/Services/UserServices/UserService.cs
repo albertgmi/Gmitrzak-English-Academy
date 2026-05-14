@@ -19,14 +19,16 @@ namespace inzBackend.Services.UserServices
         private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IMapper _mapper;
+        private readonly IUserContextService _userContextService;
         public UserService(GmitrzakEnglishAcademyDbContext dbContext, 
             IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings, 
-            IMapper mapper)
+            IMapper mapper, IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
             _mapper = mapper;
+            _userContextService = userContextService;
         }
 
         public AppUser registerUser(RegisterUserRequest request)
@@ -94,6 +96,17 @@ namespace inzBackend.Services.UserServices
                     .Where(u => u.IsActive == active.Value);
 
             return _mapper.Map<List<AppUserDto>>(query.ToList());
+        }
+
+        public AppUserDto getUserById()
+        {
+            var userId = _userContextService.GetUserId;
+
+            var user = _dbContext
+                .Users
+                .FirstOrDefault(u => u.Id == userId);
+
+            return _mapper.Map<AppUserDto>(user);
         }
 
         public void updateUser(UpdateUserRequest request, int userId)

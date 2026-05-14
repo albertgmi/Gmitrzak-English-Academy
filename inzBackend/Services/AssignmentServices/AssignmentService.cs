@@ -160,12 +160,22 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        private static MatrixAssignmentDto MapToMatrixAssignmentDto(UserMatrixAssignment x)
+        private MatrixAssignmentDto MapToMatrixAssignmentDto(UserMatrixAssignment x)
         {
+            var completedModuleIds = _dbContext.UserModuleAssignments
+                .Where(uma => uma.UserId == x.UserId && uma.IsCompleted)
+                .Select(uma => uma.ModuleId)
+                .ToList();
+
             var modules = x.Matrix.MatrixModules
                 .OrderBy(mm => mm.WeekNumber)
                 .ThenBy(mm => mm.DayOfWeek)
-                .Select(mm => MapToModuleUnlockDto(mm, x.StartDate, x.Matrix.RefreshIntervalDays))
+                .Select(mm => MapToModuleUnlockDto(
+                    mm,
+                    x.StartDate,
+                    x.Matrix.RefreshIntervalDays,
+                    completedModuleIds.Contains(mm.ModuleId)
+                ))
                 .ToList();
 
             return new MatrixAssignmentDto
@@ -181,10 +191,8 @@ namespace inzBackend.Services.AssignmentServices
             };
         }
 
-        private static ModuleUnlockDto MapToModuleUnlockDto(
-            MatrixModule mm,
-            DateOnly startDate,
-            int refreshIntervalDays)
+        private static ModuleUnlockDto MapToModuleUnlockDto(MatrixModule mm, DateOnly startDate,
+            int refreshIntervalDays, bool isCompleted)
         {
             var unlockDate = startDate
                 .AddDays((mm.WeekNumber - 1) * refreshIntervalDays)
@@ -200,7 +208,8 @@ namespace inzBackend.Services.AssignmentServices
                 WeekNumber = mm.WeekNumber,
                 DayOfWeek = mm.DayOfWeek,
                 UnlockDate = unlockDate,
-                IsUnlocked = unlockDate <= today
+                IsUnlocked = unlockDate <= today,
+                IsCompleted = isCompleted
             };
         }
 

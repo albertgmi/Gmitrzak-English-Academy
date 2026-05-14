@@ -22,6 +22,12 @@ namespace inzBackend.Controllers
         {
             return Ok(_userService.getAllUsers(active));
         }
+        [HttpGet]
+        [Authorize(Roles = "User")]
+        public ActionResult<AppUserDto> getUserById()
+        {
+            return Ok(_userService.getUserById());
+        }
 
         [HttpPut("update/{userId}")]
         public ActionResult updateUser([FromBody] UpdateUserRequest request, [FromRoute] int userId)
