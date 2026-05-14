@@ -8,5 +8,6 @@
         public Module Module { get; set; } = null!;
         public int WeekNumber { get; set; }
         public int DayOfWeek { get; set; }
+        public int Order { get; set; }
     }
 }

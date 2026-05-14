@@ -31,7 +31,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("{userId}/avatar")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<string> UploadAvatar(int userId, IFormFile file)
         {
             return await _profileService.UploadAvatar(userId, file);

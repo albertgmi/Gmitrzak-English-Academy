@@ -5,6 +5,7 @@ using inzBackend.Models.MatrixModels;
 using inzBackend.Models.ModuleModels;
 using inzBackend.Models.ProfileModels;
 using inzBackend.Models.ProgramModels;
+using inzBackend.Models.StudentCourseModels;
 using inzBackend.Models.UserModels;
 
 namespace inzBackend.Profiles
@@ -46,6 +47,8 @@ namespace inzBackend.Profiles
             CreateMap<Module, ModuleDto>()
                 .ForMember(dest => dest.Matrices, opt => opt.MapFrom(src =>
                     src.MatrixModules.Select(mm => mm.Matrix)));
+
+            CreateMap<Grade, GradeDto>();
         }
     }
 }

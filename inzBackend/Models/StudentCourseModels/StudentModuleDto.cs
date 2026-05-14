@@ -1,10 +1,12 @@
-﻿namespace inzBackend.Models.MatrixAssignmentModels
+﻿namespace inzBackend.Models.StudentCourseModels
 {
-    public class ModuleUnlockDto
+    public class StudentModuleDto
     {
+        public int Id { get; set; }
         public int ModuleId { get; set; }
-        public string ModuleName { get; set; } = string.Empty;
-        public string ModuleDescription { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int Order { get; set; }
         public int WeekNumber { get; set; }
         public int DayOfWeek { get; set; }
         public DateOnly UnlockDate { get; set; }

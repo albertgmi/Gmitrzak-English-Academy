@@ -11,5 +11,6 @@ namespace inzBackend.Services.UserServices
         void updateUser(UpdateUserRequest request, int userId);
         void deleteUser(int userId);
         void deleteManyUsers(List<int> userIds);
+        AppUserDto getUserById();
     }
 }
