@@ -2,6 +2,7 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
@@ -62,19 +63,15 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         public List<FlashcardStudyLogDto> getStudyLogs()
         {
             var userId = _userContextService.GetUserId;
-            return _dbContext.FlashcardStudyLogs
+            var studyLogs = _dbContext
+                .FlashcardStudyLogs
+                .Include(x => x.Flashcard)
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.StudyDate)
-                .Select(x => new FlashcardStudyLogDto
-                {
-                    Id = x.Id,
-                    StudyDate = x.StudyDate,
-                    EasyCount = x.EasyCount,
-                    HardCount = x.HardCount,
-                    IncorrectCount = x.IncorrectCount,
-                    TimeSpentSeconds = x.TimeSpentSeconds
-                })
+                .ThenBy(x=>x.CreatedAt)
                 .ToList();
+
+            return _mapper.Map<List<FlashcardStudyLogDto>>(studyLogs);
         }
 
         public List<FlashcardDto> searchFlashcards(string query)
@@ -88,6 +85,74 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                      x.Back.ToLower().Contains(q)))
                 .ToList();
             return _mapper.Map<List<FlashcardDto>>(flashcards);
+        }
+
+        public void reviewCard(int flashcardId, ReviewCardRequest request)
+        {
+            var userId = _userContextService.GetUserId;
+
+            var card = _dbContext
+                .Flashcards
+                .FirstOrDefault(x => x.Id == flashcardId && x.UserId == userId);
+
+            if (card is null)
+                return;
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            switch (request.Quality.ToLower())
+            {
+                case "easy":
+                    card.Interval = card.Interval == 0 ? 2 : card.Interval * 2;
+                    card.NextReviewDate = today.AddDays(card.Interval);
+                    card.EaseFactor = Math.Min(card.EaseFactor + 10, 300);
+                    break;
+
+                case "hard":
+                    card.Interval = 1;
+                    card.NextReviewDate = today.AddDays(1);
+                    card.EaseFactor = Math.Max(card.EaseFactor - 15, 130);
+                    break;
+
+                case "incorrect":
+                    card.Interval = 0;
+                    card.NextReviewDate = today;
+                    card.EaseFactor = Math.Max(card.EaseFactor - 20, 130);
+                    break;
+            }
+
+            card.IsLeech = card.EaseFactor <= 150;
+
+            var log = _dbContext.FlashcardStudyLogs
+                .FirstOrDefault(x => x.UserId == userId
+                      && x.StudyDate == today
+                      && x.FlashcardId == card.Id);
+
+            if (log is null)
+            {
+                log = new FlashcardStudyLog
+                {
+                    UserId = userId!.Value,
+                    FlashcardId = card.Id,
+                    StudyDate = today,
+                    EasyCount = 0,
+                    HardCount = 0,
+                    IncorrectCount = 0,
+                    TimeSpentSeconds = 0
+                };
+                _dbContext.FlashcardStudyLogs.Add(log);
+            }
+
+            switch (request.Quality.ToLower())
+            {
+                case "easy": log.EasyCount++; break;
+                case "hard": log.HardCount++; break;
+                case "incorrect": log.IncorrectCount++; break;
+            }
+
+            log.TimeSpentSeconds += request.TimeSpentSeconds;
+
+            _dbContext.SaveChanges();
         }
     }
 }

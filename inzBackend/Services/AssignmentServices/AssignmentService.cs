@@ -45,15 +45,20 @@ namespace inzBackend.Services.AssignmentServices
 
         public void createMatrixAssignment(CreateMatrixAssignmentRequest request)
         {
-            var userExists = _dbContext.Users.Any(x => x.Id == request.UserId);
-            if (!userExists)
+            var user = _dbContext
+                .Users
+                .FirstOrDefault(x => x.Id == request.UserId);
+            if (user is null)
                 throw new NotFoundException("User not found");
 
-            var matrixExists = _dbContext.Matrices.Any(x => x.Id == request.MatrixId);
+            var matrixExists = _dbContext
+                .Matrices
+                .Any(x => x.Id == request.MatrixId);
             if (!matrixExists)
                 throw new NotFoundException("Matrix not found");
-
-            var alreadyAssigned = _dbContext.UserMatrixAssignments
+            // TODO maile
+            var alreadyAssigned = _dbContext
+                .UserMatrixAssignments
                 .Any(x => x.UserId == request.UserId && x.MatrixId == request.MatrixId);
             if (alreadyAssigned)
                 throw new BadRequestException("This matrix is already assigned to this user");

@@ -118,5 +118,12 @@ namespace inzBackend.Controllers
         {
             return _studentAssignmentService.getAssignmentHistory();
         }
+
+        [HttpPatch("flashcards/{id}/review")]
+        public ActionResult reviewCard(int id, [FromBody] ReviewCardRequest request)
+        {
+            _flashcardsService.reviewCard(id, request);
+            return Ok();
+        }
     }
 }

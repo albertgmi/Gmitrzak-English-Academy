@@ -8,5 +8,6 @@
         public int HardCount { get; set; }
         public int IncorrectCount { get; set; }
         public int TimeSpentSeconds { get; set; }
+        public string FlashcardFront { get; set; }
     }
 }
