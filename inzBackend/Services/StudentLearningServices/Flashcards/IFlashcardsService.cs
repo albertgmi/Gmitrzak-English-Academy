@@ -9,5 +9,6 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         List<FlashcardDto> getStudiedToday();
         List<FlashcardStudyLogDto> getStudyLogs();
         List<FlashcardDto> searchFlashcards(string query);
+        void reviewCard(int flashcardId, ReviewCardRequest request);
     }
 }

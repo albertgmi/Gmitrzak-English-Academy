@@ -8,8 +8,13 @@ namespace inzBackend.Models.Configurations
         public void Configure(EntityTypeBuilder<FlashcardStudyLog> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.HasOne<Flashcard>().WithMany().HasForeignKey(x => x.FlashcardId);
-            builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId);
+            builder.HasOne(x => x.Flashcard)
+                .WithMany()
+                .HasForeignKey(x => x.FlashcardId);
+
+            builder.HasOne<AppUser>()
+                .WithMany()
+                .HasForeignKey(x => x.UserId);
         }
     }
 }
