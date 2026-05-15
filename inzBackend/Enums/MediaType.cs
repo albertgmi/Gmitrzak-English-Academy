@@ -2,6 +2,6 @@
 {
     public enum MediaType
     {
-        Podcast, Video, Book, Article, Movie, YouTube
+        Podcast, Video, Book, Article, Movie, YouTube, Other
     }
 }

@@ -42,46 +42,66 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("complete/{matrixModuleId}")]
-        public ActionResult CompleteModule(int matrixModuleId)
+        public ActionResult completeModule(int matrixModuleId)
         {
             _studentCourseService.completeModule(matrixModuleId);
             return Ok();
         }
 
         [HttpDelete("complete/{matrixModuleId}")]
-        public ActionResult UncompleteModule(int matrixModuleId)
+        public ActionResult uncompleteModule(int matrixModuleId)
         {
             _studentCourseService.uncompleteModule(matrixModuleId);
             return Ok();
         }
         [HttpGet("courses")]
-        public List<StudentAssignmentDto> GetCourses()
+        public ActionResult<List<StudentAssignmentDto>> getCourses()
         {
             return _studentCourseService.getStudentsAssignments();
         }
 
         [HttpGet("last-week")]
-        public LastWeekDto GetLastWeek()
+        public ActionResult<LastWeekDto> getLastWeek()
         {
             return _lastWeekService.getLastWeek();
         }
 
         [HttpGet("activity-points")]
-        public ActivityPointsHistoryDto GetActivityPoints()
+        public ActionResult<ActivityPointsHistoryDto> getActivityPoints()
         {
             return _activityPointService.getHistory();
         }
 
         [HttpGet("grades")]
-        public List<GradeDto> GetGrades()
+        public ActionResult<List<GradeDto>> getGrades()
         {
             return _gradesService.getGrades();
         }
 
         [HttpGet("stats")]
-        public StatsDto GetStats()
+        public ActionResult<StatsDto> getStats()
         {
             return _statsService.getStats();
+        }
+
+        [HttpGet("single-modules")]
+        public ActionResult<List<StudentModuleDto>> GetSingleModules()
+        {
+            return _studentCourseService.getSingleModules();
+        }
+
+        [HttpPost("single-modules/complete/{id}")]
+        public ActionResult CompleteSingleModule(int id)
+        {
+            _studentCourseService.completeSingleModule(id);
+            return Ok();
+        }
+
+        [HttpDelete("single-modules/complete/{id}")]
+        public ActionResult UncompleteSingleModule(int id)
+        {
+            _studentCourseService.uncompleteSingleModule(id);
+            return Ok();
         }
     }
 }

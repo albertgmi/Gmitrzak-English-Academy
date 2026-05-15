@@ -9,5 +9,6 @@ namespace inzBackend.Models
         public string PasswordHash { get; set; } = string.Empty;
         public UserRole Role { get; set; }
         public bool IsActive { get; set; } = true;
+        public IEnumerable<FlashcardStudyLog> FlashcardStudyLogs { get; set; } = new List<FlashcardStudyLog>();
     }
 }

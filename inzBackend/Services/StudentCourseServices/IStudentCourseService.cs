@@ -7,5 +7,8 @@ namespace inzBackend.Services.StudentCourseServices
         List<StudentAssignmentDto> getStudentsAssignments();
         void completeModule(int matrixModuleId);
         void uncompleteModule(int matrixModuleId);
+        List<StudentModuleDto> getSingleModules();
+        void completeSingleModule(int id);
+        void uncompleteSingleModule(int id);
     }
 }

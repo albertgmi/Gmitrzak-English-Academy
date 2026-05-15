@@ -76,6 +76,73 @@ namespace inzBackend.Services.StudentCourseServices
             _dbContext.SaveChanges();
         }
 
+        public List<StudentModuleDto> getSingleModules()
+        {
+            var userId = _userContextService.GetUserId;
+            var today = DateOnly.FromDateTime(DateTime.Now);
+
+            var matrixModuleIds = _dbContext.UserMatrixAssignments
+                .Where(x => x.UserId == userId)
+                .SelectMany(x => x.Matrix.MatrixModules)
+                .Select(x => x.ModuleId)
+                .ToList();
+
+            var assignments = _dbContext.UserModuleAssignments
+                .Include(x => x.Module)
+                .Where(x =>
+                    x.UserId == userId &&
+                    !matrixModuleIds.Contains(x.ModuleId) &&
+                    !x.IsCompleted) 
+                .ToList();
+
+            return assignments.Select((x, index) => new StudentModuleDto
+            {
+                Id = x.Id,
+                ModuleId = x.ModuleId,
+                Name = x.Module.Name,
+                Description = x.Module.Description,
+
+                Order = index + 1,
+                WeekNumber = 0,
+                DayOfWeek = 0,
+
+                UnlockDate = x.DueDate,
+                IsUnlocked = today >= x.DueDate,
+
+                IsCompleted = x.IsCompleted
+            }).ToList();
+        }
+
+        public void completeSingleModule(int id)
+        {
+            var userId = _userContextService.GetUserId;
+
+            var assignment = _dbContext.UserModuleAssignments
+                .FirstOrDefault(x => x.Id == id && x.UserId == userId);
+
+            if (assignment is null)
+                throw new NotFoundException("Module assignment not found");
+
+            assignment.IsCompleted = true;
+
+            _dbContext.SaveChanges();
+        }
+
+        public void uncompleteSingleModule(int id)
+        {
+            var userId = _userContextService.GetUserId;
+
+            var assignment = _dbContext.UserModuleAssignments
+                .FirstOrDefault(x => x.Id == id && x.UserId == userId);
+
+            if (assignment is null)
+                throw new NotFoundException("Module assignment not found");
+
+            assignment.IsCompleted = false;
+
+            _dbContext.SaveChanges();
+        }
+
         private StudentAssignmentDto mapToStudentAssignmentDto(
             UserMatrixAssignment assignment,
             List<int> completedMatrixModuleIds,
