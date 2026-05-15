@@ -12,8 +12,8 @@ namespace inzBackend.Models.Configurations
                 .WithMany()
                 .HasForeignKey(x => x.FlashcardId);
 
-            builder.HasOne<AppUser>()
-                .WithMany()
+            builder.HasOne(x => x.User)
+                .WithMany(u => u.FlashcardStudyLogs)
                 .HasForeignKey(x => x.UserId);
         }
     }
