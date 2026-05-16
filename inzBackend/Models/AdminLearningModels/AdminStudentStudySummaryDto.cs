@@ -1,4 +1,4 @@
-﻿namespace inzBackend.Models.AdminFlashcardModels
+﻿namespace inzBackend.Models.AdminLearningModels
 {
     public class AdminStudentStudySummaryDto
     {

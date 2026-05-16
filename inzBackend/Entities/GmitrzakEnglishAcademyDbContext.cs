@@ -35,6 +35,8 @@ namespace inzBackend.Models
         public DbSet<Entities.Profile> Profiles { get; set; }
         public DbSet<UserModuleAssignment> UserModuleAssignments { get; set; }
         public DbSet<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; }
+        public DbSet<TeacherNote> TeacherNotes { get; set; }
+        public DbSet<GlobalFlashcard> GlobalFlashcards { get; set; }
 
         public override int SaveChanges()
         {

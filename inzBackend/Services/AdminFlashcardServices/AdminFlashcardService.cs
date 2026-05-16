@@ -1,5 +1,5 @@
 ﻿using inzBackend.Models;
-using inzBackend.Models.AdminFlashcardModels;
+using inzBackend.Models.AdminLearningModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.AdminFlashcardServices
