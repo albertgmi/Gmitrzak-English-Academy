@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.AdminFlashcardModels;
+﻿using inzBackend.Models.AdminLearningModels;
 
 namespace inzBackend.Services.AdminFlashcardServices
 {

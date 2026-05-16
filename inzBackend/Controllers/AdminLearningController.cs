@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.AdminFlashcardModels;
+﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Services.AdminFlashcardServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

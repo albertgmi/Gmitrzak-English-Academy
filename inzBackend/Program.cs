@@ -7,6 +7,7 @@ using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
 using inzBackend.Services.AdminFlashcardServices;
+using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AssignmentServices;
 using inzBackend.Services.CourseServices;
 using inzBackend.Services.MatrixServices;
@@ -101,6 +102,7 @@ namespace inzBackend
             builder.Services.AddScoped<IVocabularyService, VocabularyService>();
             builder.Services.AddScoped<IStudentAssignmentService, StudentAssignmentService>();
             builder.Services.AddScoped<IAdminFlashcardService, AdminFlashcardService>();
+            builder.Services.AddScoped<ILessonService, LessonService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
