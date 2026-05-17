@@ -1,9 +1,8 @@
-﻿namespace inzBackend.Models
+﻿namespace inzBackend.Models.AdminLearningModels
 {
-    public class Grade : AuditableEntity
+    public class LessonGradeDto
     {
-        public int UserId { get; set; }
-        public AppUser User { get; set; }
+        public int Id { get; set; }
         public DateOnly GradeDate { get; set; }
         public decimal Percentage { get; set; }
         public string Category { get; set; } = string.Empty;
