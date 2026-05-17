@@ -10,6 +10,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         void addSentence(AddSentenceRequest request);
         void addMemory(AddMemoryRequest request);
         void addPronunciation(AddPronunciationRequest request);
+        List<GlobalFlashcardDto> getAllGlobalFlashcards();
 
         List<HomeworkItemDto> getHomeworkForWeek(int studentUserId);
         void checkHomework(int assignmentId);

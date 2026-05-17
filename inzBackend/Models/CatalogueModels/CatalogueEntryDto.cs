@@ -1,12 +1,12 @@
-﻿namespace inzBackend.Models
+﻿namespace inzBackend.Models.CatalogueModels
 {
-    public class CatalogueEntry : BaseEntity
+    public class CatalogueEntryDto
     {
-        public int CatalogueId { get; set; }
-        public Catalogue Catalogue { get; set; } = null!;
+        public int Id { get; set; }
         public DateOnly EntryDate { get; set; }
         public string UserRef { get; set; } = string.Empty;
         public string Entry { get; set; } = string.Empty;
         public string ComputedKey { get; set; } = string.Empty;
+        public string CatalogueName { get; set; } = string.Empty;
     }
 }

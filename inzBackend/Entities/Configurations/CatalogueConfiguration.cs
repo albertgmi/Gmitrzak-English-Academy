@@ -8,7 +8,9 @@ namespace inzBackend.Models.Configurations
         public void Configure(EntityTypeBuilder<Catalogue> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UploadedByUserId);
+            builder.HasOne(x=>x.UploadedBy)
+                .WithMany()
+                .HasForeignKey(x => x.UploadedByUserId);
         }
     }
 }

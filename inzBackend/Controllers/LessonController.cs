@@ -31,28 +31,34 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("flashcard/assign")]
-        public IActionResult assignFlashcard([FromBody] AssignFlashcardToStudentRequest request)
+        public ActionResult assignFlashcard([FromBody] AssignFlashcardToStudentRequest request)
         {
             _lessonService.assignFlashcardToStudent(request);
             return Ok();
         }
 
+        [HttpGet("flashcard-global")]
+        public ActionResult getAllGlobalFlashcards()
+        {
+            return Ok(_lessonService.getAllGlobalFlashcards());
+        }
+
         [HttpPost("sentence")]
-        public IActionResult addSentence([FromBody] AddSentenceRequest request)
+        public ActionResult addSentence([FromBody] AddSentenceRequest request)
         {
             _lessonService.addSentence(request);
             return Ok();
         }
 
         [HttpPost("memory")]
-        public IActionResult addMemory([FromBody] AddMemoryRequest request)
+        public ActionResult addMemory([FromBody] AddMemoryRequest request)
         {
             _lessonService.addMemory(request);
             return Ok();
         }
 
         [HttpPost("pronunciation")]
-        public IActionResult addPronunciation([FromBody] AddPronunciationRequest request)
+        public ActionResult addPronunciation([FromBody] AddPronunciationRequest request)
         {
             _lessonService.addPronunciation(request);
             return Ok();
@@ -65,14 +71,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("homework/{id}/check")]
-        public IActionResult checkHomework(int id)
+        public ActionResult checkHomework(int id)
         {
             _lessonService.checkHomework(id);
             return Ok();
         }
 
         [HttpPatch("homework/{id}/uncheck")]
-        public IActionResult uncheckHomework(int id)
+        public ActionResult uncheckHomework(int id)
         {
             _lessonService.uncheckHomework(id);
             return Ok();
@@ -85,14 +91,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("pronunciation-test/{id}/check")]
-        public IActionResult checkWord(int id)
+        public ActionResult checkWord(int id)
         {
             _lessonService.checkPronunciationWord(id);
             return Ok();
         }
 
         [HttpPatch("pronunciation-test/{id}/uncheck")]
-        public IActionResult uncheckWord(int id)
+        public ActionResult uncheckWord(int id)
         {
             _lessonService.uncheckPronunciationWord(id);
             return Ok();
@@ -105,14 +111,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("grades")]
-        public IActionResult addGrade([FromBody] AddGradeRequest request)
+        public ActionResult addGrade([FromBody] AddGradeRequest request)
         {
             _lessonService.addGrade(request);
             return Ok();
         }
 
         [HttpDelete("grades/{gradeId}")]
-        public IActionResult removeGrade(int gradeId)
+        public ActionResult removeGrade(int gradeId)
         {
             _lessonService.removeGrade(gradeId);
             return NoContent();
@@ -125,14 +131,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("notes")]
-        public IActionResult saveNote([FromBody] SaveNoteRequest request)
+        public ActionResult saveNote([FromBody] SaveNoteRequest request)
         {
             _lessonService.saveNote(request);
             return Ok();
         }
 
         [HttpDelete("notes/{noteId}")]
-        public IActionResult deleteNote(int noteId)
+        public ActionResult deleteNote(int noteId)
         {
             _lessonService.deleteNote(noteId);
             return NoContent();
@@ -145,7 +151,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("listening")]
-        public IActionResult addListeningReport([FromBody] AddListeningReportRequest request)
+        public ActionResult addListeningReport([FromBody] AddListeningReportRequest request)
         {
             _lessonService.addListeningReport(request);
             return Ok();
