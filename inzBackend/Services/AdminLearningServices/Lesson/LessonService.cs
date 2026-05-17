@@ -5,6 +5,7 @@ using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using inzBackend.Enums;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {
@@ -12,13 +13,14 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly IMapper _mapper;
 
-        public LessonService(
-            GmitrzakEnglishAcademyDbContext dbContext,
-            IUserContextService userContextService)
+        public LessonService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
+            IMapper mapper)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _mapper = mapper;
         }
         public SearchGlobalFlashcardResult searchGlobalFlashcard(string query, int studentUserId)
         {
@@ -76,13 +78,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.GlobalFlashcards.Add(global);
             _dbContext.SaveChanges();
 
-            return new GlobalFlashcardDto
-            {
-                Id = global.Id,
-                Front = global.Front,
-                Back = global.Back,
-                Category = global.Category
-            };
+            return _mapper.Map<GlobalFlashcardDto>(global);
         }
         public void assignFlashcardToStudent(AssignFlashcardToStudentRequest request)
         {
@@ -113,6 +109,14 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             _dbContext.Flashcards.Add(flashcard);
             _dbContext.SaveChanges();
+        }
+
+        public List<GlobalFlashcardDto> getAllGlobalFlashcards()
+        {
+            var globalFlashcards = _dbContext
+                .GlobalFlashcards
+                .ToList();
+            return _mapper.Map<List<GlobalFlashcardDto>>(globalFlashcards);
         }
 
         public void addSentence(AddSentenceRequest request)

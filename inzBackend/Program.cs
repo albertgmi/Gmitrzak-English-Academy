@@ -10,6 +10,7 @@ using inzBackend.Services.AdminFlashcardServices;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.AssignmentServices;
+using inzBackend.Services.CatalogueServices;
 using inzBackend.Services.CourseServices;
 using inzBackend.Services.DashboardServices;
 using inzBackend.Services.MatrixServices;
@@ -107,6 +108,7 @@ namespace inzBackend
             builder.Services.AddScoped<ILessonService, LessonService>();
             builder.Services.AddScoped<ILessonPanelService, LessonPanelService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<ICatalogueService, CatalogueService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();

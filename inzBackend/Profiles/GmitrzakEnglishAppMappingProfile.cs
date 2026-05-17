@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Models;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixModels;
 using inzBackend.Models.ModuleModels;
@@ -66,6 +67,8 @@ namespace inzBackend.Profiles
 
             CreateMap<FlashcardStudyLog, FlashcardStudyLogDto>()
                 .ForMember(dest => dest.FlashcardFront, opt => opt.MapFrom(src => src.Flashcard.Front));
+
+            CreateMap<GlobalFlashcard, GlobalFlashcardDto>();
         }
     }
 }
