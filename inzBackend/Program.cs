@@ -6,7 +6,6 @@ using inzBackend.Models;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
-using inzBackend.Services;
 using inzBackend.Services.AdminFlashcardServices;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
@@ -138,29 +137,8 @@ namespace inzBackend
 
             app.UseAuthorization();
 
+
             app.MapControllers();
-
-            // === SEEDOWANIE BAZY DLA BRATA ===
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<GmitrzakEnglishAcademyDbContext>();
-
-                    // Automatycznie utworzy bazê i tabele, jeœli jeszcze nie istniej¹
-                    context.Database.EnsureCreated();
-
-                    // Wywo³anie Twojego initializera
-                    DbInitializer.Seed(context);
-                }
-                catch (Exception ex)
-                {
-                    // W razie b³êdu wypisze komunikat w konsoli, ale nie wywali aplikacji
-                    Console.WriteLine($"B³¹d inicjalizacji bazy danych: {ex.Message}");
-                }
-            }
-            // =================================
 
             app.Run();
         }
