@@ -14,6 +14,7 @@ using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.UserModels;
+using inzBackend.Models.StudentLearningModels.VocabularyModels;
 
 namespace inzBackend.Profiles
 {
@@ -57,7 +58,14 @@ namespace inzBackend.Profiles
 
             CreateMap<Grade, GradeDto>();
             CreateMap<Sentence, SentenceDto>();
-            CreateMap<Flashcard, FlashcardDto>();
+            CreateMap<Flashcard, FlashcardDto>()
+                .ForMember(dest => dest.Front, opt => opt.MapFrom(src =>
+                    src.Vocabulary != null ? src.Vocabulary.Front : string.Empty))
+                .ForMember(dest => dest.Back, opt => opt.MapFrom(src =>
+                    src.Vocabulary != null ? src.Vocabulary.Back : string.Empty))
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src =>
+                    src.Vocabulary != null ? src.Vocabulary.Category : string.Empty));
+
             CreateMap<Memory, MemoryDto>();
             CreateMap<PronunciationEntry, PronunciationEntryDto>();
 
@@ -69,6 +77,7 @@ namespace inzBackend.Profiles
                 .ForMember(dest => dest.FlashcardFront, opt => opt.MapFrom(src =>
                     src.Flashcard.Vocabulary != null ? src.Flashcard.Vocabulary.Front : string.Empty));
 
+            CreateMap<Vocabulary, VocabularyDto>();
             CreateMap<Vocabulary, GlobalVocabularyDto>();
         }
     }

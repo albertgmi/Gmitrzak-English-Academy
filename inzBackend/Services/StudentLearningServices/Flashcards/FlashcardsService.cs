@@ -24,7 +24,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         {
             var userId = _userContextService.GetUserId;
             var flashcards = _dbContext.Flashcards
-                .Include(x => x.Vocabulary) // Dołączamy relację słownika dla AutoMappera
+                .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == userId)
                 .OrderBy(x => x.NextReviewDate)
                 .ToList();
@@ -35,9 +35,8 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         {
             var userId = _userContextService.GetUserId;
             var flashcards = _dbContext.Flashcards
-                .Include(x => x.Vocabulary) // Dołączamy relację słownika
+                .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == userId && x.IsLeech)
-                // POPRAWIONO: Sortowanie odbywa się teraz po polu z encji Vocabulary
                 .OrderBy(x => x.Vocabulary != null ? x.Vocabulary.Front : string.Empty)
                 .ToList();
             return _mapper.Map<List<FlashcardDto>>(flashcards);
@@ -55,7 +54,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .ToList();
 
             var flashcards = _dbContext.Flashcards
-                .Include(x => x.Vocabulary) // Dołączamy relację słownika
+                .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == userId && studiedIds.Contains(x.Id))
                 .ToList();
 
@@ -67,7 +66,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             var userId = _userContextService.GetUserId;
             var studyLogs = _dbContext.FlashcardStudyLogs
                 .Include(x => x.Flashcard)
-                    .ThenInclude(f => f.Vocabulary) // POPRAWIONO: Łańcuchowe dołączenie słownika przez fiszkę
+                    .ThenInclude(f => f.Vocabulary)
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.StudyDate)
                 .ThenBy(x => x.CreatedAt)
@@ -82,10 +81,10 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             var q = query.ToLower();
 
             var flashcards = _dbContext.Flashcards
-                .Include(x => x.Vocabulary) // Dołączamy relację słownika
+                .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == userId && x.Vocabulary != null &&
                     (x.Vocabulary.Front.ToLower().Contains(q) ||
-                     x.Vocabulary.Back.ToLower().Contains(q))) // POPRAWIONO: Przeszukiwanie pól z encji Vocabulary
+                     x.Vocabulary.Back.ToLower().Contains(q)))
                 .ToList();
 
             return _mapper.Map<List<FlashcardDto>>(flashcards);
