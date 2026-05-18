@@ -8,10 +8,15 @@ namespace inzBackend.Models.Configurations
         public void Configure(EntityTypeBuilder<Flashcard> builder)
         {
             builder.HasKey(x => x.Id);
+
             builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId);
-            builder.Property(x => x.Front).IsRequired();
-            builder.Property(x => x.Back).IsRequired();
+
+            builder.HasOne(x => x.Vocabulary)
+                   .WithMany(v => v.Flashcards)
+                   .HasForeignKey(x => x.VocabularyId)
+                   .OnDelete(DeleteBehavior.Restrict);
             builder.HasQueryFilter(x => !x.IsDeleted);
+
         }
     }
 }

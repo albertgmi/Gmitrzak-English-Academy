@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518082020_lengthFix")]
+    partial class lengthFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,6 +70,49 @@ namespace inzBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Agendas");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.GlobalFlashcard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Back")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Front")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GlobalFlashcards");
                 });
 
             modelBuilder.Entity("inzBackend.Entities.Profile", b =>
@@ -370,49 +416,6 @@ namespace inzBackend.Migrations
                     b.ToTable("UserModuleAssignments");
                 });
 
-            modelBuilder.Entity("inzBackend.Entities.Vocabulary", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Back")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Front")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset?>("LastModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Vocabulary");
-                });
-
             modelBuilder.Entity("inzBackend.Models.ActivityPoint", b =>
                 {
                     b.Property<int>("Id")
@@ -497,28 +500,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 11, 19, 0, 101, DateTimeKind.Unspecified).AddTicks(100), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 8, 20, 19, 570, DateTimeKind.Unspecified).AddTicks(6373), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 11, 19, 0, 101, DateTimeKind.Unspecified).AddTicks(105), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 8, 20, 19, 570, DateTimeKind.Unspecified).AddTicks(6382), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAolv2b4zHM7GZ/o01f80KGjGOg/tiKIw9QrB7fHjFU1PNqRXQn92kF8yLyULvRNmg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI4IS770fo/a8emdS9FgCre2rdbNaF+Xp3WHmiKXGoaZJDKUfvUOozkRvZLSGAMWKw==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 11, 19, 0, 148, DateTimeKind.Unspecified).AddTicks(9189), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 8, 20, 19, 621, DateTimeKind.Unspecified).AddTicks(4240), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 11, 19, 0, 148, DateTimeKind.Unspecified).AddTicks(9196), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 18, 8, 20, 19, 621, DateTimeKind.Unspecified).AddTicks(4253), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDRQYoD4QjZKzKBnQpzA+D0YvSMkRIsIBwUjdo1dlB4+ndTMj7F9bTY/kFXuxCidCw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFwjWSR/s4rbc1cRt2Xb93OsLHeVcE6jC3T5UTQWDYSifFcE4MOsRD4oWul8jLQGqg==",
                             Role = "User",
                             Username = "testauser"
                         });
@@ -677,6 +680,14 @@ namespace inzBackend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Back")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -685,6 +696,10 @@ namespace inzBackend.Migrations
 
                     b.Property<int>("EaseFactor")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Front")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Interval")
                         .HasColumnType("integer");
@@ -707,14 +722,9 @@ namespace inzBackend.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("VocabularyId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("VocabularyId");
 
                     b.ToTable("Flashcards");
                 });
@@ -1389,14 +1399,6 @@ namespace inzBackend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("inzBackend.Entities.Vocabulary", "Vocabulary")
-                        .WithMany("Flashcards")
-                        .HasForeignKey("VocabularyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Vocabulary");
                 });
 
             modelBuilder.Entity("inzBackend.Models.FlashcardStudyLog", b =>
@@ -1531,11 +1533,6 @@ namespace inzBackend.Migrations
                     b.Navigation("Matrix");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("inzBackend.Entities.Vocabulary", b =>
-                {
-                    b.Navigation("Flashcards");
                 });
 
             modelBuilder.Entity("inzBackend.Models.AppUser", b =>

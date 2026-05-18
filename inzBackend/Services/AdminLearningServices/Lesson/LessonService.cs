@@ -6,6 +6,8 @@ using inzBackend.Services.UserServices;
 using inzBackend.Enums;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using inzBackend.Models.GlobalVocabularyModels;
+using inzBackend.Models.StudentLearningModels.VocabularyModels;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {
@@ -15,21 +17,21 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
 
-        public LessonService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
-            IMapper mapper)
+        public LessonService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService, IMapper mapper)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
             _mapper = mapper;
         }
+
         public SearchGlobalFlashcardResult searchGlobalFlashcard(string query, int studentUserId)
         {
             var q = query.ToLower().Trim();
 
-            var global = _dbContext.GlobalFlashcards
+            var vocabulary = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower().Contains(q) || x.Back.ToLower().Contains(q));
 
-            if (global is null)
+            if (vocabulary is null)
             {
                 return new SearchGlobalFlashcardResult
                 {
@@ -42,25 +44,26 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             }
 
             var alreadyAssigned = _dbContext.Flashcards
-                .Any(x => x.UserId == studentUserId && x.Front == global.Front);
+                .Any(x => x.UserId == studentUserId && x.VocabularyId == vocabulary.Id);
 
             return new SearchGlobalFlashcardResult
             {
-                Id = global.Id,
-                Front = global.Front,
-                Back = global.Back,
-                Category = global.Category,
+                Id = vocabulary.Id,
+                Front = vocabulary.Front,
+                Back = vocabulary.Back,
+                Category = vocabulary.Category,
                 ExistsInGlobal = true,
                 AlreadyAssignedToStudent = alreadyAssigned
             };
         }
-        public GlobalFlashcardDto addTranslation(AddTranslationRequest request)
+
+        public VocabularyDto addTranslation(AddTranslationRequest request)
         {
-            var existing = _dbContext.GlobalFlashcards
+            var existing = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower() == request.Front.ToLower());
 
             if (existing is not null)
-                return new GlobalFlashcardDto
+                return new VocabularyDto
                 {
                     Id = existing.Id,
                     Front = existing.Front,
@@ -68,28 +71,29 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     Category = existing.Category
                 };
 
-            var global = new GlobalFlashcard
+            var vocabulary = new Vocabulary
             {
                 Front = request.Front,
                 Back = request.Back,
                 Category = request.Category
             };
 
-            _dbContext.GlobalFlashcards.Add(global);
+            _dbContext.Vocabulary.Add(vocabulary);
             _dbContext.SaveChanges();
 
-            return _mapper.Map<GlobalFlashcardDto>(global);
+            return _mapper.Map<VocabularyDto>(vocabulary);
         }
+
         public void assignFlashcardToStudent(AssignFlashcardToStudentRequest request)
         {
-            var global = _dbContext.GlobalFlashcards
+            var vocabulary = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Id == request.GlobalFlashcardId);
 
-            if (global is null)
-                throw new NotFoundException("Flashcard not found in global database");
+            if (vocabulary is null)
+                throw new NotFoundException("Vocabulary word not found in global database");
 
             var alreadyExists = _dbContext.Flashcards
-                .Any(x => x.UserId == request.StudentUserId && x.Front == global.Front);
+                .Any(x => x.UserId == request.StudentUserId && x.VocabularyId == vocabulary.Id);
 
             if (alreadyExists) return;
 
@@ -98,9 +102,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             var flashcard = new Flashcard
             {
                 UserId = request.StudentUserId,
-                Front = global.Front,
-                Back = global.Back,
-                Category = global.Category,
+                VocabularyId = vocabulary.Id,
                 EaseFactor = 250,
                 Interval = 0,
                 IsLeech = false,
@@ -109,14 +111,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             _dbContext.Flashcards.Add(flashcard);
             _dbContext.SaveChanges();
-        }
-
-        public List<GlobalFlashcardDto> getAllGlobalFlashcards()
-        {
-            var globalFlashcards = _dbContext
-                .GlobalFlashcards
-                .ToList();
-            return _mapper.Map<List<GlobalFlashcardDto>>(globalFlashcards);
         }
 
         public void addSentence(AddSentenceRequest request)
@@ -158,6 +152,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
         }
+
         public List<HomeworkItemDto> getHomeworkForWeek(int studentUserId)
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -197,6 +192,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             a.IsCompleted = false;
             _dbContext.SaveChanges();
         }
+
         public List<PronunciationTestItemDto> getPronunciationList(int studentUserId)
         {
             return _dbContext.PronunciationEntries
@@ -212,6 +208,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
+
         public void checkPronunciationWord(int entryId)
         {
             var entry = _dbContext.PronunciationEntries.FirstOrDefault(x => x.Id == entryId);
@@ -219,6 +216,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             entry.IsChecked = true;
             _dbContext.SaveChanges();
         }
+
         public void uncheckPronunciationWord(int entryId)
         {
             var entry = _dbContext.PronunciationEntries.FirstOrDefault(x => x.Id == entryId);
@@ -226,6 +224,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             entry.IsChecked = false;
             _dbContext.SaveChanges();
         }
+
         public void addGrade(AddGradeRequest request)
         {
             _dbContext.Grades.Add(new Grade
@@ -254,6 +253,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
+
         public void removeGrade(int gradeId)
         {
             var grade = _dbContext.Grades.FirstOrDefault(x => x.Id == gradeId);
@@ -261,6 +261,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.Grades.Remove(grade);
             _dbContext.SaveChanges();
         }
+
         public List<TeacherNoteDto> getNotes(int studentUserId)
         {
             var teacherId = _userContextService.GetUserId;
@@ -275,6 +276,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
+
         public void saveNote(SaveNoteRequest request)
         {
             var teacherId = _userContextService.GetUserId;
@@ -287,6 +289,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
         }
+
         public void deleteNote(int noteId)
         {
             var note = _dbContext.TeacherNotes.FirstOrDefault(x => x.Id == noteId);
@@ -335,19 +338,15 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .Select(user => new AdminStudentStudySummaryDto
                 {
                     Username = user.Username,
-
                     TotalTimeSpentSeconds = user.FlashcardStudyLogs.Any()
                         ? user.FlashcardStudyLogs.Sum(log => log.TimeSpentSeconds)
                         : null,
-
                     TotalFlashcardsDone = user.FlashcardStudyLogs.Any()
-                        ? user.FlashcardStudyLogs.Sum(log =>
-                            log.EasyCount +
-                            log.HardCount +
-                            log.IncorrectCount)
+                        ? user.FlashcardStudyLogs.Sum(log => log.EasyCount + log.HardCount + log.IncorrectCount)
                         : null
                 })
                 .FirstOrDefault();
+
             if (report is null)
                 throw new NotFoundException("Student not found");
 

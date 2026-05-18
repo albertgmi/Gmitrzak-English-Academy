@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Models;
-using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixModels;
 using inzBackend.Models.ModuleModels;
@@ -13,6 +12,7 @@ using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
+using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.UserModels;
 
 namespace inzBackend.Profiles
@@ -66,9 +66,10 @@ namespace inzBackend.Profiles
                 .ForMember(dest => dest.ModuleDescription, opt => opt.MapFrom(src => src.Module.Description));
 
             CreateMap<FlashcardStudyLog, FlashcardStudyLogDto>()
-                .ForMember(dest => dest.FlashcardFront, opt => opt.MapFrom(src => src.Flashcard.Front));
+                .ForMember(dest => dest.FlashcardFront, opt => opt.MapFrom(src =>
+                    src.Flashcard.Vocabulary != null ? src.Flashcard.Vocabulary.Front : string.Empty));
 
-            CreateMap<GlobalFlashcard, GlobalFlashcardDto>();
+            CreateMap<Vocabulary, GlobalVocabularyDto>();
         }
     }
 }

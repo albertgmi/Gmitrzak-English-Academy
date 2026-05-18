@@ -1,4 +1,5 @@
-﻿using inzBackend.Models.AdminLearningModels;
+﻿using inzBackend.Entities;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,32 +16,6 @@ namespace inzBackend.Controllers
         public LessonController(ILessonService lessonService)
         {
             _lessonService = lessonService;
-        }
-
-        [HttpGet("flashcard/search")]
-        public SearchGlobalFlashcardResult searchFlashcard(
-            [FromQuery] string q, [FromQuery] int studentUserId)
-        {
-            return _lessonService.searchGlobalFlashcard(q, studentUserId);
-        }
-
-        [HttpPost("flashcard/translation")]
-        public GlobalFlashcardDto addTranslation([FromBody] AddTranslationRequest request)
-        {
-            return _lessonService.addTranslation(request);
-        }
-
-        [HttpPost("flashcard/assign")]
-        public ActionResult assignFlashcard([FromBody] AssignFlashcardToStudentRequest request)
-        {
-            _lessonService.assignFlashcardToStudent(request);
-            return Ok();
-        }
-
-        [HttpGet("flashcard-global")]
-        public ActionResult getAllGlobalFlashcards()
-        {
-            return Ok(_lessonService.getAllGlobalFlashcards());
         }
 
         [HttpPost("sentence")]
@@ -65,9 +40,10 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("homework/{studentUserId}")]
-        public List<HomeworkItemDto> getHomework(int studentUserId)
+        public ActionResult<List<HomeworkItemDto>> getHomework(int studentUserId)
         {
-            return _lessonService.getHomeworkForWeek(studentUserId);
+            var result = _lessonService.getHomeworkForWeek(studentUserId);
+            return Ok(result);
         }
 
         [HttpPatch("homework/{id}/check")]
@@ -85,9 +61,10 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("pronunciation-test/{studentUserId}")]
-        public List<PronunciationTestItemDto> getPronunciationTest(int studentUserId)
+        public ActionResult<List<PronunciationTestItemDto>> getPronunciationTest(int studentUserId)
         {
-            return _lessonService.getPronunciationList(studentUserId);
+            var result = _lessonService.getPronunciationList(studentUserId);
+            return Ok(result);
         }
 
         [HttpPatch("pronunciation-test/{id}/check")]
@@ -105,9 +82,10 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("grades/{studentUserId}")]
-        public List<GradeListDto> getGrades(int studentUserId)
+        public ActionResult<List<GradeListDto>> getGrades(int studentUserId)
         {
-            return _lessonService.getGrades(studentUserId);
+            var result = _lessonService.getGrades(studentUserId);
+            return Ok(result);
         }
 
         [HttpPost("grades")]
@@ -125,9 +103,10 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("notes/{studentUserId}")]
-        public List<TeacherNoteDto> getNotes(int studentUserId)
+        public ActionResult<List<TeacherNoteDto>> getNotes(int studentUserId)
         {
-            return _lessonService.getNotes(studentUserId);
+            var result = _lessonService.getNotes(studentUserId);
+            return Ok(result);
         }
 
         [HttpPost("notes")]
@@ -145,9 +124,10 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("listening/{studentUserId}")]
-        public List<ListeningReportDto> getListeningReports(int studentUserId)
+        public ActionResult<List<ListeningReportDto>> getListeningReports(int studentUserId)
         {
-            return _lessonService.getListeningReports(studentUserId);
+            var result = _lessonService.getListeningReports(studentUserId);
+            return Ok(result);
         }
 
         [HttpPost("listening")]

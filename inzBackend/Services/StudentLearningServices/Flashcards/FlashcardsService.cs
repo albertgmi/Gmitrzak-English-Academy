@@ -24,6 +24,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         {
             var userId = _userContextService.GetUserId;
             var flashcards = _dbContext.Flashcards
+                .Include(x => x.Vocabulary) // Dołączamy relację słownika dla AutoMappera
                 .Where(x => x.UserId == userId)
                 .OrderBy(x => x.NextReviewDate)
                 .ToList();
@@ -33,10 +34,11 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         public List<FlashcardDto> getLeeches()
         {
             var userId = _userContextService.GetUserId;
-            var flashcards = _dbContext
-                .Flashcards
+            var flashcards = _dbContext.Flashcards
+                .Include(x => x.Vocabulary) // Dołączamy relację słownika
                 .Where(x => x.UserId == userId && x.IsLeech)
-                .OrderBy(x => x.Front)
+                // POPRAWIONO: Sortowanie odbywa się teraz po polu z encji Vocabulary
+                .OrderBy(x => x.Vocabulary != null ? x.Vocabulary.Front : string.Empty)
                 .ToList();
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
@@ -52,8 +54,8 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .Distinct()
                 .ToList();
 
-            var flashcards = _dbContext
-                .Flashcards
+            var flashcards = _dbContext.Flashcards
+                .Include(x => x.Vocabulary) // Dołączamy relację słownika
                 .Where(x => x.UserId == userId && studiedIds.Contains(x.Id))
                 .ToList();
 
@@ -63,12 +65,12 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         public List<FlashcardStudyLogDto> getStudyLogs()
         {
             var userId = _userContextService.GetUserId;
-            var studyLogs = _dbContext
-                .FlashcardStudyLogs
+            var studyLogs = _dbContext.FlashcardStudyLogs
                 .Include(x => x.Flashcard)
+                    .ThenInclude(f => f.Vocabulary) // POPRAWIONO: Łańcuchowe dołączenie słownika przez fiszkę
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.StudyDate)
-                .ThenBy(x=>x.CreatedAt)
+                .ThenBy(x => x.CreatedAt)
                 .ToList();
 
             return _mapper.Map<List<FlashcardStudyLogDto>>(studyLogs);
@@ -78,12 +80,14 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         {
             var userId = _userContextService.GetUserId;
             var q = query.ToLower();
-            var flashcards = _dbContext
-                .Flashcards
-                .Where(x => x.UserId == userId &&
-                    (x.Front.ToLower().Contains(q) ||
-                     x.Back.ToLower().Contains(q)))
+
+            var flashcards = _dbContext.Flashcards
+                .Include(x => x.Vocabulary) // Dołączamy relację słownika
+                .Where(x => x.UserId == userId && x.Vocabulary != null &&
+                    (x.Vocabulary.Front.ToLower().Contains(q) ||
+                     x.Vocabulary.Back.ToLower().Contains(q))) // POPRAWIONO: Przeszukiwanie pól z encji Vocabulary
                 .ToList();
+
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
 
@@ -91,8 +95,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         {
             var userId = _userContextService.GetUserId;
 
-            var card = _dbContext
-                .Flashcards
+            var card = _dbContext.Flashcards
                 .FirstOrDefault(x => x.Id == flashcardId && x.UserId == userId);
 
             if (card is null)
@@ -125,8 +128,8 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
 
             var log = _dbContext.FlashcardStudyLogs
                 .FirstOrDefault(x => x.UserId == userId
-                      && x.StudyDate == today
-                      && x.FlashcardId == card.Id);
+                     && x.StudyDate == today
+                     && x.FlashcardId == card.Id);
 
             if (log is null)
             {
