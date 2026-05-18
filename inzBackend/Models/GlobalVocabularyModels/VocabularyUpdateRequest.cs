@@ -1,8 +1,6 @@
-﻿using inzBackend.Models;
-
-namespace inzBackend.Entities
+﻿namespace inzBackend.Models.GlobalVocabularyModels
 {
-    public class GlobalFlashcard : AuditableEntity
+    public class VocabularyUpdateRequest
     {
         public string Front { get; set; } = string.Empty;
         public string Back { get; set; } = string.Empty;

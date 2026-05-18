@@ -36,8 +36,9 @@ namespace inzBackend.Models
         public DbSet<UserModuleAssignment> UserModuleAssignments { get; set; }
         public DbSet<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; }
         public DbSet<TeacherNote> TeacherNotes { get; set; }
-        public DbSet<GlobalFlashcard> GlobalFlashcards { get; set; }
         public DbSet<Agenda> Agendas { get; set; }
+        public DbSet<TheaterItem> TheaterItems { get; set; }
+        public DbSet<Vocabulary> Vocabulary { get; set; }
 
         public override int SaveChanges()
         {

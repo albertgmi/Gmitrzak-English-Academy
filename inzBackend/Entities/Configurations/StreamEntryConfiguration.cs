@@ -8,7 +8,9 @@ namespace inzBackend.Models.Configurations
         public void Configure(EntityTypeBuilder<StreamEntry> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId);
+            builder.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId);
         }
     }
 }

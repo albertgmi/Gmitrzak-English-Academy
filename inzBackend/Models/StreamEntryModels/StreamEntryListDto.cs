@@ -1,9 +1,10 @@
-﻿namespace inzBackend.Models
+﻿namespace inzBackend.Models.StreamEntryModels
 {
-    public class StreamEntry : BaseEntity
+    public class StreamEntryListDto
     {
+        public int Id { get; set; }
         public int UserId { get; set; }
-        public AppUser User { get; set; }
+        public string Username { get; set; } = string.Empty;
         public string Command { get; set; } = string.Empty;
         public string Payload { get; set; } = string.Empty;
         public DateTimeOffset ExecutedAt { get; set; }
