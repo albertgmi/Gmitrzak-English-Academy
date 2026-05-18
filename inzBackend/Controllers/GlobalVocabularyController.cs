@@ -1,5 +1,7 @@
 ﻿using inzBackend.Entities;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.GlobalVocabularyModels;
+using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Services.GlobalVocabularyServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +37,27 @@ namespace inzBackend.Controllers
         public ActionResult updateVocabulary([FromBody] VocabularyUpdateRequest request, [FromRoute] int vocabularyId)
         {
             _globalVocabularyService.updateVocabulary(request, vocabularyId);
+            return Ok();
+        }
+
+        [HttpGet("search")]
+        public ActionResult<SearchVocabularyResult> searchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
+        {
+            var result = _globalVocabularyService.searchVocabulary(query, studentUserId);
+            return Ok(result);
+        }
+
+        [HttpPost("translation")]
+        public ActionResult<VocabularyDto> addTranslation([FromBody] AddTranslationRequest request)
+        {
+            var result = _globalVocabularyService.addTranslation(request);
+            return Ok(result);
+        }
+
+        [HttpPost("assign")]
+        public ActionResult assignVocabularyToStudent([FromBody] AssignVocabularyToStudentRequest request)
+        {
+            _globalVocabularyService.assignVocabularyToStudent(request);
             return Ok();
         }
     }
