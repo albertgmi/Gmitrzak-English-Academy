@@ -4,6 +4,8 @@ using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
+using inzBackend.Services.AiIntegrationServices;
+using AutoMapper;
 
 namespace inzBackend.Services.CatalogueServices
 {
@@ -11,13 +13,17 @@ namespace inzBackend.Services.CatalogueServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly IAiTranslationService _aiTranslationService;
+        private readonly IMapper _mapper;
 
         public CatalogueService(
-            GmitrzakEnglishAcademyDbContext dbContext,
-            IUserContextService userContextService)
+            GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
+            IAiTranslationService aiTranslationService, IMapper mapper)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _aiTranslationService = aiTranslationService;
+            _mapper = mapper;
         }
 
         public async Task<CatalogueDto> uploadCatalogue(IFormFile file)
@@ -104,12 +110,33 @@ namespace inzBackend.Services.CatalogueServices
                     })
                     .ToList();
 
+                var textsToTranslate = catEntries
+                    .Select(e => e.Entry)
+                    .ToList();
+
+                var translatedTexts = await _aiTranslationService
+                    .TranslateBatchAsync(textsToTranslate, "Polish");
+
+                Console.WriteLine($"Otrzymano tłumaczeń: {translatedTexts.Count}");
+                foreach (var text in translatedTexts)
+                {
+                    Console.WriteLine($"Przetłumaczone: {text}");
+                }
+
+                for (int i = 0; i < catEntries.Count; i++)
+                {
+                    if (i < translatedTexts.Count)
+                    {
+                        catEntries[i].TranslatedEntry = translatedTexts[i];
+                    }
+                }
+
                 _dbContext.CatalogueEntries.AddRange(catEntries);
                 _dbContext.SaveChanges();
                 lastCatalogue = existing;
             }
 
-            return MapCatalogue(lastCatalogue!);
+            return _mapper.Map<CatalogueDto>(lastCatalogue);
         }
 
         public List<CatalogueDto> getAllCatalogues()
@@ -155,6 +182,7 @@ namespace inzBackend.Services.CatalogueServices
                     EntryDate = x.EntryDate,
                     UserRef = x.UserRef,
                     Entry = x.Entry,
+                    TranslatedEntry = x.TranslatedEntry,
                     ComputedKey = x.ComputedKey,
                     CatalogueName = x.Catalogue.Name
                 })
@@ -163,7 +191,8 @@ namespace inzBackend.Services.CatalogueServices
 
         public void deleteCatalogue(int catalogueId)
         {
-            var catalogue = _dbContext.Catalogues
+            var catalogue = _dbContext
+                .Catalogues
                 .Include(x => x.Entries)
                 .FirstOrDefault(x => x.Id == catalogueId);
 
@@ -175,13 +204,16 @@ namespace inzBackend.Services.CatalogueServices
             _dbContext.SaveChanges();
         }
 
-        private static CatalogueDto MapCatalogue(Catalogue x) => new()
+        public void updateTranslation(UpdateTranslationRequest request, int entryId)
         {
-            Id = x.Id,
-            Name = x.Name,
-            UploadedDate = x.UploadedDate,
-            UploadedBy = x.UploadedBy?.Username ?? string.Empty,
-            EntryCount = x.Entries?.Count() ?? 0
-        };
+            var entry = _dbContext
+                .CatalogueEntries
+                .FirstOrDefault(x => x.Id == entryId);
+            if (entry is null)
+                throw new NotFoundException($"Entry with Id: {entryId} was not found");
+
+            entry.TranslatedEntry = request.TranslatedEntry;
+            _dbContext.SaveChanges();
+        }
     }
 }

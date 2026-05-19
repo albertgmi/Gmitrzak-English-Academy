@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260519134358_translatedColumnForAi")]
+    partial class translatedColumnForAi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -497,28 +500,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 14, 33, 4, 919, DateTimeKind.Unspecified).AddTicks(3395), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 13, 43, 57, 975, DateTimeKind.Unspecified).AddTicks(4207), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 14, 33, 4, 919, DateTimeKind.Unspecified).AddTicks(3401), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 13, 43, 57, 975, DateTimeKind.Unspecified).AddTicks(4219), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDfzi/dcUbMAvmQHZmIkowtSGngUAYNKwIsu6hsl0VmAaeTNwuChoWZZZyGs30lK+w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBuwunyPHw44xJWI7MlhLYK77eS4grOAHwGDFsSAG1Unhf6vFMiGCJIh0qpMdHkQPg==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 14, 33, 4, 967, DateTimeKind.Unspecified).AddTicks(2767), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 13, 43, 58, 22, DateTimeKind.Unspecified).AddTicks(9634), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 14, 33, 4, 967, DateTimeKind.Unspecified).AddTicks(2779), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 19, 13, 43, 58, 22, DateTimeKind.Unspecified).AddTicks(9644), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEVldkrXtSxsgAivtvOFcFz01IgSFxXlnllZI1Qk1PohFN1Wuxk3GPHA7cgkWtYgVQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMJ27rzivGtdUhucy4yiAlWgY2qYqWcFlpnmLKorqh/FE7pZkYrNq00NbnXwj+SFew==",
                             Role = "User",
                             Username = "testauser"
                         });
@@ -588,10 +591,6 @@ namespace inzBackend.Migrations
 
                     b.Property<DateOnly>("EntryDate")
                         .HasColumnType("date");
-
-                    b.Property<string>("TranslatedEntry")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("UserRef")
                         .IsRequired()
