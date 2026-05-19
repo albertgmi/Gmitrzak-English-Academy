@@ -117,12 +117,6 @@ namespace inzBackend.Services.CatalogueServices
                 var translatedTexts = await _aiTranslationService
                     .TranslateBatchAsync(textsToTranslate, "Polish");
 
-                Console.WriteLine($"Otrzymano tłumaczeń: {translatedTexts.Count}");
-                foreach (var text in translatedTexts)
-                {
-                    Console.WriteLine($"Przetłumaczone: {text}");
-                }
-
                 for (int i = 0; i < catEntries.Count; i++)
                 {
                     if (i < translatedTexts.Count)
