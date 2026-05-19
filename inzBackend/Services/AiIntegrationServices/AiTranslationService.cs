@@ -40,7 +40,6 @@ namespace inzBackend.Services.AiIntegrationServices
 
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
             string responseText = completion.Content[0].Text;
-            Console.WriteLine($"[RAW AI RESPONSE]: {responseText}");
 
             var result = JsonSerializer.Deserialize<TranslationResult>(responseText);
             return result?.Translations ?? new List<string>();
