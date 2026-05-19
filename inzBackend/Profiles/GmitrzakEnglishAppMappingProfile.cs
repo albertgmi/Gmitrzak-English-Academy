@@ -15,6 +15,7 @@ using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
+using inzBackend.Models.CatalogueModels;
 
 namespace inzBackend.Profiles
 {
@@ -79,6 +80,12 @@ namespace inzBackend.Profiles
 
             CreateMap<Vocabulary, VocabularyDto>();
             CreateMap<Vocabulary, GlobalVocabularyDto>();
+
+            CreateMap<Catalogue, CatalogueDto>()
+                .ForMember(dest => dest.UploadedBy, opt => opt.MapFrom(src =>
+                    src.UploadedBy != null ? src.UploadedBy.Username : string.Empty))
+                .ForMember(dest => dest.EntryCount, opt => opt.MapFrom(src =>
+                    src.Entries != null ? src.Entries.Count() : 0));
         }
     }
 }

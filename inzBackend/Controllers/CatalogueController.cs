@@ -18,12 +18,16 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        public List<CatalogueDto> getAll() =>
-            _catalogueService.getAllCatalogues();
-
+        public List<CatalogueDto> getAll()
+        {
+            return _catalogueService.getAllCatalogues();
+        }
+            
         [HttpPost("upload")]
-        public async Task<CatalogueDto> upload(IFormFile file) =>
-            await _catalogueService.uploadCatalogue(file);
+        public async Task<CatalogueDto> upload(IFormFile file)
+        {
+            return await _catalogueService.uploadCatalogue(file);
+        }
 
         [HttpGet("entries")]
         public List<CatalogueEntryDto> getEntries(
@@ -42,10 +46,18 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("{catalogueId}")]
-        public IActionResult delete(int catalogueId)
+        public ActionResult delete(int catalogueId)
         {
             _catalogueService.deleteCatalogue(catalogueId);
             return NoContent();
+        }
+
+        [HttpPut("entries/{entryId}")]
+        public ActionResult updateTranslation([FromBody] UpdateTranslationRequest request,
+            [FromRoute] int entryId)
+        {
+            _catalogueService.updateTranslation(request, entryId);
+            return Ok();
         }
     }
 }

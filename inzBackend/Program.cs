@@ -36,8 +36,13 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OpenAI.Chat;
+using OpenAI;
+using System.ClientModel;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
+using inzBackend.Services.AiIntegrationServices;
 
 namespace inzBackend
 {
@@ -62,6 +67,21 @@ namespace inzBackend
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
 
+            builder.Services.AddScoped<ChatClient>(sp =>
+            {
+                var apiKey = builder.Configuration["GroqSettings:ApiKey"] ?? "";
+                var modelId = builder.Configuration["GroqSettings:ModelId"] ?? "llama-3.3-70b-versatile";
+
+                var clientOptions = new OpenAIClientOptions
+                {
+                    Endpoint = new Uri("https://api.groq.com/openai/v1")
+                };
+
+                var openAiClient = new OpenAIClient(
+                    new System.ClientModel.ApiKeyCredential(apiKey), clientOptions);
+
+                return openAiClient.GetChatClient(modelId);
+            });
 
             builder.Services.AddControllers().AddFluentValidation();
             builder.Services.AddAutoMapper(typeof(GmitrzakEnglishAppMappingProfile).Assembly);
@@ -115,6 +135,7 @@ namespace inzBackend
             builder.Services.AddScoped<IStreamService, StreamService>();
             builder.Services.AddScoped<ITheaterService, TheaterService>();
             builder.Services.AddScoped<IGlobalVocabularyService, GlobalVocabularyService>();
+            builder.Services.AddScoped<IAiTranslationService, AiTranslationService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();

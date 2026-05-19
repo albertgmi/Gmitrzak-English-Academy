@@ -8,5 +8,6 @@ namespace inzBackend.Services.CatalogueServices
         List<CatalogueDto> getAllCatalogues();
         List<CatalogueEntryDto> getEntries(CatalogueEntryFilterRequest filter);
         void deleteCatalogue(int catalogueId);
+        void updateTranslation(UpdateTranslationRequest request, int entryId);
     }
 }
