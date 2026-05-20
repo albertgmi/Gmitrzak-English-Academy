@@ -13,5 +13,6 @@ namespace inzBackend.Entities
         public DateOnly DueDate { get; set; }
         public bool IsCompleted { get; set; }
         public IEnumerable<UserSentenceAnswer> Answers { get; set; } = [];
+        public bool IsReviewed { get; set; } = false;
     }
 }

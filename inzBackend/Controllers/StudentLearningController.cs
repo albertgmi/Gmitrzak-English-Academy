@@ -1,4 +1,5 @@
-﻿using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
+﻿using inzBackend.Models.ModuleSentenceModels;
+using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
@@ -12,6 +13,7 @@ using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Controllers
 {
@@ -123,6 +125,19 @@ namespace inzBackend.Controllers
         public ActionResult reviewCard(int id, [FromBody] ReviewCardRequest request)
         {
             _flashcardsService.reviewCard(id, request);
+            return Ok();
+        }
+
+        [HttpGet("module/{moduleId}/sentences")]
+        public ActionResult<ModuleSentenceSessionDto> getModuleSentences(int moduleId)
+        {
+            return Ok(_sentencesService.getModuleSentences(moduleId));
+        }
+
+        [HttpPatch("sentences/{id}/review")]
+        public IActionResult reviewSentence(int id)
+        {
+            _sentencesService.reviewSentence(id);
             return Ok();
         }
     }

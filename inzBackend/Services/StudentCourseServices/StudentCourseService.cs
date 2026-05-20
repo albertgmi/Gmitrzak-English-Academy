@@ -135,7 +135,9 @@ namespace inzBackend.Services.StudentCourseServices
         {
             var userId = _userContextService.GetUserId;
 
-            var assignment = _dbContext.UserModuleAssignments
+            var assignment = _dbContext
+                .UserModuleAssignments
+                .Include(x => x.Module)
                 .FirstOrDefault(x => x.Id == id && x.UserId == userId);
 
             if (assignment is null)
@@ -146,7 +148,7 @@ namespace inzBackend.Services.StudentCourseServices
             _lessonPanelService.addActivityPoints(
                 userId.Value,
                 30,
-                $"Completed additional assignment (ID: {id})"
+                $"Completed assignment {assignment.Module.Name}"
             );
             _dbContext.SaveChanges();
         }
