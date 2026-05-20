@@ -43,6 +43,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using inzBackend.Services.AiIntegrationServices;
+using inzBackend.Services.AnnouncementsServices;
+using inzBackend.Services.SentenceServices;
+using inzBackend.Services.UserOptionsServices;
+using inzBackend.Services.UserAnswerServices;
 
 namespace inzBackend
 {
@@ -136,6 +140,11 @@ namespace inzBackend
             builder.Services.AddScoped<ITheaterService, TheaterService>();
             builder.Services.AddScoped<IGlobalVocabularyService, GlobalVocabularyService>();
             builder.Services.AddScoped<IAiTranslationService, AiTranslationService>();
+            builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
+            builder.Services.AddScoped<ISentenceService, SentenceService>();
+            builder.Services.AddScoped<IUserOptionsService, UserOptionsService>();
+            builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
+            builder.Services.AddScoped<IAiSentenceCheckerService, AiSentenceCheckerService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();

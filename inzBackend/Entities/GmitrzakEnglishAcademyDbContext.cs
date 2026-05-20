@@ -39,6 +39,14 @@ namespace inzBackend.Models
         public DbSet<Agenda> Agendas { get; set; }
         public DbSet<TheaterItem> TheaterItems { get; set; }
         public DbSet<Vocabulary> Vocabulary { get; set; }
+        public DbSet<Announcement> Announcements { get; set; }
+        public DbSet<AnnouncementRecipient> AnnouncementRecipients { get; set; }
+        public DbSet<SentenceStock> SentenceStocks { get; set; }
+        public DbSet<SentenceSet> SentenceSets { get; set; }
+        public DbSet<SentenceSetItem> SentenceSetItems { get; set; }
+        public DbSet<UserSentenceAssignment> UserSentenceAssignments { get; set; }
+        public DbSet<UserSentenceAnswer> UserSentenceAnswers { get; set; }
+        public DbSet<UserOptions> UserOptions { get; set; }
 
         public override int SaveChanges()
         {
