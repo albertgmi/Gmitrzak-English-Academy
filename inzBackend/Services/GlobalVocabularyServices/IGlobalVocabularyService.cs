@@ -13,5 +13,6 @@ namespace inzBackend.Services.GlobalVocabularyServices
         SearchVocabularyResult searchVocabulary(string query, int studentUserId);
         GlobalVocabularyDto addTranslation(AddTranslationRequest request);
         void assignVocabularyToStudent(AssignVocabularyToStudentRequest request);
+        void assignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request);
     }
 }

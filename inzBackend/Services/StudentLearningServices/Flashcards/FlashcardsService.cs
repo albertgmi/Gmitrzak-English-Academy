@@ -3,6 +3,8 @@ using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
+using inzBackend.Exceptions;
 
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
@@ -11,13 +13,15 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
+        private readonly ILessonPanelService _lessonPanelService;
 
         public FlashcardsService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
-            IMapper mapper)
+            IMapper mapper, ILessonPanelService lessonPanelService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
             _mapper = mapper;
+            _lessonPanelService = lessonPanelService;
         }
 
         public List<FlashcardDto> getAllFlashcards()
@@ -108,18 +112,21 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                     card.Interval = card.Interval == 0 ? 2 : card.Interval * 2;
                     card.NextReviewDate = today.AddDays(card.Interval);
                     card.EaseFactor = Math.Min(card.EaseFactor + 10, 300);
+                    _lessonPanelService.addActivityPoints((int)userId, 3, "Flashcard done on easy level");
                     break;
 
                 case "hard":
                     card.Interval = 1;
                     card.NextReviewDate = today.AddDays(1);
                     card.EaseFactor = Math.Max(card.EaseFactor - 15, 130);
+                    _lessonPanelService.addActivityPoints((int)userId, 2, "Flashcard done on hard level");
                     break;
 
                 case "incorrect":
                     card.Interval = 0;
                     card.NextReviewDate = today;
                     card.EaseFactor = Math.Max(card.EaseFactor - 20, 130);
+                    _lessonPanelService.addActivityPoints((int)userId, 1, "Flashcard incorrect, points for trying");
                     break;
             }
 
@@ -153,6 +160,23 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             }
 
             log.TimeSpentSeconds += request.TimeSpentSeconds;
+
+            if (request.Quality.ToLower() == "easy" || request.Quality.ToLower() == "hard")
+            {
+                bool alreadyGotBonusToday = _dbContext.ActivityPoints
+                    .Any(x => x.UserId == userId && x.PointDate == today && x.Reason.Contains("Daily Flashcard Session Completed"));
+
+                if (!alreadyGotBonusToday)
+                {
+                    bool hasMoreDueCards = _dbContext.Flashcards
+                        .Any(x => x.UserId == userId && x.NextReviewDate <= today && x.Id != card.Id);
+
+                    if (!hasMoreDueCards)
+                    {
+                        _lessonPanelService.addActivityPoints(userId.Value, 15, "Daily Flashcard Session Completed - Bonus!");
+                    }
+                }
+            }
 
             _dbContext.SaveChanges();
         }

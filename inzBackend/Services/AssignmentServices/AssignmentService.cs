@@ -117,11 +117,24 @@ namespace inzBackend.Services.AssignmentServices
             if (!moduleExists)
                 throw new NotFoundException("Module not found");
 
+            var parsedDueDate = DateOnly.Parse(request.DueDate);
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var startOfWeek = today.AddDays(-diff);
+            var endOfWeek = startOfWeek.AddDays(6);
+
+            if (parsedDueDate < startOfWeek || parsedDueDate > endOfWeek)
+                throw new BadRequestException("Single assignments can only be assigned to days within the current week.");
+
+            if (parsedDueDate < today)
+                throw new BadRequestException("You cannot assign a module to a day in the past.");
+
             var assignment = new UserModuleAssignment
             {
                 UserId = request.UserId,
                 ModuleId = request.ModuleId,
-                DueDate = DateOnly.Parse(request.DueDate),
+                DueDate = parsedDueDate,
                 IsCompleted = false
             };
 
@@ -220,7 +233,7 @@ namespace inzBackend.Services.AssignmentServices
 
         private static ModuleAssignmentDto mapToModuleAssignmentDto(UserModuleAssignment x)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(DateTime.Today);
 
             return new ModuleAssignmentDto
             {
