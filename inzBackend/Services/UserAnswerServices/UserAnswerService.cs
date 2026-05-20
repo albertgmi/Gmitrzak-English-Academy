@@ -4,6 +4,7 @@ using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models;
 using inzBackend.Services.AiIntegrationServices;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Services.UserServices;
 
 namespace inzBackend.Services.UserAnswerServices
 {
@@ -11,19 +12,24 @@ namespace inzBackend.Services.UserAnswerServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IAiSentenceCheckerService _aiService;
+        private readonly IUserContextService _userContextService;
 
-        public UserAnswerService(GmitrzakEnglishAcademyDbContext dbContext, IAiSentenceCheckerService aiService)
+        public UserAnswerService(GmitrzakEnglishAcademyDbContext dbContext, IAiSentenceCheckerService aiService,
+            IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _aiService = aiService;
+            _userContextService = userContextService;
         }
 
-        public async Task<AnswerResultDto> submitAnswerAsync(int userId, SubmitAnswerRequest request)
+        public async Task<AnswerResultDto> submitAnswerAsync(SubmitAnswerRequest request)
         {
-            var sentence = _dbContext.SentenceStocks.FirstOrDefault(x => x.Id == request.SentenceStockId)
+            var userId = _userContextService.GetUserId!.Value;
+            var sentence = await _dbContext.SentenceStocks
+                .FirstOrDefaultAsync(x => x.Id == request.SentenceStockId)
                 ?? throw new NotFoundException("Sentence not found");
 
-            var checkedResult = await _aiService.CheckAnswerAsync(
+            var (result, explanation) = await _aiService.CheckAnswerAsync(
                 sentence.Polish, sentence.EnglishTranslation, request.UserAnswer);
 
             var answer = new UserSentenceAnswer
@@ -32,12 +38,30 @@ namespace inzBackend.Services.UserAnswerServices
                 AssignmentId = request.AssignmentId,
                 SentenceStockId = request.SentenceStockId,
                 UserAnswer = request.UserAnswer,
-                AiResult = checkedResult.result,
-                AiExplanation = checkedResult.explanation,
+                AiResult = result,
+                AiExplanation = explanation,
                 TeacherReviewed = false
             };
 
             _dbContext.UserSentenceAnswers.Add(answer);
+
+            if (result is "Correct" or "Partial")
+            {
+                var alreadyExists = await _dbContext.Sentences
+                    .AnyAsync(x => x.UserId == userId && x.Content == sentence.Polish);
+
+                if (!alreadyExists)
+                {
+                    _dbContext.Sentences.Add(new Sentence
+                    {
+                        UserId = userId,
+                        Content = sentence.Polish,
+                        Translation = request.UserAnswer,
+                        Notes = $"AI: {result}"
+                    });
+                }
+            }
+
             await _dbContext.SaveChangesAsync();
 
             return new AnswerResultDto
@@ -46,8 +70,8 @@ namespace inzBackend.Services.UserAnswerServices
                 Polish = sentence.Polish,
                 ExpectedTranslation = sentence.EnglishTranslation,
                 UserAnswer = request.UserAnswer,
-                AiResult = checkedResult.result,
-                AiExplanation = checkedResult.explanation
+                AiResult = result,
+                AiExplanation = explanation
             };
         }
 

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520200012_sentenceAssignableToModules")]
+    partial class sentenceAssignableToModules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -722,9 +725,6 @@ namespace inzBackend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsReviewed")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTimeOffset?>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -878,28 +878,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 52, 17, 228, DateTimeKind.Unspecified).AddTicks(1488), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 0, 11, 288, DateTimeKind.Unspecified).AddTicks(1390), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 52, 17, 228, DateTimeKind.Unspecified).AddTicks(1496), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 0, 11, 288, DateTimeKind.Unspecified).AddTicks(1396), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAED3DzL+wRfubYCEnJNtrlgZhDUnm7/l6iel21vc9tDeNu3nTJUCQoxhImofMG0de8w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIufEDEcS/BIGnXlkS5MW+bnsI9F57mJOEM+wHxGouIt7pAWFU6EdezptKnffSQOzg==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 52, 17, 276, DateTimeKind.Unspecified).AddTicks(5797), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 0, 11, 335, DateTimeKind.Unspecified).AddTicks(3187), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 52, 17, 276, DateTimeKind.Unspecified).AddTicks(5805), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 20, 20, 0, 11, 335, DateTimeKind.Unspecified).AddTicks(3194), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOAUK2hq+mI5DQWxwvFENI/k3AWIFFH/O01nMGJ1m2ZydUJhhakCeBjcnDt8CDErUw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELV2jGyr7KHrsK+dglDgx4i6xHahBSKyoFRdu/EC1wMu0/QHBrUMCu8eaBGMNgbPMw==",
                             Role = "User",
                             Username = "testauser"
                         });
@@ -1540,9 +1540,6 @@ namespace inzBackend.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsReviewed")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")

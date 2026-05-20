@@ -47,6 +47,7 @@ namespace inzBackend.Models
         public DbSet<UserSentenceAssignment> UserSentenceAssignments { get; set; }
         public DbSet<UserSentenceAnswer> UserSentenceAnswers { get; set; }
         public DbSet<UserOptions> UserOptions { get; set; }
+        public DbSet<ModuleSentenceSet> ModuleSentenceSets { get; set; }
 
         public override int SaveChanges()
         {

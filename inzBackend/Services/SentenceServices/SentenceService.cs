@@ -8,6 +8,8 @@ using inzBackend.Services.SentenceServices;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Services.AiIntegrationServices;
+using inzBackend.Models.ModuleSentenceModels;
+using Microsoft.AspNetCore.Mvc;
 
 public class SentenceService : ISentenceService
 {
@@ -204,6 +206,61 @@ public class SentenceService : ISentenceService
             DueDate = DateOnly.Parse(request.DueDate),
             IsCompleted = false
         });
+        _dbContext.SaveChanges();
+    }
+
+    public void assignToModule(AssignSetToModuleRequest request)
+    {
+        var exists = _dbContext.ModuleSentenceSets
+            .Any(x => x.ModuleId == request.ModuleId
+                   && x.SentenceSetId == request.SentenceSetId);
+        if (exists)
+            throw new NotFoundException("Module Sentence set was not found");
+
+        _dbContext.ModuleSentenceSets.Add(new ModuleSentenceSet
+        {
+            ModuleId = request.ModuleId,
+            SentenceSetId = request.SentenceSetId
+        });
+        _dbContext.SaveChanges();
+    }
+
+    public List<SentenceSetDto> getSetsForModule(int moduleId)
+    {
+        var setIds = _dbContext.ModuleSentenceSets
+            .Where(x => x.ModuleId == moduleId)
+            .Select(x => x.SentenceSetId)
+            .ToList();
+
+        return _dbContext.SentenceSets
+            .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
+            .Where(x => setIds.Contains(x.Id))
+            .Select(x => new SentenceSetDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                GroupName = x.GroupName,
+                Order = x.Order,
+                ItemCount = x.Items.Count,
+                Items = x.Items.OrderBy(i => i.Order).Select(i => new SentenceSetItemDto
+                {
+                    Id = i.Id,
+                    SentenceStockId = i.SentenceStockId,
+                    Polish = i.SentenceStock.Polish,
+                    EnglishTranslation = i.SentenceStock.EnglishTranslation,
+                    Order = i.Order
+                }).ToList()
+            })
+            .ToList();
+    }
+    public void removeSetFromModule(int moduleId, int setId)
+    {
+        var link = _dbContext.ModuleSentenceSets
+            .FirstOrDefault(x => x.ModuleId == moduleId && x.SentenceSetId == setId);
+        if (link is null)
+            throw new NotFoundException("Module Sentence set was not found");
+
+        _dbContext.ModuleSentenceSets.Remove(link);
         _dbContext.SaveChanges();
     }
 }

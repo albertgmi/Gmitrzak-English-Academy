@@ -1,16 +1,14 @@
-﻿using inzBackend.Entities;
-using inzBackend.Models.AIAnswerCheckingModels;
+﻿using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
-using inzBackend.Models;
-using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.SentenceServices;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Services.UserAnswerServices;
+using inzBackend.Models.ModuleSentenceModels;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 [Route("api/sentence")]
 [ApiController]
@@ -86,12 +84,10 @@ public class SentenceController : ControllerBase
     }
 
     [HttpPost("answer")]
-    [Authorize]
     public async Task<ActionResult<AnswerResultDto>> submitAnswer([FromBody] SubmitAnswerRequest request)
     {
-        var userId = _userContextService.GetUserId!.Value;
-        var result = await _userAnswerService.submitAnswerAsync(userId, request);
-        return Ok(result);
+        var result = await _userAnswerService.submitAnswerAsync(request);
+        return result;
     }
 
     [HttpGet("answers/{assignmentId}")]
@@ -106,5 +102,25 @@ public class SentenceController : ControllerBase
     {
         _userAnswerService.overrideAnswer(answerId, request);
         return Ok();
+    }
+
+    [HttpPost("assign-to-module")]
+    public ActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
+    {
+        _sentenceService.assignToModule(request);
+        return Ok();
+    }
+
+    [HttpGet("module/{moduleId}/sets")]
+    public ActionResult<List<SentenceSetDto>> getSetsForModule(int moduleId)
+    {
+        return _sentenceService.getSetsForModule(moduleId);
+    }
+
+    [HttpDelete("module/{moduleId}/set/{setId}")]
+    public ActionResult removeSetFromModule(int moduleId, int setId)
+    {
+        _sentenceService.removeSetFromModule(moduleId, setId);
+        return NoContent();
     }
 }

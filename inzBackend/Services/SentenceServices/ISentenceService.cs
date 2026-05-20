@@ -1,4 +1,5 @@
 ﻿using inzBackend.Models.AIAnswerCheckingModels;
+using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
 
@@ -15,5 +16,8 @@ namespace inzBackend.Services.SentenceServices
         SentenceSetDto createSet(CreateSentenceSetRequest request);
         void deleteSet(int id);
         void assignToUser(AssignSentenceRequest request);
+        void assignToModule(AssignSetToModuleRequest request);
+        List<SentenceSetDto> getSetsForModule(int moduleId);
+        void removeSetFromModule(int moduleId, int setId);
     }
 }
