@@ -1,0 +1,17 @@
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore;
+
+namespace inzBackend.Entities.Configurations
+{
+    public class AnnouncementConfiguration : IEntityTypeConfiguration<Announcement>
+    {
+        public void Configure(EntityTypeBuilder<Announcement> builder)
+        {
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Title).IsRequired().HasMaxLength(300);
+            builder.HasOne(x => x.Sender).WithMany()
+                .HasForeignKey(x => x.SenderId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasQueryFilter(x => !x.IsDeleted);
+        }
+    }
+}
