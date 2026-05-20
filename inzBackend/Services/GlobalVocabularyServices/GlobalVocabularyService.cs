@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Exceptions;
-using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Models;
-using inzBackend.Services.UserServices;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.AdminLearningModels;
 
@@ -140,6 +138,49 @@ namespace inzBackend.Services.GlobalVocabularyServices
             };
 
             _dbContext.Flashcards.Add(flashcard);
+            _dbContext.SaveChanges();
+        }
+
+        public void assignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request)
+        {
+            if (request.VocabularyIds == null || !request.VocabularyIds.Any())
+                return;
+
+            var validVocabularyIds = _dbContext.Vocabulary
+                .Where(x => request.VocabularyIds.Contains(x.Id))
+                .Select(x => x.Id)
+                .ToList();
+
+            if (!validVocabularyIds.Any())
+                throw new NotFoundException("None of the specified vocabulary entries were found in global database");
+
+            var alreadyAssignedIds = _dbContext.Flashcards
+                .Where(x => x.UserId == request.StudentUserId && validVocabularyIds.Contains(x.VocabularyId))
+                .Select(x => x.VocabularyId)
+                .ToList();
+
+            var idsToAssign = validVocabularyIds.Except(alreadyAssignedIds).ToList();
+
+            if (!idsToAssign.Any())
+                return;
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var flashcardsToAdd = new List<Flashcard>();
+
+            foreach (var vocabId in idsToAssign)
+            {
+                flashcardsToAdd.Add(new Flashcard
+                {
+                    UserId = request.StudentUserId,
+                    VocabularyId = vocabId,
+                    EaseFactor = 250,
+                    Interval = 0,
+                    IsLeech = false,
+                    NextReviewDate = today
+                });
+            }
+
+            _dbContext.Flashcards.AddRange(flashcardsToAdd);
             _dbContext.SaveChanges();
         }
     }

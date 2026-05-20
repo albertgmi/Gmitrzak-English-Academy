@@ -2,6 +2,7 @@
 using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.StudentCourseModels;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,13 +12,14 @@ namespace inzBackend.Services.StudentCourseServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly ILessonPanelService _lessonPanelService;
 
-        public StudentCourseService(
-            GmitrzakEnglishAcademyDbContext dbContext,
-            IUserContextService userContextService)
+        public StudentCourseService(GmitrzakEnglishAcademyDbContext dbContext,
+            IUserContextService userContextService, ILessonPanelService lessonPanelService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _lessonPanelService = lessonPanelService;
         }
 
         public List<StudentAssignmentDto> getStudentsAssignments()
@@ -59,6 +61,12 @@ namespace inzBackend.Services.StudentCourseServices
                 CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow)
             });
 
+            _lessonPanelService.addActivityPoints(
+                userId.Value,
+                50,
+                $"Completed curriculum module (ID: {matrixModuleId})"
+            );
+
             _dbContext.SaveChanges();
         }
 
@@ -72,6 +80,12 @@ namespace inzBackend.Services.StudentCourseServices
             if (completion is null)
                 throw new BadRequestException($"Matrix module is not completed");
 
+            _lessonPanelService.addActivityPoints(
+                userId.Value,
+                -50,
+                $"Reversed completion of curriculum module (ID: {matrixModuleId})"
+            );
+
             _dbContext.UserMatrixModuleCompletions.Remove(completion);
             _dbContext.SaveChanges();
         }
@@ -79,7 +93,11 @@ namespace inzBackend.Services.StudentCourseServices
         public List<StudentModuleDto> getSingleModules()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.Now);
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var startOfWeek = today.AddDays(-diff);
+            var endOfWeek = startOfWeek.AddDays(6);
 
             var matrixModuleIds = _dbContext.UserMatrixAssignments
                 .Where(x => x.UserId == userId)
@@ -92,7 +110,10 @@ namespace inzBackend.Services.StudentCourseServices
                 .Where(x =>
                     x.UserId == userId &&
                     !matrixModuleIds.Contains(x.ModuleId) &&
-                    !x.IsCompleted) 
+                    !x.IsCompleted &&
+                    x.DueDate >= startOfWeek &&
+                    x.DueDate <= endOfWeek &&
+                    today <= x.DueDate)
                 .ToList();
 
             return assignments.Select((x, index) => new StudentModuleDto
@@ -101,14 +122,11 @@ namespace inzBackend.Services.StudentCourseServices
                 ModuleId = x.ModuleId,
                 Name = x.Module.Name,
                 Description = x.Module.Description,
-
                 Order = index + 1,
                 WeekNumber = 0,
                 DayOfWeek = 0,
-
                 UnlockDate = x.DueDate,
-                IsUnlocked = today >= x.DueDate,
-
+                IsUnlocked = true,
                 IsCompleted = x.IsCompleted
             }).ToList();
         }
@@ -125,6 +143,11 @@ namespace inzBackend.Services.StudentCourseServices
 
             assignment.IsCompleted = true;
 
+            _lessonPanelService.addActivityPoints(
+                userId.Value,
+                30,
+                $"Completed additional assignment (ID: {id})"
+            );
             _dbContext.SaveChanges();
         }
 
@@ -140,6 +163,11 @@ namespace inzBackend.Services.StudentCourseServices
 
             assignment.IsCompleted = false;
 
+            _lessonPanelService.addActivityPoints(
+                userId.Value,
+                -30,
+                $"Reversed completion of additional assignment (ID: {id})"
+            );
             _dbContext.SaveChanges();
         }
 
