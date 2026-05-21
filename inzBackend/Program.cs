@@ -47,6 +47,7 @@ using inzBackend.Services.AnnouncementsServices;
 using inzBackend.Services.SentenceServices;
 using inzBackend.Services.UserOptionsServices;
 using inzBackend.Services.UserAnswerServices;
+using inzBackend.Services.ReportServices;
 
 namespace inzBackend
 {
@@ -145,6 +146,7 @@ namespace inzBackend
             builder.Services.AddScoped<IUserOptionsService, UserOptionsService>();
             builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
             builder.Services.AddScoped<IAiSentenceCheckerService, AiSentenceCheckerService>();
+            builder.Services.AddScoped<IModuleReportExportService, ModuleReportExportService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();

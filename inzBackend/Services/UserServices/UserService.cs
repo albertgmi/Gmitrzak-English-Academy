@@ -82,6 +82,23 @@ namespace inzBackend.Services.UserServices
                 expires: expires,
                 signingCredentials: cred);
             var tokenhandler = new JwtSecurityTokenHandler();
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var alreadyLoggedToday = _dbContext.UserLoginLogs
+                .Any(x => x.UserId == user.Id && x.LoginDate == today);
+
+            if (!alreadyLoggedToday)
+            {
+                _dbContext.UserLoginLogs.Add(new UserLoginLog
+                {
+                    UserId = user.Id,
+                    LoginDate = today,
+                    LoginAt = DateTimeOffset.UtcNow
+                });
+                _dbContext.SaveChanges();
+            }
+
             return tokenhandler.WriteToken(token);
         }
 

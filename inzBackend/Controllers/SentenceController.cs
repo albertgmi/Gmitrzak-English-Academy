@@ -1,38 +1,30 @@
 ﻿using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
+using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Services.SentenceServices;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using inzBackend.Services.UserAnswerServices;
-using inzBackend.Models.ModuleSentenceModels;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 [Route("api/sentence")]
 [ApiController]
-[Authorize(Roles = "Admin")]
 public class SentenceController : ControllerBase
 {
     private readonly ISentenceService _sentenceService;
-    private readonly IUserAnswerService _userAnswerService;
-    private readonly IUserContextService _userContextService;
 
-    public SentenceController(
-        ISentenceService sentenceService,
-        IUserAnswerService userAnswerService,
-        IUserContextService userContextService)
+    public SentenceController(ISentenceService sentenceService)
     {
         _sentenceService = sentenceService;
-        _userAnswerService = userAnswerService;
-        _userContextService = userContextService;
     }
 
     [HttpGet("stock")]
-    public List<SentenceStockDto> getStock() => _sentenceService.getAllStock();
+    [Authorize(Roles = "Admin")]
+    public List<SentenceStockDto> getStock() =>
+        _sentenceService.getAllStock();
 
     [HttpPost("stock")]
+    [Authorize(Roles = "Admin")]
     public IActionResult createStock([FromBody] CreateSentenceStockRequest request)
     {
         _sentenceService.createStock(request);
@@ -40,6 +32,7 @@ public class SentenceController : ControllerBase
     }
 
     [HttpDelete("stock/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult deleteStock(int id)
     {
         _sentenceService.deleteStock(id);
@@ -47,6 +40,7 @@ public class SentenceController : ControllerBase
     }
 
     [HttpPost("stock/upload")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> uploadStock(IFormFile file)
     {
         var allowedExtensions = new[] { ".xlsx", ".xls" };
@@ -60,65 +54,44 @@ public class SentenceController : ControllerBase
     }
 
     [HttpGet("sets")]
-    public List<SentenceSetGroupDto> getSets() => _sentenceService.getAllSetsGrouped();
+    [Authorize(Roles = "Admin")]
+    public List<SentenceSetGroupDto> getSets() =>
+        _sentenceService.getAllSetsGrouped();
 
     [HttpGet("sets/{id}")]
-    public SentenceSetDto getSet(int id) => _sentenceService.getSet(id);
+    [Authorize(Roles = "Admin")]
+    public SentenceSetDto getSet(int id) =>
+        _sentenceService.getSet(id);
 
     [HttpPost("sets")]
+    [Authorize(Roles = "Admin")]
     public SentenceSetDto createSet([FromBody] CreateSentenceSetRequest request) =>
         _sentenceService.createSet(request);
 
     [HttpDelete("sets/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult deleteSet(int id)
     {
         _sentenceService.deleteSet(id);
         return NoContent();
     }
 
-    [HttpPost("assign")]
-    public IActionResult assign([FromBody] AssignSentenceRequest request)
-    {
-        _sentenceService.assignToUser(request);
-        return Ok();
-    }
-
-    [HttpPost("answer")]
-    public async Task<ActionResult<AnswerResultDto>> submitAnswer([FromBody] SubmitAnswerRequest request)
-    {
-        var result = await _userAnswerService.submitAnswerAsync(request);
-        return result;
-    }
-
-    [HttpGet("answers/{assignmentId}")]
-    public ActionResult<List<AnswerResultDto>> getAnswers(int assignmentId)
-    {
-        var results = _userAnswerService.getAnswersForAssignment(assignmentId);
-        return Ok(results);
-    }
-
-    [HttpPatch("answers/{answerId}/override")]
-    public IActionResult overrideAnswer(int answerId, [FromBody] TeacherOverrideRequest request)
-    {
-        _userAnswerService.overrideAnswer(answerId, request);
-        return Ok();
-    }
-
     [HttpPost("assign-to-module")]
-    public ActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
+    [Authorize(Roles = "Admin")]
+    public IActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
     {
         _sentenceService.assignToModule(request);
         return Ok();
     }
 
     [HttpGet("module/{moduleId}/sets")]
-    public ActionResult<List<SentenceSetDto>> getSetsForModule(int moduleId)
-    {
-        return _sentenceService.getSetsForModule(moduleId);
-    }
+    [Authorize(Roles = "Admin")]
+    public List<SentenceSetDto> getSetsForModule(int moduleId) =>
+        _sentenceService.getSetsForModule(moduleId);
 
     [HttpDelete("module/{moduleId}/set/{setId}")]
-    public ActionResult removeSetFromModule(int moduleId, int setId)
+    [Authorize(Roles = "Admin")]
+    public IActionResult removeSetFromModule(int moduleId, int setId)
     {
         _sentenceService.removeSetFromModule(moduleId, setId);
         return NoContent();

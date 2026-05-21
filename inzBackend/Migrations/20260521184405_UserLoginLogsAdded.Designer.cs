@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521184405_UserLoginLogsAdded")]
+    partial class UserLoginLogsAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -702,9 +705,6 @@ namespace inzBackend.Migrations
                     b.Property<int>("SentenceStockId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("TeacherExplanation")
-                        .HasColumnType("text");
-
                     b.Property<string>("TeacherOverride")
                         .HasColumnType("text");
 
@@ -913,28 +913,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 862, DateTimeKind.Unspecified).AddTicks(9897), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 18, 44, 3, 202, DateTimeKind.Unspecified).AddTicks(5499), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 862, DateTimeKind.Unspecified).AddTicks(9903), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 18, 44, 3, 202, DateTimeKind.Unspecified).AddTicks(5512), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEYi3xg4SZ6gL6yoKG0bGB5LbKL812zSidyZW0WYxU1nv9kbPoowe6NsF38fauTGAw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBs1dh3/dJCgIJZtBGlx6dk6EMSS2owoItkBzQF+Ya5jaTFzqsC3EU+NzBC50Rifrw==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 934, DateTimeKind.Unspecified).AddTicks(4268), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 18, 44, 3, 249, DateTimeKind.Unspecified).AddTicks(9429), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 934, DateTimeKind.Unspecified).AddTicks(4275), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 18, 44, 3, 249, DateTimeKind.Unspecified).AddTicks(9435), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFW2Skta+gSHN0XAHfktybcn5HRHs+GxKFp+Bv6OYcWq9Dhl7ckGFnU+XMdQ8xN0lA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELNGdKSY19GiJ0lyLKb/KNJ9dl8HvXvGgAZ3p43rOMotrMOkbsCs/vqU0yDqenup4Q==",
                             Role = "User",
                             Username = "testauser"
                         });
