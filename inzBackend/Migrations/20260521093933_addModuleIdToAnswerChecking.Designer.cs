@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521093933_addModuleIdToAnswerChecking")]
+    partial class addModuleIdToAnswerChecking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -497,33 +500,6 @@ namespace inzBackend.Migrations
                     b.ToTable("TheaterItems");
                 });
 
-            modelBuilder.Entity("inzBackend.Entities.UserLoginLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("LoginAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly>("LoginDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "LoginDate");
-
-                    b.ToTable("UserLoginLogs");
-                });
-
             modelBuilder.Entity("inzBackend.Entities.UserMatrixModuleCompletion", b =>
                 {
                     b.Property<int>("Id")
@@ -701,9 +677,6 @@ namespace inzBackend.Migrations
 
                     b.Property<int>("SentenceStockId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("TeacherExplanation")
-                        .HasColumnType("text");
 
                     b.Property<string>("TeacherOverride")
                         .HasColumnType("text");
@@ -913,28 +886,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 862, DateTimeKind.Unspecified).AddTicks(9897), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 39, 31, 441, DateTimeKind.Unspecified).AddTicks(9443), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 862, DateTimeKind.Unspecified).AddTicks(9903), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 39, 31, 441, DateTimeKind.Unspecified).AddTicks(9454), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEYi3xg4SZ6gL6yoKG0bGB5LbKL812zSidyZW0WYxU1nv9kbPoowe6NsF38fauTGAw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKW8/pBfobn1g4rm4cHfjsrSl3R1evZjgDuIHsxrocfcMrGAhbL9JczeIKBqx/kn5g==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 934, DateTimeKind.Unspecified).AddTicks(4268), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 39, 31, 571, DateTimeKind.Unspecified).AddTicks(2811), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 934, DateTimeKind.Unspecified).AddTicks(4275), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 39, 31, 571, DateTimeKind.Unspecified).AddTicks(2820), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFW2Skta+gSHN0XAHfktybcn5HRHs+GxKFp+Bv6OYcWq9Dhl7ckGFnU+XMdQ8xN0lA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL8skPsj8eC6+r16oGzh72JODua7kt9waRmmtpr9yNTfhxPk0DjkHkPGfxk5ba7WOw==",
                             Role = "User",
                             Username = "testauser"
                         });
@@ -1787,17 +1760,6 @@ namespace inzBackend.Migrations
                     b.Navigation("Student");
 
                     b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("inzBackend.Entities.UserLoginLog", b =>
-                {
-                    b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Entities.UserMatrixModuleCompletion", b =>

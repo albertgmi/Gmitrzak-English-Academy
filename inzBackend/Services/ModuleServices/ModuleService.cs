@@ -35,6 +35,7 @@ namespace inzBackend.Services.ModuleServices
             {
                 Name = request.Name,
                 Description = request.Description,
+                Category = request.Category,
                 IsHidden = request.IsHidden
             };
 
@@ -65,6 +66,7 @@ namespace inzBackend.Services.ModuleServices
 
             module.Name = request.Name;
             module.Description = request.Description;
+            module.Category = request.Category;
             module.IsHidden = request.IsHidden;
 
             _dbContext.SaveChanges();

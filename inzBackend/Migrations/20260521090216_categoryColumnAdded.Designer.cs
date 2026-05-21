@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521090216_categoryColumnAdded")]
+    partial class categoryColumnAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -497,33 +500,6 @@ namespace inzBackend.Migrations
                     b.ToTable("TheaterItems");
                 });
 
-            modelBuilder.Entity("inzBackend.Entities.UserLoginLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("LoginAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly>("LoginDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "LoginDate");
-
-                    b.ToTable("UserLoginLogs");
-                });
-
             modelBuilder.Entity("inzBackend.Entities.UserMatrixModuleCompletion", b =>
                 {
                     b.Property<int>("Id")
@@ -681,6 +657,9 @@ namespace inzBackend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("AssignmentId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -696,14 +675,8 @@ namespace inzBackend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<int>("ModuleId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("SentenceStockId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("TeacherExplanation")
-                        .HasColumnType("text");
 
                     b.Property<string>("TeacherOverride")
                         .HasColumnType("text");
@@ -718,18 +691,13 @@ namespace inzBackend.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserSentenceAssignmentId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ModuleId");
+                    b.HasIndex("AssignmentId");
 
                     b.HasIndex("SentenceStockId");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserSentenceAssignmentId");
 
                     b.ToTable("UserSentenceAnswers");
                 });
@@ -913,28 +881,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 862, DateTimeKind.Unspecified).AddTicks(9897), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 615, DateTimeKind.Unspecified).AddTicks(6570), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 862, DateTimeKind.Unspecified).AddTicks(9903), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 615, DateTimeKind.Unspecified).AddTicks(6580), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEYi3xg4SZ6gL6yoKG0bGB5LbKL812zSidyZW0WYxU1nv9kbPoowe6NsF38fauTGAw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL/lkPGMNlrnOKTWtueeaw2CsRENqmFucnz8or4/btBP6k4VEj7l9qxF0J74P3oCng==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 934, DateTimeKind.Unspecified).AddTicks(4268), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 726, DateTimeKind.Unspecified).AddTicks(691), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 20, 56, 17, 934, DateTimeKind.Unspecified).AddTicks(4275), new TimeSpan(0, 0, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 726, DateTimeKind.Unspecified).AddTicks(698), new TimeSpan(0, 0, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFW2Skta+gSHN0XAHfktybcn5HRHs+GxKFp+Bv6OYcWq9Dhl7ckGFnU+XMdQ8xN0lA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDiJ+RjBHwo+UnvHNbjPXH9GSx/QXOcI2avKc4AlY+XaNXQsAazF6VIM6Mn70Mo2ww==",
                             Role = "User",
                             Username = "testauser"
                         });
@@ -1789,17 +1757,6 @@ namespace inzBackend.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("inzBackend.Entities.UserLoginLog", b =>
-                {
-                    b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("inzBackend.Entities.UserMatrixModuleCompletion", b =>
                 {
                     b.HasOne("inzBackend.Models.MatrixModule", "MatrixModule")
@@ -1851,9 +1808,9 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Entities.UserSentenceAnswer", b =>
                 {
-                    b.HasOne("inzBackend.Models.Module", "Module")
-                        .WithMany()
-                        .HasForeignKey("ModuleId")
+                    b.HasOne("inzBackend.Entities.UserSentenceAssignment", "Assignment")
+                        .WithMany("Answers")
+                        .HasForeignKey("AssignmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1869,11 +1826,7 @@ namespace inzBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("inzBackend.Entities.UserSentenceAssignment", null)
-                        .WithMany("Answers")
-                        .HasForeignKey("UserSentenceAssignmentId");
-
-                    b.Navigation("Module");
+                    b.Navigation("Assignment");
 
                     b.Navigation("SentenceStock");
 

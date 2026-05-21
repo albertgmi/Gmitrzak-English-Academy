@@ -24,27 +24,21 @@ namespace inzBackend.Services.DashboardServices
             var daysFromMonday = ((int)DateTime.UtcNow.DayOfWeek + 6) % 7;
             var weekStart = today.AddDays(-daysFromMonday);
 
-            var totalStudents = _dbContext
-                .Users
+            var totalStudents = _dbContext.Users
                 .Count(x => x.Role == Enums.UserRole.User && x.IsActive);
 
-            var activeStudentsThisWeek = _dbContext
-                .ActivityPoints
-                .Where(x => x.PointDate >= weekStart)
+            var activeStudentsThisWeek = _dbContext.UserLoginLogs
+                .Where(x => x.LoginDate >= weekStart)
                 .Select(x => x.UserId)
                 .Distinct()
                 .Count();
 
-            var totalFlashcards = _dbContext
-                .Flashcards
-                .Count();
+            var totalFlashcards = _dbContext.Flashcards.Count();
 
-            var totalPending = _dbContext
-                .UserModuleAssignments
+            var totalPending = _dbContext.UserModuleAssignments
                 .Count(x => !x.IsCompleted && x.DueDate >= today);
 
-            var recentGrades = _dbContext
-                .Grades
+            var recentGrades = _dbContext.Grades
                 .Include(x => x.User)
                 .OrderByDescending(x => x.GradeDate)
                 .Take(8)
@@ -57,8 +51,7 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
 
-            var upcomingAssignments = _dbContext
-                .UserModuleAssignments
+            var upcomingAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => !x.IsCompleted && x.DueDate >= today)
                 .OrderBy(x => x.DueDate)
@@ -72,8 +65,7 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
 
-            var allPoints = _dbContext
-                .ActivityPoints
+            var allPoints = _dbContext.ActivityPoints
                 .GroupBy(x => x.UserId)
                 .Select(g => new
                 {
@@ -85,11 +77,8 @@ namespace inzBackend.Services.DashboardServices
                 .Take(5)
                 .ToList();
 
-            var userIds = allPoints
-                .Select(x => x.UserId)
-                .ToList();
-            var users = _dbContext
-                .Users
+            var userIds = allPoints.Select(x => x.UserId).ToList();
+            var users = _dbContext.Users
                 .Where(x => userIds.Contains(x.Id))
                 .ToDictionary(x => x.Id, x => x.Username);
 
@@ -120,28 +109,22 @@ namespace inzBackend.Services.DashboardServices
             var weekStart = today.AddDays(-daysFromMonday - 7);
             var weekEnd = weekStart.AddDays(6);
 
-            var user = _dbContext
-                .Users
-                .FirstOrDefault(x => x.Id == userId);
+            var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
 
-            var totalPoints = _dbContext
-                .ActivityPoints
+            var totalPoints = _dbContext.ActivityPoints
                 .Where(x => x.UserId == userId)
                 .Sum(x => (int?)x.Points) ?? 0;
 
-            var dueToday = _dbContext
-                .Flashcards
+            var dueToday = _dbContext.Flashcards
                 .Count(x => x.UserId == userId && x.NextReviewDate <= today);
 
-            var studiedTodayIds = _dbContext
-                .FlashcardStudyLogs
+            var studiedTodayCount = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId && x.StudyDate == today)
                 .Select(x => x.FlashcardId)
                 .Distinct()
                 .Count();
 
-            var activeAssignments = _dbContext
-                .UserModuleAssignments
+            var activeAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == userId && !x.IsCompleted && x.DueDate >= today)
                 .OrderBy(x => x.DueDate)
@@ -155,14 +138,12 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
 
-            var completedMatrixModuleIds = _dbContext
-                .UserMatrixModuleCompletions
+            var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
                 .Where(x => x.UserId == userId)
                 .Select(x => x.MatrixModuleId)
                 .ToList();
 
-            var assignments = _dbContext
-                .UserMatrixAssignments
+            var assignments = _dbContext.UserMatrixAssignments
                 .Include(x => x.Matrix)
                     .ThenInclude(m => m.MatrixModules)
                         .ThenInclude(mm => mm.Module)
@@ -179,7 +160,8 @@ namespace inzBackend.Services.DashboardServices
                         .AddDays((mm.WeekNumber - 1) * a.Matrix.RefreshIntervalDays)
                         .AddDays(mm.DayOfWeek - 1)
                 }))
-                .Where(x => x.UnlockDate >= today && !completedMatrixModuleIds.Contains(x.MatrixModuleId))
+                .Where(x => x.UnlockDate >= today
+                         && !completedMatrixModuleIds.Contains(x.MatrixModuleId))
                 .OrderBy(x => x.UnlockDate)
                 .Take(5)
                 .Select(x => new UpcomingModuleDto
@@ -191,48 +173,51 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
 
-            var agenda = _dbContext
-                .Agendas
-                .FirstOrDefault(x => x.UserId == userId);
+            var agenda = _dbContext.Agendas.FirstOrDefault(x => x.UserId == userId);
 
-            var lastWeekPoints = _dbContext
-                .ActivityPoints
-                .Where(x => x.UserId == userId && x.PointDate >= weekStart && x.PointDate <= weekEnd)
+            var lastWeekPoints = _dbContext.ActivityPoints
+                .Where(x => x.UserId == userId
+                         && x.PointDate >= weekStart
+                         && x.PointDate <= weekEnd)
                 .Sum(x => (int?)x.Points) ?? 0;
 
-            var lastWeekFlashcards = _dbContext
-                .FlashcardStudyLogs
-                .Where(x => x.UserId == userId && x.StudyDate >= weekStart && x.StudyDate <= weekEnd)
+            var lastWeekFlashcards = _dbContext.FlashcardStudyLogs
+                .Where(x => x.UserId == userId
+                         && x.StudyDate >= weekStart
+                         && x.StudyDate <= weekEnd)
                 .Sum(x => (int?)(x.EasyCount + x.HardCount + x.IncorrectCount)) ?? 0;
 
-            var lastWeekListening = _dbContext
-                .ListeningReports
-                .Where(x => x.UserId == userId && x.ReportDate >= weekStart && x.ReportDate <= weekEnd)
+            var lastWeekListening = _dbContext.ListeningReports
+                .Where(x => x.UserId == userId
+                         && x.ReportDate >= weekStart
+                         && x.ReportDate <= weekEnd)
                 .Sum(x => (int?)x.EpisodeCount) ?? 0;
 
             var criteriaMet = lastWeekPoints >= (agenda?.ActivityPointTarget ?? 500)
                            && lastWeekFlashcards >= (agenda?.FlashcardTarget ?? 50)
                            && lastWeekListening >= (agenda?.ListeningEpisodeTarget ?? 1);
 
-            var studyDates = _dbContext.FlashcardStudyLogs
+            var loginDates = _dbContext.UserLoginLogs
                 .Where(x => x.UserId == userId)
-                .Select(x => x.StudyDate)
+                .Select(x => x.LoginDate)
                 .Distinct()
                 .OrderByDescending(x => x)
                 .ToList();
 
-            // TODO poprawic day streak
             var streak = 0;
             var check = today;
-            foreach (var date in studyDates)
+
+            foreach (var date in loginDates)
             {
                 if (date == check)
                 {
                     streak++;
                     check = check.AddDays(-1);
                 }
-                else
+                else if (date < check)
+                {
                     break;
+                }
             }
 
             return new StudentDashboardDto
@@ -240,7 +225,7 @@ namespace inzBackend.Services.DashboardServices
                 Username = user?.Username ?? string.Empty,
                 TotalActivityPoints = totalPoints,
                 FlashcardsDueToday = dueToday,
-                FlashcardsStudiedToday = studiedTodayIds,
+                FlashcardsStudiedToday = studiedTodayCount,
                 ActiveAssignments = activeAssignments,
                 UpcomingModules = upcomingModules,
                 LastWeekCriteriaMet = criteriaMet,

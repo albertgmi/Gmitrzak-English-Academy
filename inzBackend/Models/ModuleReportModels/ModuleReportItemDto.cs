@@ -1,16 +1,15 @@
-﻿namespace inzBackend.Models.AIAnswerCheckingModels
+﻿namespace inzBackend.Models.ModuleReportModels
 {
-    public class AnswerResultDto
+    public class ModuleReportItemDto
     {
-        public int Id { get; set; }
+        public int Order { get; set; }
         public string Polish { get; set; } = string.Empty;
         public string ExpectedTranslation { get; set; } = string.Empty;
-        public string UserAnswer { get; set; } = string.Empty;
+        public string StudentAnswer { get; set; } = string.Empty;
         public string AiResult { get; set; } = string.Empty;
         public string AiExplanation { get; set; } = string.Empty;
         public string? TeacherOverride { get; set; }
         public string? TeacherExplanation { get; set; }
-        public bool TeacherReviewed { get; set; }
-        public string FinalResult => TeacherOverride ?? AiResult;
+        public string FinalResult { get; set; } = string.Empty;
     }
 }

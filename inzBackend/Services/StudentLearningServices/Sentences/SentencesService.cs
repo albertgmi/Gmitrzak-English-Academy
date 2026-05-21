@@ -80,18 +80,11 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
         {
             var userId = _userContextService.GetUserId!.Value;
 
-            var matrixAssignment = _dbContext.UserMatrixModuleCompletions
-                .Include(x => x.MatrixModule).ThenInclude(mm => mm.Module)
-                .FirstOrDefault(x => x.UserId == userId
-                                  && x.MatrixModule.ModuleId == moduleId);
-
             var directAssignment = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
 
-            var moduleName = directAssignment?.Module.Name
-                ?? matrixAssignment?.MatrixModule.Module.Name
-                ?? "Module";
+            var moduleName = directAssignment?.Module.Name ?? "Module";
 
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
@@ -102,20 +95,32 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                 .Include(x => x.SentenceStock)
                 .Where(x => setIds.Contains(x.SentenceSetId))
                 .OrderBy(x => x.SentenceSetId).ThenBy(x => x.Order)
-                .Select(x => new ModuleSentenceItemDto
-                {
-                    SentenceStockId = x.SentenceStockId,
-                    Polish = x.SentenceStock.Polish,
-                    Order = x.Order.ToString()
-                })
                 .ToList();
+
+            var existingAnswers = _dbContext.UserSentenceAnswers
+                .Where(x => x.UserId == userId && x.ModuleId == moduleId)
+                .ToDictionary(x => x.SentenceStockId);
 
             return new ModuleSentenceSessionDto
             {
                 ModuleId = moduleId,
                 ModuleName = moduleName,
-                AssignmentId = directAssignment?.Id ?? 0,
-                Sentences = sentences
+                Sentences = sentences.Select(x =>
+                {
+                    existingAnswers.TryGetValue(x.SentenceStockId, out var prev);
+                    return new ModuleSentenceItemDto
+                    {
+                        SentenceStockId = x.SentenceStockId,
+                        Polish = x.SentenceStock.Polish,
+                        Order = x.Order,
+                        PreviousAnswer = prev?.UserAnswer,
+                        PreviousResult = prev != null
+                            ? (prev.TeacherOverride ?? prev.AiResult)
+                            : null,
+                        PreviousExplanation = prev?.AiExplanation,
+                        PreviousAnswerId = prev?.Id
+                    };
+                }).ToList()
             };
         }
 

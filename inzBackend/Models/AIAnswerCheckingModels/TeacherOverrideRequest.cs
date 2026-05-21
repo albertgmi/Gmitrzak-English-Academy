@@ -2,6 +2,7 @@
 {
     public class TeacherOverrideRequest
     {
-        public string Override { get; set; } = string.Empty;
+        public string? Override { get; set; }
+        public string? TeacherExplanation { get; set; }
     }
 }
