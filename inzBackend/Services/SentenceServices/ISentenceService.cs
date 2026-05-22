@@ -19,5 +19,6 @@ namespace inzBackend.Services.SentenceServices
         void assignToModule(AssignSetToModuleRequest request);
         List<SentenceSetDto> getSetsForModule(int moduleId);
         void removeSetFromModule(int moduleId, int setId);
+        void updateStock(int id, UpdateSentenceStockRequest request);
     }
 }
