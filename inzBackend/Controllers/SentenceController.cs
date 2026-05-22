@@ -25,7 +25,7 @@ public class SentenceController : ControllerBase
 
     [HttpPost("stock")]
     [Authorize(Roles = "Admin")]
-    public IActionResult createStock([FromBody] CreateSentenceStockRequest request)
+    public ActionResult createStock([FromBody] CreateSentenceStockRequest request)
     {
         _sentenceService.createStock(request);
         return Ok();
@@ -33,7 +33,7 @@ public class SentenceController : ControllerBase
 
     [HttpDelete("stock/{id}")]
     [Authorize(Roles = "Admin")]
-    public IActionResult deleteStock(int id)
+    public ActionResult deleteStock(int id)
     {
         _sentenceService.deleteStock(id);
         return NoContent();
@@ -70,7 +70,7 @@ public class SentenceController : ControllerBase
 
     [HttpDelete("sets/{id}")]
     [Authorize(Roles = "Admin")]
-    public IActionResult deleteSet(int id)
+    public ActionResult deleteSet(int id)
     {
         _sentenceService.deleteSet(id);
         return NoContent();
@@ -78,7 +78,7 @@ public class SentenceController : ControllerBase
 
     [HttpPost("assign-to-module")]
     [Authorize(Roles = "Admin")]
-    public IActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
+    public ActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
     {
         _sentenceService.assignToModule(request);
         return Ok();
@@ -95,5 +95,13 @@ public class SentenceController : ControllerBase
     {
         _sentenceService.removeSetFromModule(moduleId, setId);
         return NoContent();
+    }
+
+    [HttpPut("stock/{id}")]
+    [Authorize(Roles = "Admin")]
+    public ActionResult updateStock(int id, [FromBody] UpdateSentenceStockRequest request)
+    {
+        _sentenceService.updateStock(id, request);
+        return Ok();
     }
 }
