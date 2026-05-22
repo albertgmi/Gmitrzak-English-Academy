@@ -24,8 +24,7 @@ namespace inzBackend.Controllers
 
         [HttpPost]
         [Authorize(Roles = "User")]
-        public async Task<ActionResult<AnswerResultDto>> submitAnswer(
-            [FromBody] SubmitAnswerRequest request)
+        public async Task<ActionResult<AnswerResultDto>> submitAnswer([FromBody] SubmitAnswerRequest request)
         {
             var result = await _service.submitAnswerAsync(request);
             return Ok(result);
@@ -49,9 +48,7 @@ namespace inzBackend.Controllers
 
         [HttpPatch("{answerId}/override")]
         [Authorize(Roles = "Admin")]
-        public IActionResult overrideAnswer(
-            int answerId,
-            [FromBody] TeacherOverrideRequest request)
+        public ActionResult overrideAnswer(int answerId, [FromBody] TeacherOverrideRequest request)
         {
             _service.overrideAnswer(answerId, request);
             return Ok();
@@ -59,9 +56,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("module/{moduleId}/student/{studentId}/report/pdf")]
         [Authorize(Roles = "Admin")]
-        public IActionResult generatePdfReport(
-            int moduleId,
-            int studentId)
+        public ActionResult generatePdfReport(int moduleId, int studentId)
         {
             var report = _service.generateReport(moduleId, studentId);
 
@@ -76,9 +71,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("module/{moduleId}/student/{studentId}/report/docx")]
         [Authorize(Roles = "Admin")]
-        public IActionResult generateDocxReport(
-            int moduleId,
-            int studentId)
+        public ActionResult generateDocxReport(int moduleId, int studentId)
         {
             var report = _service.generateReport(moduleId, studentId);
 

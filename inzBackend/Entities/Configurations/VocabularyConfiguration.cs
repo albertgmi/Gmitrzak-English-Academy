@@ -13,6 +13,11 @@ namespace inzBackend.Entities.Configurations
             builder.Property(x => x.Back).IsRequired().HasMaxLength(500);
             builder.Property(x => x.Category).HasMaxLength(100);
 
+            builder.HasOne(x => x.Catalogue)
+                   .WithMany()
+                   .HasForeignKey(x => x.CatalogueId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasQueryFilter(x => !x.IsDeleted);
         }
     }

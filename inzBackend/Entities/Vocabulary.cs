@@ -7,7 +7,8 @@ namespace inzBackend.Entities
         public string Front { get; set; } = string.Empty; 
         public string Back { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
-
+        public int? CatalogueId { get; set; }
+        public Catalogue? Catalogue { get; set; }
         public IEnumerable<Flashcard> Flashcards { get; set; } = new List<Flashcard>();
     }
 }

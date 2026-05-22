@@ -103,5 +103,11 @@ namespace inzBackend.Controllers
             _studentCourseService.uncompleteSingleModule(id);
             return Ok();
         }
+
+        [HttpGet("completed-single-modules")]
+        public ActionResult<List<StudentModuleDto>> getCompletedSingleModules()
+        {
+            return _studentCourseService.getCompletedSingleModules();
+        }
     }
 }

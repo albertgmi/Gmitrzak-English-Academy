@@ -18,9 +18,15 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("users")]
-        public ActionResult<List<AppUserDto>> getAllUsers([FromQuery] bool? active)
+        public ActionResult<List<AppUserDto>> getAllUsers()
         {
-            return Ok(_userService.getAllUsers(active));
+            return Ok(_userService.getAllUsers());
+        }
+
+        [HttpGet("users/inactive")]
+        public ActionResult<List<AppUserDto>> getAllInactiveUsers()
+        {
+            return Ok(_userService.getAllInactiveUsers());
         }
         [HttpGet]
         [Authorize(Roles = "User")]

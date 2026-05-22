@@ -102,17 +102,14 @@ namespace inzBackend.Services.UserServices
             return tokenhandler.WriteToken(token);
         }
 
-        public List<AppUserDto> getAllUsers(bool? active)
+        public List<AppUserDto> getAllUsers()
         {
-            var query = _dbContext
-                .Users
-                .AsQueryable();
+            return getUsers(true);
+        }
 
-            if (active.HasValue)
-                query = query
-                    .Where(u => u.IsActive == active.Value);
-
-            return _mapper.Map<List<AppUserDto>>(query.ToList());
+        public List<AppUserDto> getAllInactiveUsers()
+        {
+            return getUsers(false);
         }
 
         public AppUserDto getUserById()
@@ -167,6 +164,16 @@ namespace inzBackend.Services.UserServices
 
             _dbContext.Users.RemoveRange(usersToDelete);
             _dbContext.SaveChanges();
+        }
+
+        private List<AppUserDto> getUsers(bool isActive)
+        {
+            var users = _dbContext
+                .Users
+                .Where(u => u.IsActive == isActive)
+                .ToList();
+
+            return _mapper.Map<List<AppUserDto>>(users);
         }
     }
 }
