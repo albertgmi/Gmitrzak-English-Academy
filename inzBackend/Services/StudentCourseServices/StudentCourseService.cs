@@ -174,6 +174,30 @@ namespace inzBackend.Services.StudentCourseServices
             _dbContext.SaveChanges();
         }
 
+        public List<StudentModuleDto> getCompletedSingleModules()
+        {
+            var userId = _userContextService.GetUserId;
+
+            return _dbContext.UserModuleAssignments
+                .Include(x => x.Module)
+                .Where(x => x.UserId == userId && x.IsCompleted)
+                .Select(x => new StudentModuleDto
+                {
+                    Id = x.Id,
+                    ModuleId = x.ModuleId,
+                    Name = x.Module.Name,
+                    Description = x.Module.Description,
+                    Category = x.Module.Category,
+                    Order = 0,
+                    WeekNumber = 0,
+                    DayOfWeek = 0,
+                    UnlockDate = x.DueDate,
+                    IsUnlocked = true,
+                    IsCompleted = true
+                })
+                .ToList();
+        }
+
         private StudentAssignmentDto mapToStudentAssignmentDto(
             UserMatrixAssignment assignment,
             List<int> completedMatrixModuleIds,

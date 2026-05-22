@@ -1,12 +1,12 @@
 ﻿using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using OpenXmlDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
 using QDocument = QuestPDF.Fluent.Document;
 using inzBackend.Models.ModuleReportModels;
-using DocumentFormat.OpenXml;
 
 namespace inzBackend.Services.ReportServices
 {
@@ -21,7 +21,6 @@ namespace inzBackend.Services.ReportServices
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-
                     page.Margin(2, Unit.Centimetre);
 
                     page.DefaultTextStyle(x =>
@@ -182,69 +181,42 @@ namespace inzBackend.Services.ReportServices
         {
             using var stream = new MemoryStream();
 
-            using (var document = WordprocessingDocument.Create(
-                       stream,
-                       WordprocessingDocumentType.Document,
-                       true))
+            using (var document = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, true))
             {
                 var mainPart = document.AddMainDocumentPart();
-
                 mainPart.Document = new OpenXmlDocument();
-
                 var body = new Body();
 
                 body.Append(CreateHeading("Sentence Module Report", 32));
-
-                body.Append(CreateParagraph(
-                    $"Student: {report.StudentUsername}",
-                    true));
-
-                body.Append(CreateParagraph(
-                    $"Module: {report.ModuleName}",
-                    true));
-
-                body.Append(CreateParagraph(
-                    $"Generated: {report.GeneratedDate:d MMM yyyy}"));
-
+                body.Append(CreateParagraph($"Student: {report.StudentUsername}", true));
+                body.Append(CreateParagraph($"Module: {report.ModuleName}", true));
+                body.Append(CreateParagraph($"Generated: {report.GeneratedDate:d MMM yyyy}"));
                 body.Append(CreateParagraph(" "));
 
-                body.Append(CreateParagraph(
-                    $"Correct: {report.CorrectCount} | " +
-                    $"Partial: {report.PartialCount} | " +
-                    $"Incorrect: {report.IncorrectCount}",
-                    true));
-
+                int totalIncorrect = report.IncorrectCount + report.PartialCount;
+                body.Append(CreateParagraph($"Correct: {report.CorrectCount} | Incorrect: {totalIncorrect}", true));
                 body.Append(CreateParagraph(" "));
 
                 foreach (var item in report.Items)
                 {
-                    body.Append(CreateHeading(
-                        $"#{item.Order} {item.Polish}",
-                        24));
+                    string displayResult = item.FinalResult == "Correct" ? "Correct" : "Incorrect";
 
-                    body.Append(CreateParagraph(
-                        $"Final Result: {item.FinalResult}",
-                        true));
+                    body.Append(CreateHeading($"#{item.Order} {item.Polish}", 24));
+                    body.Append(CreateParagraph($"Status: {displayResult}", true));
+                    body.Append(CreateParagraph($"Students Translate: {item.StudentAnswer}"));
 
-                    body.Append(CreateParagraph(
-                        $"Expected: {item.ExpectedTranslation}"));
-
-                    body.Append(CreateParagraph(
-                        $"Student: {item.StudentAnswer}"));
-
-                    body.Append(CreateParagraph(
-                        $"AI Explanation: {item.AiExplanation}"));
+                    if (!string.IsNullOrWhiteSpace(item.AiExplanation))
+                    {
+                        body.Append(CreateParagraph($"AI Explanation: {item.AiExplanation}"));
+                    }
 
                     if (!string.IsNullOrWhiteSpace(item.TeacherOverride))
                     {
-                        body.Append(CreateParagraph(
-                            $"Teacher Override: {item.TeacherOverride}",
-                            true));
+                        body.Append(CreateParagraph($"Teacher Override: {item.TeacherOverride}", true));
 
                         if (!string.IsNullOrWhiteSpace(item.TeacherExplanation))
                         {
-                            body.Append(CreateParagraph(
-                                $"Teacher Explanation: {item.TeacherExplanation}"));
+                            body.Append(CreateParagraph($"Teacher Explanation: {item.TeacherExplanation}"));
                         }
                     }
 
@@ -252,7 +224,6 @@ namespace inzBackend.Services.ReportServices
                 }
 
                 mainPart.Document.Append(body);
-
                 mainPart.Document.Save();
             }
 
@@ -288,36 +259,25 @@ namespace inzBackend.Services.ReportServices
                 });
         }
 
-        private static Paragraph CreateParagraph(
-            string text,
-            bool bold = false)
+        private static Paragraph CreateParagraph(string text, bool bold = false)
         {
             var run = new Run();
-
             if (bold)
             {
-                run.Append(
-                    new RunProperties(
-                        new Bold()));
+                run.Append(new RunProperties(new Bold()));
             }
-
             run.Append(new Text(text));
-
             return new Paragraph(run);
         }
 
-        private static Paragraph CreateHeading(
-            string text,
-            int size)
+        private static Paragraph CreateHeading(string text, int size)
         {
             return new Paragraph(
                 new Run(
                     new RunProperties(
                         new Bold(),
-                        new FontSize
-                        {
-                            Val = size.ToString()
-                        }),
+                        new FontSize { Val = size.ToString() }
+                    ),
                     new Text(text)));
         }
     }

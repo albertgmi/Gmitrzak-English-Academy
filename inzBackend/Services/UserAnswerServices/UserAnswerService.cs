@@ -1,11 +1,14 @@
-﻿using inzBackend.Entities;
+﻿using DocumentFormat.OpenXml.Office2016.Excel;
+using inzBackend.Entities;
 using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.ModuleReportModels;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace inzBackend.Services.UserAnswerServices
 {
@@ -14,15 +17,15 @@ namespace inzBackend.Services.UserAnswerServices
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IAiSentenceCheckerService _aiService;
         private readonly IUserContextService _userContextService;
+        private readonly ILessonPanelService _lessonPanelService;
 
-        public UserAnswerService(
-            GmitrzakEnglishAcademyDbContext dbContext,
-            IAiSentenceCheckerService aiService,
-            IUserContextService userContextService)
+        public UserAnswerService(GmitrzakEnglishAcademyDbContext dbContext, IAiSentenceCheckerService aiService,
+            IUserContextService userContextService, ILessonPanelService lessonPanelService)
         {
             _dbContext = dbContext;
             _aiService = aiService;
             _userContextService = userContextService;
+            _lessonPanelService = lessonPanelService;
         }
 
         public async Task<AnswerResultDto> submitAnswerAsync(SubmitAnswerRequest request)
@@ -84,9 +87,7 @@ namespace inzBackend.Services.UserAnswerServices
                     Notes = $"AI: {result}"
                 });
             }
-
             await _dbContext.SaveChangesAsync();
-
             await tryCompleteModuleAsync(userId, request.ModuleId);
             await _dbContext.SaveChangesAsync();
 
@@ -213,21 +214,28 @@ namespace inzBackend.Services.UserAnswerServices
             if (totalSentences == 0) return;
 
             var answeredCount = await _dbContext.UserSentenceAnswers
-                .CountAsync(x => x.UserId == userId
-                              && x.ModuleId == moduleId);
+                .CountAsync(x => x.UserId == userId && x.ModuleId == moduleId);
 
-            if (answeredCount < totalSentences) return;
-
-            var directAssignment = await _dbContext.UserModuleAssignments
-                .FirstOrDefaultAsync(x => x.UserId == userId
-                                       && x.ModuleId == moduleId
-                                       && !x.IsCompleted);
-
-            if (directAssignment is not null)
+            if (answeredCount < totalSentences)
             {
-                directAssignment.IsCompleted = true;
+                Console.WriteLine($"Answered Count = {answeredCount}, Total Sentences = {totalSentences}");
                 return;
             }
+
+            var isAlreadyCompleted = await _dbContext.UserModuleAssignments
+                .AnyAsync(x => x.UserId == userId && x.ModuleId == moduleId && x.IsCompleted);
+
+            if (!isAlreadyCompleted)
+            {
+                await assignModuleCompletionPointsAsync(userId, moduleId);
+
+                var assignment = await _dbContext.UserModuleAssignments
+                    .FirstOrDefaultAsync(x => x.UserId == userId && x.ModuleId == moduleId);
+
+                if (assignment != null) assignment.IsCompleted = true;
+            }
+
+            await _dbContext.SaveChangesAsync();
 
             var matrixModules = await _dbContext.MatrixModules
                 .Where(x => x.ModuleId == moduleId)
@@ -249,6 +257,40 @@ namespace inzBackend.Services.UserAnswerServices
                     });
                 }
             }
+        }
+
+        private async Task assignModuleCompletionPointsAsync(int userId, int moduleId)
+        {
+            var answers = await _dbContext.UserSentenceAnswers
+                .Where(x => x.UserId == userId && x.ModuleId == moduleId)
+                .ToListAsync();
+
+            var directAssignment = await _dbContext.UserModuleAssignments
+                .FirstOrDefaultAsync(x => x.UserId == userId
+                                       && x.ModuleId == moduleId
+                                       && !x.IsCompleted);
+
+            var module = await _dbContext.Modules.FirstOrDefaultAsync(x => x.Id == moduleId);
+            string moduleName = module?.Name ?? "Unknown Module";
+
+            int totalPoints = answers.Sum(ans => (ans.TeacherOverride ?? ans.AiResult) switch
+            {
+                "Correct" => 5,
+                "Partial" => 3,
+                _ => 1
+            });
+
+            int bonus = 0;
+            if (directAssignment != null && DateOnly.FromDateTime(DateTime.Now) <= directAssignment.DueDate)
+                bonus = 10;
+
+            totalPoints += bonus;
+
+            string explanation = bonus > 0
+                ? $"Sentence module {moduleName} completed, extra {bonus} points added for finishing module in time!"
+                : $"Sentence module {moduleName} completed";
+
+            _lessonPanelService.addActivityPoints(userId, totalPoints, explanation);
         }
     }
 }

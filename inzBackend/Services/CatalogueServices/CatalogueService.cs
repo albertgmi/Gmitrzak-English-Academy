@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using inzBackend.Services.AiIntegrationServices;
 using AutoMapper;
+using inzBackend.Entities;
 
 namespace inzBackend.Services.CatalogueServices
 {
@@ -36,7 +37,7 @@ namespace inzBackend.Services.CatalogueServices
             var userId = _userContextService.GetUserId!.Value;
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            var entries = new List<(DateOnly date, string user, string entry, string key, string catalogueName)>();
+            var entries = new List<ParsedCatalogueRowDto>();
 
             using (var stream = new MemoryStream())
             {
@@ -57,11 +58,15 @@ namespace inzBackend.Services.CatalogueServices
 
                     if (string.IsNullOrWhiteSpace(entryVal)) continue;
 
-                    DateOnly entryDate;
-                    if (!DateOnly.TryParse(dateCell, out entryDate))
+                    if (!DateOnly.TryParse(dateCell, out DateOnly entryDate))
                         entryDate = today;
 
-                    entries.Add((entryDate, userRef, entryVal, computedKey, catalogueName));
+                    entries.Add(new ParsedCatalogueRowDto(
+                        entryDate,
+                        userRef,
+                        entryVal,
+                        computedKey,
+                        catalogueName));
                 }
             }
 
@@ -69,7 +74,7 @@ namespace inzBackend.Services.CatalogueServices
                 throw new BadRequestException("File contains no valid entries");
 
             var catalogueNames = entries
-                .Select(e => e.catalogueName)
+                .Select(e => e.CatalogueName)
                 .Where(n => !string.IsNullOrWhiteSpace(n))
                 .Distinct()
                 .ToList();
@@ -94,19 +99,20 @@ namespace inzBackend.Services.CatalogueServices
                         UploadedByUserId = userId
                     };
                     _dbContext.Catalogues.Add(existing);
-                    _dbContext.SaveChanges();
+
+                    await _dbContext.SaveChangesAsync();
                 }
 
                 var catEntries = entries
-                    .Where(e => e.catalogueName == catName ||
-                               (string.IsNullOrWhiteSpace(e.catalogueName) && catName == fallbackName))
+                    .Where(e => e.CatalogueName == catName ||
+                               (string.IsNullOrWhiteSpace(e.CatalogueName) && catName == fallbackName))
                     .Select(e => new CatalogueEntry
                     {
                         CatalogueId = existing.Id,
-                        EntryDate = e.date,
-                        UserRef = e.user,
-                        Entry = e.entry,
-                        ComputedKey = e.key
+                        EntryDate = e.EntryDate,
+                        UserRef = e.UserRef,
+                        Entry = e.EntryVal,
+                        ComputedKey = e.ComputedKey
                     })
                     .ToList();
 
@@ -117,16 +123,53 @@ namespace inzBackend.Services.CatalogueServices
                 var translatedTexts = await _aiTranslationService
                     .TranslateBatchAsync(textsToTranslate, "Polish");
 
+                var newVocabularies = new List<Vocabulary>();
+
                 for (int i = 0; i < catEntries.Count; i++)
                 {
                     if (i < translatedTexts.Count)
                     {
-                        catEntries[i].TranslatedEntry = translatedTexts[i];
+                        var originalText = catEntries[i].Entry;
+                        var translatedText = translatedTexts[i];
+
+                        catEntries[i].TranslatedEntry = translatedText;
+
+                        if (!string.IsNullOrWhiteSpace(originalText) && !string.IsNullOrWhiteSpace(translatedText))
+                        {
+                            newVocabularies.Add(new Vocabulary
+                            {
+                                Front = originalText,
+                                Back = translatedText,
+                                Category = catName,
+                                CatalogueId = existing.Id
+                            });
+                        }
                     }
                 }
 
+                var distinctVocabularies = newVocabularies
+                    .GroupBy(v => v.Front)
+                    .Select(g => g.First())
+                    .ToList();
+
+                var existingWordsInDb = await _dbContext.Vocabulary
+                    .Where(v => distinctVocabularies.Select(d => d.Front).Contains(v.Front))
+                    .Select(v => v.Front)
+                    .ToListAsync();
+
+                var vocabulariesToInsert = distinctVocabularies
+                    .Where(v => !existingWordsInDb.Contains(v.Front))
+                    .ToList();
+
+                if (vocabulariesToInsert.Any())
+                {
+                    _dbContext.Vocabulary.AddRange(vocabulariesToInsert);
+                }
+
                 _dbContext.CatalogueEntries.AddRange(catEntries);
-                _dbContext.SaveChanges();
+
+                await _dbContext.SaveChangesAsync();
+
                 lastCatalogue = existing;
             }
 
@@ -193,7 +236,12 @@ namespace inzBackend.Services.CatalogueServices
             if (catalogue is null)
                 throw new NotFoundException("Catalogue not found");
 
+            var relatedVocabulary = _dbContext.Vocabulary
+                .Where(x => x.CatalogueId == catalogueId)
+                .ToList();
+
             _dbContext.CatalogueEntries.RemoveRange(catalogue.Entries);
+            _dbContext.Vocabulary.RemoveRange(relatedVocabulary);
             _dbContext.Catalogues.Remove(catalogue);
             _dbContext.SaveChanges();
         }
@@ -206,7 +254,18 @@ namespace inzBackend.Services.CatalogueServices
             if (entry is null)
                 throw new NotFoundException($"Entry with Id: {entryId} was not found");
 
+            var oldTranslation = entry.TranslatedEntry;
+
             entry.TranslatedEntry = request.TranslatedEntry;
+
+            var vocabularyWord = _dbContext.Vocabulary
+                .FirstOrDefault(x => x.CatalogueId == entry.CatalogueId
+                          && x.Front == entry.Entry
+                          && x.Back == oldTranslation);
+
+            if (vocabularyWord is not null)
+                vocabularyWord.Back = request.TranslatedEntry;
+
             _dbContext.SaveChanges();
         }
     }
