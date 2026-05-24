@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.ModuleSentenceModels;
@@ -25,7 +26,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
         {
             var userId = _userContextService.GetUserId!.Value;
 
-            var privateSentencesQuery = _dbContext.Sentences
+            var allSentences = _dbContext.Sentences
                 .Where(x => x.UserId == userId)
                 .Select(x => new SentenceDto
                 {
@@ -34,44 +35,12 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                     Translation = x.Translation,
                     Notes = x.Notes,
                     IsReviewed = x.IsReviewed,
-                    IsPrivate = true
-                });
-
-            var sentencesFromSetsQuery = _dbContext.SentenceSetItems
-                .Where(item => _dbContext.UserSentenceAssignments
-                    .Where(ua => ua.UserId == userId && ua.SentenceSetId != null)
-                    .Select(ua => ua.SentenceSetId)
-                    .Contains(item.SentenceSetId))
-                .Select(item => new SentenceDto
-                {
-                    Id = item.SentenceStockId,
-                    Content = item.SentenceStock.Polish,
-                    Translation = item.SentenceStock.EnglishTranslation,
-                    Notes = "Assigned from set: " + item.SentenceSet.Name,
-                    IsReviewed = _dbContext.UserSentenceAssignments
-                        .Where(ua => ua.UserId == userId && ua.SentenceSetId == item.SentenceSetId)
-                        .Select(ua => ua.IsReviewed)
-                        .FirstOrDefault(),
-                    IsPrivate = false
-                });
-
-            var singleAssignedSentencesQuery = _dbContext.UserSentenceAssignments
-                .Where(x => x.UserId == userId && x.SentenceStockId != null)
-                .Select(x => new SentenceDto
-                {
-                    Id = x.SentenceStockId!.Value,
-                    Content = x.SentenceStock.Polish,
-                    Translation = x.SentenceStock.EnglishTranslation,
-                    Notes = "Single sentence assigned",
-                    IsReviewed = x.IsReviewed,
-                    IsPrivate = false
-                });
-
-            var allSentences = privateSentencesQuery
-                .Concat(sentencesFromSetsQuery)
-                .Concat(singleAssignedSentencesQuery)
-                .Distinct()
-                .ToList();
+                    IsPrivate = true,
+                    EaseFactor = x.EaseFactor,
+                    Interval = x.Interval,
+                    IsLeech = x.IsLeech,
+                    NextReviewDate = x.NextReviewDate
+                }).ToList();
 
             return allSentences;
         }
@@ -124,40 +93,82 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             };
         }
 
-        public void reviewSentence(int id)
+        public void reviewSentence(int id, ReviewSentenceRequest request)
+        {
+            var userId = _userContextService.GetUserId;
+
+            var sentence = _dbContext.Sentences
+                .FirstOrDefault(x => x.Id == id && x.UserId == userId);
+
+            if (sentence is null) return;
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            switch (request.Quality.ToLower())
+            {
+                case "easy":
+                    sentence.Interval = sentence.Interval == 0 ? 2 : sentence.Interval * 2;
+                    sentence.NextReviewDate = today.AddDays(sentence.Interval);
+                    sentence.EaseFactor = Math.Min(sentence.EaseFactor + 10, 300);
+                    break;
+
+                case "hard":
+                    sentence.Interval = 1;
+                    sentence.NextReviewDate = today.AddDays(1);
+                    sentence.EaseFactor = Math.Max(sentence.EaseFactor - 15, 130);
+                    break;
+
+                case "incorrect":
+                    sentence.Interval = 0;
+                    sentence.NextReviewDate = today;
+                    sentence.EaseFactor = Math.Max(sentence.EaseFactor - 20, 130);
+                    break;
+            }
+
+            sentence.IsReviewed = true;
+            sentence.IsLeech = sentence.EaseFactor <= 150;
+
+            _dbContext.SaveChanges();
+        }
+
+        public List<SentenceDto> getOtherSentences()
         {
             var userId = _userContextService.GetUserId!.Value;
 
-            var privateSentence = _dbContext
-                .Sentences
-                .FirstOrDefault(x => x.Id == id && x.UserId == userId);
-            if (privateSentence != null)
-            {
-                privateSentence.IsReviewed = true;
-            }
-            else
-            {
-                var assignment = _dbContext.UserSentenceAssignments
-                    .FirstOrDefault(x => x.UserId == userId && x.SentenceStockId == id);
-
-                if (assignment == null)
+            var sentencesFromSetsQuery = _dbContext.SentenceSetItems
+                .Where(item => _dbContext.UserSentenceAssignments
+                    .Any(ua => ua.UserId == userId && ua.SentenceSetId == item.SentenceSetId))
+                .Select(item => new SentenceDto
                 {
-                    var setIds = _dbContext.SentenceSetItems
-                        .Where(ssi => ssi.SentenceStockId == id)
-                        .Select(ssi => ssi.SentenceSetId)
-                        .ToList();
+                    Id = item.SentenceStockId,
+                    Content = item.SentenceStock.Polish,
+                    Translation = item.SentenceStock.EnglishTranslation,
+                    Notes = "Assigned from set: " + item.SentenceSet.Name,
+                    IsReviewed = _dbContext.UserSentenceAssignments
+                        .Where(ua => ua.UserId == userId && ua.SentenceSetId == item.SentenceSetId)
+                        .Select(ua => ua.IsReviewed)
+                        .FirstOrDefault(),
+                    IsPrivate = false
+                });
 
-                    assignment = _dbContext.UserSentenceAssignments
-                        .FirstOrDefault(x => x.UserId == userId && x.SentenceSetId.HasValue && setIds.Contains(x.SentenceSetId.Value));
-                }
-
-                if (assignment != null)
+            var singleAssignedSentencesQuery = _dbContext.UserSentenceAssignments
+                .Where(x => x.UserId == userId && x.SentenceStockId != null)
+                .Select(x => new SentenceDto
                 {
-                    assignment.IsReviewed = true;
-                }
-            }
+                    Id = x.SentenceStockId!.Value,
+                    Content = x.SentenceStock.Polish,
+                    Translation = x.SentenceStock.EnglishTranslation,
+                    Notes = "Single sentence assigned",
+                    IsReviewed = x.IsReviewed,
+                    IsPrivate = false
+                });
 
-            _dbContext.SaveChanges();
+            var otherSentences = sentencesFromSetsQuery
+                .Concat(singleAssignedSentencesQuery)
+                .Distinct()
+                .ToList();
+
+            return otherSentences;
         }
     }
 }

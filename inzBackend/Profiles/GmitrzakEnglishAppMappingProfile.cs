@@ -71,8 +71,10 @@ namespace inzBackend.Profiles
             CreateMap<PronunciationEntry, PronunciationEntryDto>();
 
             CreateMap<UserModuleAssignment, AssignmentStudentDto>()
+                .ForMember(dest => dest.ModuleId, opt => opt.MapFrom(src => src.ModuleId))
                 .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module.Name))
-                .ForMember(dest => dest.ModuleDescription, opt => opt.MapFrom(src => src.Module.Description));
+                .ForMember(dest => dest.ModuleDescription, opt => opt.MapFrom(src => src.Module.Description))
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Module.Category));
 
             CreateMap<FlashcardStudyLog, FlashcardStudyLogDto>()
                 .ForMember(dest => dest.FlashcardFront, opt => opt.MapFrom(src =>

@@ -7,6 +7,7 @@ using inzBackend.Models.ModuleReportModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.UserServices;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -75,6 +76,8 @@ namespace inzBackend.Services.UserAnswerServices
             var alreadyExists = await _dbContext.Sentences
                 .AnyAsync(x => x.UserId == userId && x.Content == sentence.Polish);
 
+            var isCorrectOrPartial = result == "Correct" || result == "Partial";
+
             if (!alreadyExists)
             {
                 _dbContext.Sentences.Add(new Sentence
@@ -83,10 +86,21 @@ namespace inzBackend.Services.UserAnswerServices
                     Content = sentence.Polish,
                     Translation = result == "Correct" || result == "Partial"
                         ? request.UserAnswer
-                        : sentence.EnglishTranslation,
-                    Notes = $"AI: {result}"
+                        : sentence.EnglishTranslation
                 });
             }
+
+            if(!isCorrectOrPartial && !alreadyExists)
+            {
+                _dbContext.Sentences.Add(new Sentence
+                {
+                    UserId = userId,
+                    Content = sentence.Polish,
+                    Translation = sentence.EnglishTranslation,
+                    NextReviewDate = DateOnly.FromDateTime(DateTime.Now)
+                });
+            }
+
             await _dbContext.SaveChangesAsync();
             await tryCompleteModuleAsync(userId, request.ModuleId);
             await _dbContext.SaveChangesAsync();
@@ -216,26 +230,18 @@ namespace inzBackend.Services.UserAnswerServices
             var answeredCount = await _dbContext.UserSentenceAnswers
                 .CountAsync(x => x.UserId == userId && x.ModuleId == moduleId);
 
-            if (answeredCount < totalSentences)
+            if (answeredCount < totalSentences) return;
+
+            var directAssignment = await _dbContext.UserModuleAssignments
+                .FirstOrDefaultAsync(x => x.UserId == userId
+                                       && x.ModuleId == moduleId);
+
+            if (directAssignment is not null && !directAssignment.IsCompleted)
             {
-                Console.WriteLine($"Answered Count = {answeredCount}, Total Sentences = {totalSentences}");
-                return;
+                await assignModuleCompletionPointsAsync(userId, moduleId, directAssignment);
+                directAssignment.IsCompleted = true;
+                await _dbContext.SaveChangesAsync();
             }
-
-            var isAlreadyCompleted = await _dbContext.UserModuleAssignments
-                .AnyAsync(x => x.UserId == userId && x.ModuleId == moduleId && x.IsCompleted);
-
-            if (!isAlreadyCompleted)
-            {
-                await assignModuleCompletionPointsAsync(userId, moduleId);
-
-                var assignment = await _dbContext.UserModuleAssignments
-                    .FirstOrDefaultAsync(x => x.UserId == userId && x.ModuleId == moduleId);
-
-                if (assignment != null) assignment.IsCompleted = true;
-            }
-
-            await _dbContext.SaveChangesAsync();
 
             var matrixModules = await _dbContext.MatrixModules
                 .Where(x => x.ModuleId == moduleId)
@@ -249,6 +255,31 @@ namespace inzBackend.Services.UserAnswerServices
 
                 if (!alreadyCompleted)
                 {
+                    var matrixModule = await _dbContext.MatrixModules
+                        .Include(x => x.Matrix)
+                        .FirstOrDefaultAsync(x => x.Id == mmId);
+
+                    var matrixAssignment = matrixModule is not null
+                        ? await _dbContext.UserMatrixAssignments
+                            .FirstOrDefaultAsync(x => x.UserId == userId
+                                                   && x.MatrixId == matrixModule.MatrixId)
+                        : null;
+
+                    if (matrixAssignment is not null && matrixModule is not null)
+                    {
+                        var unlockDate = matrixAssignment.StartDate
+                            .AddDays((matrixModule.WeekNumber - 1) * matrixAssignment.Matrix.RefreshIntervalDays)
+                            .AddDays(matrixModule.DayOfWeek - 1);
+
+                        var dueDate = unlockDate.AddDays(7);
+                        var fakeAssignment = new UserModuleAssignment
+                        {
+                            DueDate = dueDate,
+                            IsCompleted = false
+                        };
+                        await assignModuleCompletionPointsAsync(userId, moduleId, fakeAssignment);
+                    }
+
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
                     {
                         UserId = userId,
@@ -257,21 +288,21 @@ namespace inzBackend.Services.UserAnswerServices
                     });
                 }
             }
+
+            await _dbContext.SaveChangesAsync();
         }
 
-        private async Task assignModuleCompletionPointsAsync(int userId, int moduleId)
+        private async Task assignModuleCompletionPointsAsync(int userId, int moduleId, UserModuleAssignment? assignment)
         {
             var answers = await _dbContext.UserSentenceAnswers
                 .Where(x => x.UserId == userId && x.ModuleId == moduleId)
                 .ToListAsync();
 
-            var directAssignment = await _dbContext.UserModuleAssignments
-                .FirstOrDefaultAsync(x => x.UserId == userId
-                                       && x.ModuleId == moduleId
-                                       && !x.IsCompleted);
+            var module = await _dbContext.Modules
+                .FirstOrDefaultAsync(x => x.Id == moduleId);
+            var moduleName = module?.Name ?? "Unknown Module";
 
-            var module = await _dbContext.Modules.FirstOrDefaultAsync(x => x.Id == moduleId);
-            string moduleName = module?.Name ?? "Unknown Module";
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             int totalPoints = answers.Sum(ans => (ans.TeacherOverride ?? ans.AiResult) switch
             {
@@ -281,16 +312,16 @@ namespace inzBackend.Services.UserAnswerServices
             });
 
             int bonus = 0;
-            if (directAssignment != null && DateOnly.FromDateTime(DateTime.Now) <= directAssignment.DueDate)
+            if (assignment is not null && today <= assignment.DueDate)
                 bonus = 10;
 
             totalPoints += bonus;
 
-            string explanation = bonus > 0
-                ? $"Sentence module {moduleName} completed, extra {bonus} points added for finishing module in time!"
-                : $"Sentence module {moduleName} completed";
+            string reason = bonus > 0
+                ? $"Module '{moduleName}' completed (+{bonus} bonus for on-time)"
+                : $"Module '{moduleName}' completed (no bonus — past due date)";
 
-            _lessonPanelService.addActivityPoints(userId, totalPoints, explanation);
+            _lessonPanelService.addActivityPoints(userId, totalPoints, reason);
         }
     }
 }

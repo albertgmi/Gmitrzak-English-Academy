@@ -8,5 +8,9 @@
         public string? Notes { get; set; }
         public bool? IsReviewed { get; set; }
         public bool? IsPrivate { get; set; }
+        public int EaseFactor { get; set; }
+        public int Interval { get; set; }
+        public bool IsLeech { get; set; }
+        public DateOnly NextReviewDate { get; set; }
     }
 }

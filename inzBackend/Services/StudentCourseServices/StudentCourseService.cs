@@ -93,27 +93,27 @@ namespace inzBackend.Services.StudentCourseServices
         public List<StudentModuleDto> getSingleModules()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.Today);
-
-            int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-            var startOfWeek = today.AddDays(-diff);
-            var endOfWeek = startOfWeek.AddDays(6);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var matrixModuleIds = _dbContext.UserMatrixAssignments
                 .Where(x => x.UserId == userId)
-                .SelectMany(x => x.Matrix.MatrixModules)
+                .SelectMany(x => x.Matrix.MatrixModules.Select(mm => new
+                {
+                    mm.ModuleId,
+                    UnlockDate = x.StartDate.AddDays(
+                        (mm.WeekNumber - 1) * x.Matrix.RefreshIntervalDays +
+                        (mm.DayOfWeek - 1))
+                }))
+                .Where(x => x.UnlockDate >= today)
                 .Select(x => x.ModuleId)
+                .Distinct()
                 .ToList();
 
             var assignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
-                .Where(x =>
-                    x.UserId == userId &&
-                    !matrixModuleIds.Contains(x.ModuleId) &&
-                    !x.IsCompleted &&
-                    x.DueDate >= startOfWeek &&
-                    x.DueDate <= endOfWeek &&
-                    today <= x.DueDate)
+                .Where(x => x.UserId == userId
+                         && !matrixModuleIds.Contains(x.ModuleId)
+                         && !x.IsCompleted)
                 .ToList();
 
             return assignments.Select((x, index) => new StudentModuleDto
@@ -121,14 +121,15 @@ namespace inzBackend.Services.StudentCourseServices
                 Id = x.Id,
                 ModuleId = x.ModuleId,
                 Name = x.Module.Name,
-                Description = x.Module.Description,
+                Description = x.Module.Description ?? string.Empty,
                 Category = x.Module.Category,
                 Order = index + 1,
                 WeekNumber = 0,
                 DayOfWeek = 0,
                 UnlockDate = x.DueDate,
                 IsUnlocked = true,
-                IsCompleted = x.IsCompleted
+                IsCompleted = x.IsCompleted,
+                IsOverdue = x.DueDate < today
             }).ToList();
         }
 
