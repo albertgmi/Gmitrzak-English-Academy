@@ -13,5 +13,6 @@
         public DateOnly UnlockDate { get; set; }
         public bool IsUnlocked { get; set; }
         public bool IsCompleted { get; set; }
+        public bool IsOverdue { get; set; }
     }
 }

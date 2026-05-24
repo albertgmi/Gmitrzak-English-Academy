@@ -27,13 +27,12 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
 
             var assignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
-                .Where(x => x.UserId == userId && !x.IsCompleted && x.DueDate >= today)
+                .Where(x => x.UserId == userId && !x.IsCompleted)
                 .OrderBy(x => x.DueDate)
                 .ToList();
 
             var dtos = _mapper.Map<List<AssignmentStudentDto>>(assignments);
-            dtos.ForEach(d => d.IsOverdue = d.DueDate < today && !d.IsCompleted);
-
+            dtos.ForEach(d => d.IsOverdue = d.DueDate < today);
             return dtos;
         }
 
@@ -44,14 +43,12 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
 
             var assignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
-                .Where(x => x.UserId == userId && (x.IsCompleted || x.DueDate < today))
+                .Where(x => x.UserId == userId && x.IsCompleted)
                 .OrderByDescending(x => x.DueDate)
                 .ToList();
 
             var dtos = _mapper.Map<List<AssignmentStudentDto>>(assignments);
-
-            dtos.ForEach(d => d.IsOverdue = d.DueDate < today && !d.IsCompleted);
-
+            dtos.ForEach(d => d.IsOverdue = false);
             return dtos;
         }
     }

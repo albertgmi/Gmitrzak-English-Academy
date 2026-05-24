@@ -126,7 +126,7 @@ namespace inzBackend.Services.DashboardServices
 
             var activeAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
-                .Where(x => x.UserId == userId && !x.IsCompleted && x.DueDate >= today)
+                .Where(x => x.UserId == userId && !x.IsCompleted)
                 .OrderBy(x => x.DueDate)
                 .Take(5)
                 .Select(x => new UpcomingAssignmentDto

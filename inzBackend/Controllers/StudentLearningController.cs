@@ -47,6 +47,12 @@ namespace inzBackend.Controllers
             return _sentencesService.getAllSentences();
         }
 
+        [HttpGet("sentences/other")]
+        public ActionResult<List<SentenceDto>> getOtherSentences()
+        {
+            return _sentencesService.getOtherSentences();
+        }
+
         [HttpGet("memories")]
         public ActionResult<List<MemoryDto>> getAllMemories()
         {
@@ -135,9 +141,9 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("sentences/{id}/review")]
-        public IActionResult reviewSentence(int id)
+        public ActionResult reviewSentence(int id, [FromBody] ReviewSentenceRequest request)
         {
-            _sentencesService.reviewSentence(id);
+            _sentencesService.reviewSentence(id, request);
             return Ok();
         }
     }
