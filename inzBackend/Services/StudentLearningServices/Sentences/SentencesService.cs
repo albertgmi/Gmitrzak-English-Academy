@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
@@ -102,7 +103,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
 
             if (sentence is null) return;
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             switch (request.Quality.ToLower())
             {

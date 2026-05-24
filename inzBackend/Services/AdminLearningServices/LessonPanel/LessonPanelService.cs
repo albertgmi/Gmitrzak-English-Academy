@@ -3,6 +3,7 @@ using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Helpers;
 
 public class LessonPanelService : ILessonPanelService
 {
@@ -72,8 +73,8 @@ public class LessonPanelService : ILessonPanelService
 
     public ActivityPointsLessonSummaryDto getActivityPoints(int studentUserId)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var daysFromMonday = ((int)DateTime.UtcNow.DayOfWeek + 6) % 7;
+        var today = PolandTime.Today;
+        var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
         var thisWeekStart = today.AddDays(-daysFromMonday);
         var lastWeekStart = thisWeekStart.AddDays(-7);
         var lastWeekEnd = thisWeekStart.AddDays(-1);
@@ -104,7 +105,7 @@ public class LessonPanelService : ILessonPanelService
         _dbContext.ActivityPoints.Add(new ActivityPoint
         {
             UserId = studentUserId,
-            PointDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            PointDate = PolandTime.Today,
             Points = points,
             Reason = reason
         });
@@ -113,7 +114,7 @@ public class LessonPanelService : ILessonPanelService
 
     public LessonFlashcardSummaryDto getFlashcardSummary(int studentUserId)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = PolandTime.Today;
 
         var allCards = _dbContext.Flashcards
             .Include(x => x.Vocabulary)
@@ -178,7 +179,7 @@ public class LessonPanelService : ILessonPanelService
             UserId = studentUserId,
             Command = command,
             Payload = payload,
-            ExecutedAt = DateTimeOffset.UtcNow
+            ExecutedAt = PolandTime.Now
         });
         _dbContext.SaveChanges();
     }
@@ -225,7 +226,7 @@ public class LessonPanelService : ILessonPanelService
 
     public LessonLastWeekDto getLastWeek(int studentUserId)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = PolandTime.Today;
         var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
         var weekStart = today.AddDays(-daysFromMonday);
         var weekEnd = weekStart.AddDays(6);
@@ -292,7 +293,7 @@ public class LessonPanelService : ILessonPanelService
 
     public LessonStatsDto getStats(int studentUserId)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = PolandTime.Today;
         var last30Days = today.AddDays(-30);
 
         var dailyActivity = _dbContext.ActivityPoints

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using inzBackend.Helpers;
 
 namespace inzBackend.Models.Configurations
 {
@@ -25,9 +26,9 @@ namespace inzBackend.Models.Configurations
                     Role = Enums.UserRole.Admin,
                     IsActive = true,
                     IsDeleted = false,
-                    CreatedAt = DateTimeOffset.UtcNow,
+                    CreatedAt = PolandTime.DateTimeNow,
                     CreatedBy = "System",
-                    LastModifiedAt = DateTimeOffset.UtcNow,
+                    LastModifiedAt = PolandTime.DateTimeNow,
                     LastModifiedBy = "System"
                 },
                 new AppUser
@@ -39,9 +40,9 @@ namespace inzBackend.Models.Configurations
                     Role = Enums.UserRole.User,
                     IsActive = true,
                     IsDeleted = false,
-                    CreatedAt = DateTimeOffset.UtcNow,
+                    CreatedAt = PolandTime.DateTimeNow,
                     CreatedBy = "System",
-                    LastModifiedAt = DateTimeOffset.UtcNow,
+                    LastModifiedAt = PolandTime.DateTimeNow,
                     LastModifiedBy = "System"
                 }
             );

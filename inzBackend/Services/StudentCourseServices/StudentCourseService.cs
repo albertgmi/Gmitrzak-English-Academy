@@ -1,5 +1,6 @@
 ﻿using inzBackend.Entities;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.StudentCourseModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
@@ -25,7 +26,7 @@ namespace inzBackend.Services.StudentCourseServices
         public List<StudentAssignmentDto> getStudentsAssignments()
         {
             var userId = _userContextService.GetUserId;
-            var now = DateOnly.FromDateTime(DateTime.UtcNow);
+            var now = PolandTime.Today;
 
             var assignments = _dbContext.UserMatrixAssignments
                 .Include(uma => uma.Matrix)
@@ -58,7 +59,7 @@ namespace inzBackend.Services.StudentCourseServices
             {
                 UserId = userId!.Value,
                 MatrixModuleId = matrixModuleId,
-                CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow)
+                CompletedDate = PolandTime.Today
             });
 
             _lessonPanelService.addActivityPoints(
@@ -93,7 +94,7 @@ namespace inzBackend.Services.StudentCourseServices
         public List<StudentModuleDto> getSingleModules()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var matrixModuleIds = _dbContext.UserMatrixAssignments
                 .Where(x => x.UserId == userId)

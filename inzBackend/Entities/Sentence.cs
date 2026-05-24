@@ -1,4 +1,6 @@
-﻿namespace inzBackend.Models
+﻿using inzBackend.Helpers;
+
+namespace inzBackend.Models
 {
     public class Sentence : AuditableEntity
     {
@@ -10,6 +12,6 @@
         public int EaseFactor { get; set; } = 250;
         public int Interval { get; set; } = 0;
         public bool IsLeech { get; set; } = false;
-        public DateOnly NextReviewDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+        public DateOnly NextReviewDate { get; set; } = PolandTime.Today;
     }
 }

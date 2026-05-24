@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
+using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Services.UserServices;
@@ -23,7 +24,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
         public List<AssignmentStudentDto> getActiveAssignments()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var assignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
@@ -39,7 +40,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
         public List<AssignmentStudentDto> getAssignmentHistory()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var assignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)

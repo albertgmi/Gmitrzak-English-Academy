@@ -5,6 +5,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
@@ -49,7 +50,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         public List<FlashcardDto> getStudiedToday()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var studiedIds = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId && x.StudyDate == today)
@@ -104,7 +105,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             if (card is null)
                 return;
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             switch (request.Quality.ToLower())
             {

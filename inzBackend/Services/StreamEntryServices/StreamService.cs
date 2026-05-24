@@ -2,6 +2,7 @@
 using inzBackend.Models.StreamEntryModels;
 using inzBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.StreamEntryServices
 {
@@ -48,7 +49,7 @@ namespace inzBackend.Services.StreamEntryServices
                 UserId = request.UserId,
                 Command = request.Command,
                 Payload = request.Payload,
-                ExecutedAt = DateTimeOffset.UtcNow
+                ExecutedAt = PolandTime.Now
             });
             _dbContext.SaveChanges();
         }

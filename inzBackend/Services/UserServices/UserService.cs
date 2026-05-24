@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
 using inzBackend.Jwt;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
@@ -74,7 +75,7 @@ namespace inzBackend.Services.UserServices
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.Now.AddDays(_authenticationSettings.JwtExpireDays);
+            var expires = PolandTime.DateTimeNow.AddDays(_authenticationSettings.JwtExpireDays);
 
             var token = new JwtSecurityToken(_authenticationSettings.JwtIssuer,
                 _authenticationSettings.JwtIssuer,
@@ -83,7 +84,7 @@ namespace inzBackend.Services.UserServices
                 signingCredentials: cred);
             var tokenhandler = new JwtSecurityTokenHandler();
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var alreadyLoggedToday = _dbContext.UserLoginLogs
                 .Any(x => x.UserId == user.Id && x.LoginDate == today);
@@ -94,7 +95,7 @@ namespace inzBackend.Services.UserServices
                 {
                     UserId = user.Id,
                     LoginDate = today,
-                    LoginAt = DateTimeOffset.UtcNow
+                    LoginAt = PolandTime.Now
                 });
                 _dbContext.SaveChanges();
             }

@@ -7,6 +7,7 @@ using ClosedXML.Excel;
 using inzBackend.Services.AiIntegrationServices;
 using AutoMapper;
 using inzBackend.Entities;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.CatalogueServices
 {
@@ -35,7 +36,7 @@ namespace inzBackend.Services.CatalogueServices
                 throw new BadRequestException("Only .xlsx and .xls files are allowed");
 
             var userId = _userContextService.GetUserId!.Value;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var entries = new List<ParsedCatalogueRowDto>();
 

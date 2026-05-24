@@ -4,6 +4,7 @@ using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.AdminLearningModels;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.GlobalVocabularyServices
 {
@@ -125,7 +126,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
 
             if (alreadyExists) return;
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var flashcard = new Flashcard
             {
@@ -164,7 +165,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             if (!idsToAssign.Any())
                 return;
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
             var flashcardsToAdd = new List<Flashcard>();
 
             foreach (var vocabId in idsToAssign)
