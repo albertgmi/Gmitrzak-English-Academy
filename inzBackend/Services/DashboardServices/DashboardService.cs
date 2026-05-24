@@ -2,6 +2,7 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.DashboardServices
 {
@@ -20,8 +21,8 @@ namespace inzBackend.Services.DashboardServices
 
         public AdminDashboardDto getAdminDashboard()
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var daysFromMonday = ((int)DateTime.UtcNow.DayOfWeek + 6) % 7;
+            var today = PolandTime.Today;
+            var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
             var weekStart = today.AddDays(-daysFromMonday);
 
             var totalStudents = _dbContext.Users
@@ -104,8 +105,8 @@ namespace inzBackend.Services.DashboardServices
         public StudentDashboardDto getStudentDashboard()
         {
             var userId = _userContextService.GetUserId!.Value;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var daysFromMonday = ((int)DateTime.UtcNow.DayOfWeek + 6) % 7;
+            var today = PolandTime.Today;
+            var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
             var weekStart = today.AddDays(-daysFromMonday - 7);
             var weekEnd = weekStart.AddDays(6);
 

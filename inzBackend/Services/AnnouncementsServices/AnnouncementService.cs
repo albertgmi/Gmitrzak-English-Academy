@@ -4,6 +4,7 @@ using inzBackend.Models.AnnouncementModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.AnnouncementsServices
 {
@@ -113,7 +114,7 @@ namespace inzBackend.Services.AnnouncementsServices
                 .FirstOrDefault(x => x.Id == recipientId && x.UserId == userId);
             if (recipient is null) return;
             recipient.IsRead = true;
-            recipient.ReadAt = DateTimeOffset.UtcNow;
+            recipient.ReadAt = PolandTime.Now;
             _dbContext.SaveChanges();
         }
 
@@ -126,7 +127,7 @@ namespace inzBackend.Services.AnnouncementsServices
             foreach (var r in unread)
             {
                 r.IsRead = true;
-                r.ReadAt = DateTimeOffset.UtcNow;
+                r.ReadAt = PolandTime.Now;
             }
             _dbContext.SaveChanges();
         }

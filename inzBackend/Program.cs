@@ -55,6 +55,7 @@ namespace inzBackend
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddSwaggerGen();
             var connectionString = builder.Configuration.GetConnectionString("GmitrzakEnglishAppConnectionString");

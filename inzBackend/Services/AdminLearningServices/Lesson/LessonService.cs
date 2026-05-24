@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {
@@ -97,7 +98,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             if (alreadyExists) return;
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var flashcard = new Flashcard
             {
@@ -155,7 +156,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public List<HomeworkItemDto> getHomeworkForWeek(int studentUserId)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
             var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
             var weekEnd = weekStart.AddDays(6);
 
@@ -230,7 +231,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.Grades.Add(new Grade
             {
                 UserId = request.StudentUserId,
-                GradeDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                GradeDate = PolandTime.Today,
                 Percentage = request.Percentage,
                 Category = request.Category,
                 Notes = request.Notes
@@ -285,7 +286,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 TeacherUserId = teacherId!.Value,
                 StudentUserId = request.StudentUserId,
                 Content = request.Content,
-                NoteDate = DateOnly.FromDateTime(DateTime.UtcNow)
+                NoteDate = PolandTime.Today
             });
             _dbContext.SaveChanges();
         }
@@ -306,7 +307,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.ListeningReports.Add(new ListeningReport
             {
                 UserId = request.StudentUserId,
-                ReportDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                ReportDate = PolandTime.Today,
                 Title = request.Title,
                 MediaType = mediaType,
                 EpisodeCount = request.EpisodeCount

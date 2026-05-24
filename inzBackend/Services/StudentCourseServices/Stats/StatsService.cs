@@ -1,6 +1,7 @@
 ﻿using inzBackend.Models.StudentCourseModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.StudentCourseServices.Stats
 {
@@ -18,7 +19,7 @@ namespace inzBackend.Services.StudentCourseServices.Stats
         public StatsDto getStats()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
             var last30Days = today.AddDays(-30);
 
             var dailyActivity = _dbContext.ActivityPoints

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AssignmentModels;
 using inzBackend.Models.MatrixAssignmentModels;
@@ -205,7 +206,7 @@ namespace inzBackend.Services.AssignmentServices
                 .AddDays((mm.WeekNumber - 1) * refreshIntervalDays)
                 .AddDays(mm.DayOfWeek - 1);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             return new ModuleUnlockDto
             {
@@ -222,7 +223,7 @@ namespace inzBackend.Services.AssignmentServices
 
         private static ModuleAssignmentDto mapToModuleAssignmentDto(UserModuleAssignment x)
         {
-            var today = DateOnly.FromDateTime(DateTime.Today);
+            var today = PolandTime.Today;
 
             return new ModuleAssignmentDto
             {

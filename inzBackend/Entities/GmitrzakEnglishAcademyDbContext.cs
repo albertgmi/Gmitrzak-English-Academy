@@ -1,4 +1,5 @@
 ﻿using inzBackend.Entities;
+using inzBackend.Helpers;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -63,7 +64,7 @@ namespace inzBackend.Models
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
             var currentUsername = _userContextService.GetUserName ?? "System";
-            var now = DateTimeOffset.UtcNow;
+            var now = PolandTime.DateTimeNow;
 
             foreach (var entityEntry in entries)
             {

@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Excel;
 using inzBackend.Entities;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.ModuleReportModels;
@@ -97,7 +98,7 @@ namespace inzBackend.Services.UserAnswerServices
                     UserId = userId,
                     Content = sentence.Polish,
                     Translation = sentence.EnglishTranslation,
-                    NextReviewDate = DateOnly.FromDateTime(DateTime.Now)
+                    NextReviewDate = PolandTime.Today
                 });
             }
 
@@ -188,7 +189,7 @@ namespace inzBackend.Services.UserAnswerServices
             {
                 ModuleName = module.Name,
                 StudentUsername = student.Username,
-                GeneratedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                GeneratedDate = PolandTime.Today,
                 TotalSentences = items.Count,
                 CorrectCount = items.Count(x => x.FinalResult == "Correct"),
                 PartialCount = items.Count(x => x.FinalResult == "Partial"),
@@ -284,7 +285,7 @@ namespace inzBackend.Services.UserAnswerServices
                     {
                         UserId = userId,
                         MatrixModuleId = mmId,
-                        CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow)
+                        CompletedDate = PolandTime.Today
                     });
                 }
             }
@@ -302,7 +303,7 @@ namespace inzBackend.Services.UserAnswerServices
                 .FirstOrDefaultAsync(x => x.Id == moduleId);
             var moduleName = module?.Name ?? "Unknown Module";
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             int totalPoints = answers.Sum(ans => (ans.TeacherOverride ?? ans.AiResult) switch
             {

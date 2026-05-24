@@ -1,4 +1,5 @@
 ﻿using inzBackend.Exceptions;
+using inzBackend.Helpers;
 using System.Net;
 using System.Text.Json;
 
@@ -44,7 +45,7 @@ namespace inzBackend.Middlewares
             {
                 status = context.Response.StatusCode,
                 message = customMessage ?? exception.Message,
-                timestamp = DateTime.UtcNow
+                timestamp = PolandTime.Now
             };
 
             var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions

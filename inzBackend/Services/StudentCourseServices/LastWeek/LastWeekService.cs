@@ -1,6 +1,7 @@
 ﻿using inzBackend.Models.StudentCourseModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.StudentCourseServices.LastWeek
 {
@@ -18,9 +19,9 @@ namespace inzBackend.Services.StudentCourseServices.LastWeek
         public LastWeekDto getLastWeek()
         {
             var userId = _userContextService.GetUserId;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
-            var daysFromMonday = ((int)DateTime.UtcNow.DayOfWeek + 6) % 7;
+            var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
             var weekStart = today.AddDays(-daysFromMonday - 7);
             var weekEnd = weekStart.AddDays(6);
 
