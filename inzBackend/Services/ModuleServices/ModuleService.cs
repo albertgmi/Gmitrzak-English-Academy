@@ -36,7 +36,8 @@ namespace inzBackend.Services.ModuleServices
                 Name = request.Name,
                 Description = request.Description,
                 Category = request.Category,
-                IsHidden = request.IsHidden
+                IsHidden = request.IsHidden,
+                TheaterItemId = request.Category == "Watching" ? request.TheaterItemId : null
             };
 
             _dbContext.Modules.Add(newModule);
@@ -68,6 +69,7 @@ namespace inzBackend.Services.ModuleServices
             module.Description = request.Description;
             module.Category = request.Category;
             module.IsHidden = request.IsHidden;
+            module.TheaterItemId = request.Category == "Watching" ? request.TheaterItemId : null;
 
             _dbContext.SaveChanges();
         }

@@ -1,4 +1,6 @@
-﻿namespace inzBackend.Models
+﻿using inzBackend.Entities;
+
+namespace inzBackend.Models
 {
     public class Module : AuditableEntity
     {
@@ -7,5 +9,7 @@
         public bool? IsHidden { get; set; }
         public string Category { get; set; } = string.Empty;
         public ICollection<MatrixModule> MatrixModules { get; set; } = new List<MatrixModule>();
+        public int? TheaterItemId { get; set; }
+        public TheaterItem? TheaterItem { get; set; }
     }
 }
