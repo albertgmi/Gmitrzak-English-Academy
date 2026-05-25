@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
+using inzBackend.Enums;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Jwt;
@@ -169,12 +170,20 @@ namespace inzBackend.Services.UserServices
 
         private List<AppUserDto> getUsers(bool isActive)
         {
-            var users = _dbContext
-                .Users
+            var users = _dbContext.Users
                 .Where(u => u.IsActive == isActive)
+                .Select(u => new AppUserDto
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Email = u.Email,
+                    Role = u.Role,
+                    IsActive = u.IsActive,
+                    AvatarUrl = u.Profile != null ? u.Profile.AvatarUrl : null
+                })
                 .ToList();
 
-            return _mapper.Map<List<AppUserDto>>(users);
+            return users;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace inzBackend.Entities.Configurations
             builder.Property(x => x.CurrentSemester).HasDefaultValue(1);
 
             builder.HasOne(x => x.User)
-                   .WithOne()
+                   .WithOne(x => x.Profile)
                    .HasForeignKey<Profile>(x => x.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 

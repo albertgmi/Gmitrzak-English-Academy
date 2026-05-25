@@ -155,8 +155,17 @@ namespace inzBackend
             builder.Services.AddSingleton(authenticationSettings);
 
             builder.Services.AddHttpContextAccessor();
-
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AngularCorsPolicy", policy =>
+                {
+                    policy.WithOrigins("http://localhost:4200")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
             var app = builder.Build();
+            app.UseCors("AngularCorsPolicy");
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
             app.UseStaticFiles();
