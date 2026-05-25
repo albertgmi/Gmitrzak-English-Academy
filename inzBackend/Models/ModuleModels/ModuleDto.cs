@@ -10,5 +10,6 @@ namespace inzBackend.Models.ModuleModels
         public string Category { get; set; } = string.Empty;
         public bool IsHidden { get; set; }
         public List<MatrixSimpleDto> Matrices { get; set; }
+        public string? Url { get; set; }
     }
 }

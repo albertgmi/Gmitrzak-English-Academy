@@ -14,5 +14,6 @@
         public bool IsUnlocked { get; set; }
         public bool IsCompleted { get; set; }
         public bool IsOverdue { get; set; }
+        public string Url { get; set; } = string.Empty;
     }
 }

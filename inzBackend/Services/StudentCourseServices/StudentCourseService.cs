@@ -111,27 +111,30 @@ namespace inzBackend.Services.StudentCourseServices
                 .ToList();
 
             var assignments = _dbContext.UserModuleAssignments
-                .Include(x => x.Module)
                 .Where(x => x.UserId == userId
                          && !matrixModuleIds.Contains(x.ModuleId)
                          && !x.IsCompleted)
+                .Include(x => x.Module)
+                    .ThenInclude(m => m.TheaterItem)
                 .ToList();
 
             return assignments.Select((x, index) => new StudentModuleDto
-            {
-                Id = x.Id,
-                ModuleId = x.ModuleId,
-                Name = x.Module.Name,
-                Description = x.Module.Description ?? string.Empty,
-                Category = x.Module.Category,
-                Order = index + 1,
-                WeekNumber = 0,
-                DayOfWeek = 0,
-                UnlockDate = x.DueDate,
-                IsUnlocked = true,
-                IsCompleted = x.IsCompleted,
-                IsOverdue = x.DueDate < today
-            }).ToList();
+                {
+                    Id = x.Id,
+                    ModuleId = x.ModuleId,
+                    Name = x.Module.Name,
+                    Description = x.Module.Description ?? string.Empty,
+                    Category = x.Module.Category,
+                    Order = index + 1,
+                    WeekNumber = 0,
+                    DayOfWeek = 0,
+                    UnlockDate = x.DueDate,
+                    IsUnlocked = true,
+                    IsCompleted = x.IsCompleted,
+                    IsOverdue = x.DueDate < today,
+                    Url = x.Module.TheaterItem?.Url ?? string.Empty
+                })
+                .ToList();
         }
 
         public void completeSingleModule(int id)

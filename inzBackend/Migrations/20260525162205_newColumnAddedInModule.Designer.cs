@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260525162205_newColumnAddedInModule")]
+    partial class newColumnAddedInModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -918,28 +921,28 @@ namespace inzBackend.Migrations
                         new
                         {
                             Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 21, 47, 2, 554, DateTimeKind.Unspecified).AddTicks(687), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 18, 22, 4, 97, DateTimeKind.Unspecified).AddTicks(9390), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "admin@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 21, 47, 2, 554, DateTimeKind.Unspecified).AddTicks(820), new TimeSpan(0, 2, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 18, 22, 4, 97, DateTimeKind.Unspecified).AddTicks(9509), new TimeSpan(0, 2, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPnymj0v6jmg3dOlbWa+9V1eQ/MpCbNqC6vM0qjlyWqZpyj+Pn0iFolvm7GqhtjARw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMlclJXaNEPY7Tdrq32B09Q3yTNiI5kooab2Ygo4wmPVWPRlgPODxhiW5j0xAys8QA==",
                             Role = "Admin",
                             Username = "testadmin"
                         },
                         new
                         {
                             Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 21, 47, 2, 602, DateTimeKind.Unspecified).AddTicks(244), new TimeSpan(0, 2, 0, 0, 0)),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 18, 22, 4, 145, DateTimeKind.Unspecified).AddTicks(3025), new TimeSpan(0, 2, 0, 0, 0)),
                             CreatedBy = "System",
                             Email = "user@example.com",
                             IsActive = true,
                             IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 21, 47, 2, 602, DateTimeKind.Unspecified).AddTicks(374), new TimeSpan(0, 2, 0, 0, 0)),
+                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 25, 18, 22, 4, 145, DateTimeKind.Unspecified).AddTicks(3201), new TimeSpan(0, 2, 0, 0, 0)),
                             LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGcYTRDl5RVPsX+X9kVP/0xpCHXcz9ekP+iBdW8zagZsjdEzQ7zTaEdTdKl4kU/GJA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMz8L7/LgnPetUumO0FWnrYPtIM48NZyrRvSKuHu/7RE2M5YgsaP3O4i6mcLqzbuPQ==",
                             Role = "User",
                             Username = "testauser"
                         });
