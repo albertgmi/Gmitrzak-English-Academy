@@ -10,5 +10,7 @@
         public DateOnly DueDate { get; set; }
         public bool IsCompleted { get; set; }
         public bool IsOverdue { get; set; }
+        public bool IsFromMatrix { get; set; }
+        public string MatrixName { get; set; } = string.Empty;
     }
 }
