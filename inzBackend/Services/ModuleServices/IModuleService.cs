@@ -5,7 +5,7 @@ namespace inzBackend.Services.ModuleServices
 {
     public interface IModuleService
     {
-        List<ModuleDto> getAllModules();
+        List<ModuleDto> getAllModules(int studentId);
         Module createModule(CreateModuleRequest request);
         void deleteModule(int moduleId);
         void updateModule(int moduleId, UpdateModuleRequest request);

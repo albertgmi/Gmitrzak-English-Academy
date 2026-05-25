@@ -9,5 +9,6 @@ namespace inzBackend.Models.UserModels
         public string Email { get; set; } = string.Empty;
         public UserRole Role { get; set; }
         public bool IsActive { get; set; } = true;
+        public string? AvatarUrl { get; set; }
     }
 }

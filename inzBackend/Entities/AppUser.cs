@@ -1,4 +1,5 @@
-﻿using inzBackend.Enums;
+﻿using inzBackend.Entities;
+using inzBackend.Enums;
 
 namespace inzBackend.Models
 {
@@ -10,5 +11,6 @@ namespace inzBackend.Models
         public UserRole Role { get; set; }
         public bool IsActive { get; set; } = true;
         public IEnumerable<FlashcardStudyLog> FlashcardStudyLogs { get; set; } = new List<FlashcardStudyLog>();
+        public Profile Profile { get; set; }
     }
 }

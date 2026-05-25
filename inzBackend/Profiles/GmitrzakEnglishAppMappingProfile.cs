@@ -23,7 +23,8 @@ namespace inzBackend.Profiles
     {
         public GmitrzakEnglishAppMappingProfile()
         {
-            CreateMap<AppUser, AppUserDto>();
+            CreateMap<AppUser, AppUserDto>()
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Profile != null ? src.Profile.AvatarUrl : null));
 
             CreateMap<Entities.Profile, ProfileDto>()
                 .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.Username))
