@@ -16,31 +16,37 @@ namespace inzBackend.Services.ModuleServices
             _mapper = mapper;
         }
 
-        public List<ModuleDto> getAllModules(int? studentId = null)
+        public List<ModuleDto> getAllModules()
         {
-            var query = _dbContext.Modules
+            var modules = _dbContext
+                .Modules
                 .Include(m => m.MatrixModules)
                     .ThenInclude(mm => mm.Matrix)
-                .AsQueryable();
-
-            // Jeśli przekazano ID studenta, filtrujemy moduły przypisane do jego macierzy
-            if (studentId.HasValue)
-            {
-                // Zakładam strukturę: Student ma przypisaną MatrixId. 
-                // Pobieramy MatrixId przypisane do tego studenta:
-                var studentMatrixIds = _dbContext.Users // lub _dbContext.Students w zależności od nazwy encji
-                    .Where(u => u.Id == studentId.Value)
-                    .Select(u => u.MatrixId) // Dostosuj tę linię do swojej bazy danych
-                    .ToList();
-
-                query = query.Where(m => m.MatrixModules.Any(mm => studentMatrixIds.Contains(mm.MatrixId)));
-            }
-
-            var modules = query.ToList();
-
-            // Możesz zakomentować ten rzut wyjątkiem, jeśli pusty zestaw modułów dla ucznia jest poprawnym stanem
+                .Include(m => m.TheaterItem)
+                .ToList();
             if (modules is null || modules.Count == 0)
                 throw new NotFoundException("No modules were found");
+
+            return _mapper.Map<List<ModuleDto>>(modules);
+        }
+
+        public List<ModuleDto> getSentenceModulesForStudent(int studentId)
+        {
+            var studentMatrixIds = _dbContext.UserMatrixAssignments
+                .Where(uma => uma.UserId == studentId)
+                .Select(uma => uma.MatrixId)
+                .ToList();
+
+            var studentDirectModuleIds = _dbContext.UserModuleAssignments
+                .Where(uma => uma.UserId == studentId)
+                .Select(uma => uma.ModuleId)
+                .ToList();
+
+            var modules = _dbContext.Modules
+                .Where(m => m.Category == "Sentences" &&
+                            (studentDirectModuleIds.Contains(m.Id) ||
+                             m.MatrixModules.Any(mm => studentMatrixIds.Contains(mm.MatrixId))))
+                .ToList();
 
             return _mapper.Map<List<ModuleDto>>(modules);
         }
