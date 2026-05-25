@@ -24,6 +24,12 @@ namespace inzBackend.Controllers
             return _moduleService.getAllModules();
         }
 
+        [HttpGet("student/{studentId}/sentences")]
+        public ActionResult<List<ModuleDto>> getSentenceModulesForStudent([FromRoute] int studentId)
+        {
+            return Ok(_moduleService.getSentenceModulesForStudent(studentId));
+        }
+
         [HttpPost]
         public ActionResult<Module> createModule([FromBody] CreateModuleRequest request)
         {
