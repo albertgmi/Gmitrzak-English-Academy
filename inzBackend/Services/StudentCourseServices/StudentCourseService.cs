@@ -83,7 +83,7 @@ namespace inzBackend.Services.StudentCourseServices
 
             _lessonPanelService.addActivityPoints(
                 userId.Value,
-                -50,
+                -10,
                 $"Reversed completion of curriculum module (ID: {matrixModuleId})"
             );
 
@@ -153,7 +153,7 @@ namespace inzBackend.Services.StudentCourseServices
 
             _lessonPanelService.addActivityPoints(
                 userId.Value,
-                30,
+                10,
                 $"Completed assignment {assignment.Module.Name}"
             );
             _dbContext.SaveChanges();
@@ -173,7 +173,7 @@ namespace inzBackend.Services.StudentCourseServices
 
             _lessonPanelService.addActivityPoints(
                 userId.Value,
-                -30,
+                -10,
                 $"Reversed completion of additional assignment (ID: {id})"
             );
             _dbContext.SaveChanges();
