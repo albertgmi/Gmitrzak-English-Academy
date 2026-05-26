@@ -4,6 +4,10 @@ using inzBackend.Models;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Helpers;
+using DocumentFormat.OpenXml.InkML;
+using inzBackend.Enums;
+using inzBackend.Models.AttendanceModels;
+using inzBackend.Exceptions;
 
 public class LessonPanelService : ILessonPanelService
 {
@@ -154,42 +158,6 @@ public class LessonPanelService : ILessonPanelService
                 .Select(MapFlashcard).ToList(),
             RecentLogs = recentLogs
         };
-    }
-
-    public List<StreamEntryDto> getStreamEntries(int studentUserId)
-    {
-        return _dbContext.StreamEntries
-            .Where(x => x.UserId == studentUserId)
-            .OrderByDescending(x => x.ExecutedAt)
-            .Take(100)
-            .Select(x => new StreamEntryDto
-            {
-                Id = x.Id,
-                Command = x.Command,
-                Payload = x.Payload,
-                ExecutedAt = x.ExecutedAt
-            })
-            .ToList();
-    }
-
-    public void addStreamEntry(int studentUserId, string command, string payload)
-    {
-        _dbContext.StreamEntries.Add(new StreamEntry
-        {
-            UserId = studentUserId,
-            Command = command,
-            Payload = payload,
-            ExecutedAt = PolandTime.Now
-        });
-        _dbContext.SaveChanges();
-    }
-
-    public void deleteStreamEntry(int entryId)
-    {
-        var entry = _dbContext.StreamEntries.FirstOrDefault(x => x.Id == entryId);
-        if (entry is null) return;
-        _dbContext.StreamEntries.Remove(entry);
-        _dbContext.SaveChanges();
     }
 
     public StudentStudyTimeDto getStudyTime(int studentUserId)
@@ -346,6 +314,89 @@ public class LessonPanelService : ILessonPanelService
             }
         };
     }
+
+    public IEnumerable<AttendanceDto> getAttendance(int studentId)
+    {
+        var nowPoland = PolandTime.Now;
+
+        var firstDayOfMonthPoland = new DateTimeOffset(
+            nowPoland.Year,
+            nowPoland.Month,
+            1,
+            0,
+            0,
+            0,
+            nowPoland.Offset
+        );
+
+        var firstDayOfMonthUtc = firstDayOfMonthPoland.UtcDateTime;
+
+        var records = _dbContext.Attendance
+            .Where(a =>
+                a.UserId == studentId &&
+                a.CreatedAt >= firstDayOfMonthUtc)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new AttendanceDto
+            {
+                Id = a.Id,
+                UserId = a.UserId,
+                Type = a.Type.ToString(),
+                Duration = a.DurationInMinutes,
+                CreatedAt = PolandTime.Now.UtcDateTime
+            })
+            .ToList();
+
+        return records;
+    }
+
+    public AttendanceDto addAttendance(CreateAttendanceDto dto)
+    {
+        var studentExists = _dbContext
+            .Users
+            .Any(x => x.Id == dto.UserId);
+
+        if (!studentExists)
+            throw new Exception($"Student with ID {dto.UserId} not found.");
+
+        if (!Enum.TryParse<AttendanceType>(dto.Type, true, out var attendanceType))
+            throw new Exception("Invalid attendance type. Use 'SCHEDULED' or 'MAKEUP'.");
+
+        var attendance = new Attendance
+        {
+            UserId = dto.UserId,
+            Type = attendanceType,
+            DurationInMinutes = dto.Duration,
+            CreatedAt = PolandTime.Now.UtcDateTime
+        };
+
+        _dbContext.Attendance.Add(attendance);
+        _dbContext.SaveChanges();
+
+        return new AttendanceDto
+        {
+            Id = attendance.Id,
+            UserId = attendance.UserId,
+            Type = attendance.Type.ToString(),
+            Duration = attendance.DurationInMinutes,
+            CreatedAt = PolandTime.Now.UtcDateTime
+        };
+    }
+
+    public bool deleteAttendance(int id)
+    {
+        var attendance = _dbContext
+            .Attendance
+            .FirstOrDefault(a => a.Id == id);
+
+        if (attendance is null)
+            throw new NotFoundException("Attendance not found");
+
+        _dbContext.Attendance.Remove(attendance);
+        _dbContext.SaveChanges();
+
+        return true;
+    }
+
     private static LessonFlashcardDto MapFlashcard(Flashcard x)
     {
         return new LessonFlashcardDto

@@ -18,7 +18,6 @@ using inzBackend.Services.MatrixServices;
 using inzBackend.Services.ModuleServices;
 using inzBackend.Services.ProfileServices;
 using inzBackend.Services.ProgramServices;
-using inzBackend.Services.StreamEntryServices;
 using inzBackend.Services.StudentCourseServices;
 using inzBackend.Services.StudentCourseServices.ActivityPoint;
 using inzBackend.Services.StudentCourseServices.Grade;
@@ -139,7 +138,6 @@ namespace inzBackend
             builder.Services.AddScoped<ILessonPanelService, LessonPanelService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<ICatalogueService, CatalogueService>();
-            builder.Services.AddScoped<IStreamService, StreamService>();
             builder.Services.AddScoped<ITheaterService, TheaterService>();
             builder.Services.AddScoped<IGlobalVocabularyService, GlobalVocabularyService>();
             builder.Services.AddScoped<IAiTranslationService, AiTranslationService>();

@@ -12,5 +12,6 @@ namespace inzBackend.Models
         public bool IsActive { get; set; } = true;
         public IEnumerable<FlashcardStudyLog> FlashcardStudyLogs { get; set; } = new List<FlashcardStudyLog>();
         public Profile Profile { get; set; }
+        public IEnumerable<Attendance> Attendances { get; set; } = new List<Attendance>();
     }
 }
