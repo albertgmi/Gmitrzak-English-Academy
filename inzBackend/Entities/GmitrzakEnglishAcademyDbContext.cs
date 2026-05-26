@@ -32,7 +32,6 @@ namespace inzBackend.Models
         public DbSet<ActivityPoint> ActivityPoints { get; set; }
         public DbSet<Catalogue> Catalogues { get; set; }
         public DbSet<CatalogueEntry> CatalogueEntries { get; set; }
-        public DbSet<StreamEntry> StreamEntries { get; set; }
         public DbSet<Entities.Profile> Profiles { get; set; }
         public DbSet<UserModuleAssignment> UserModuleAssignments { get; set; }
         public DbSet<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; }
@@ -51,6 +50,7 @@ namespace inzBackend.Models
         public DbSet<ModuleSentenceSet> ModuleSentenceSets { get; set; }
         public DbSet<UserLoginLog> UserLoginLogs { get; set; }
         public DbSet<RankingReaction> RankingReactions { get; set; }
+        public DbSet<Attendance> Attendance { get; set; }
 
         public override int SaveChanges()
         {

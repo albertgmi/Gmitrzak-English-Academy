@@ -1,4 +1,5 @@
 ﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AttendanceModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -55,26 +56,6 @@ namespace inzBackend.Controllers
             return _service.getFlashcardSummary(studentUserId);
         }
 
-        [HttpGet("stream/{studentUserId}")]
-        public List<StreamEntryDto> getStream(int studentUserId)
-        {
-            return _service.getStreamEntries(studentUserId);
-        }
-            
-        [HttpPost("stream/{studentUserId}")]
-        public IActionResult addStream(int studentUserId, [FromBody] AddStreamRequest request)
-        {
-            _service.addStreamEntry(studentUserId, request.Command, request.Payload);
-            return Ok();
-        }
-
-        [HttpDelete("stream/{entryId}")]
-        public IActionResult deleteStream(int entryId)
-        {
-            _service.deleteStreamEntry(entryId);
-            return NoContent();
-        }
-
         [HttpGet("study-time/{studentUserId}")]
         public StudentStudyTimeDto getStudyTime(int studentUserId)
         {
@@ -91,6 +72,27 @@ namespace inzBackend.Controllers
         public LessonStatsDto getStats(int studentUserId)
         {
             return _service.getStats(studentUserId);
+        }
+
+        [HttpGet("attendance/{studentUserId}")]
+        public ActionResult<IEnumerable<AttendanceDto>> GetAttendance([FromRoute] int studentUserId)
+        {
+            var records = _service.getAttendance(studentUserId);
+            return Ok(records);
+        }
+
+        [HttpPost("attendance")]
+        public ActionResult<AttendanceDto> AddAttendance([FromBody] CreateAttendanceDto dto)
+        {
+            var attendance = _service.addAttendance(dto);
+            return Ok(attendance);
+        }
+
+        [HttpDelete("attendance/{id}")]
+        public ActionResult DeleteAttendance([FromRoute] int id)
+        {
+            var deleted = _service.deleteAttendance(id);
+            return NoContent();
         }
     }
 }
