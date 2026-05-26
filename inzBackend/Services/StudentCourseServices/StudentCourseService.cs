@@ -64,7 +64,7 @@ namespace inzBackend.Services.StudentCourseServices
 
             _lessonPanelService.addActivityPoints(
                 userId.Value,
-                50,
+                10,
                 $"Completed curriculum module (ID: {matrixModuleId})"
             );
 

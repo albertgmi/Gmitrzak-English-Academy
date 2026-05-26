@@ -50,6 +50,7 @@ namespace inzBackend.Models
         public DbSet<UserOptions> UserOptions { get; set; }
         public DbSet<ModuleSentenceSet> ModuleSentenceSets { get; set; }
         public DbSet<UserLoginLog> UserLoginLogs { get; set; }
+        public DbSet<RankingReaction> RankingReactions { get; set; }
 
         public override int SaveChanges()
         {
