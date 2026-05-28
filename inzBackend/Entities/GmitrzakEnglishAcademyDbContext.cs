@@ -51,6 +51,8 @@ namespace inzBackend.Models
         public DbSet<UserLoginLog> UserLoginLogs { get; set; }
         public DbSet<RankingReaction> RankingReactions { get; set; }
         public DbSet<Attendance> Attendance { get; set; }
+        public DbSet<ModulePresentation> ModulePresentations { get; set; }
+        public DbSet<SectionActivityLog> SectionActivityLogs { get; set; }
 
         public override int SaveChanges()
         {

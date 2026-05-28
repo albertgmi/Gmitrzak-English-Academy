@@ -1,5 +1,6 @@
 ﻿using inzBackend.Models;
 using inzBackend.Models.ModuleModels;
+using inzBackend.Models.StudentCourseModels;
 
 namespace inzBackend.Services.ModuleServices
 {
@@ -7,10 +8,12 @@ namespace inzBackend.Services.ModuleServices
     {
         List<ModuleDto> getAllModules();
         List<ModuleDto> getSentenceModulesForStudent(int studentId);
-        Module createModule(CreateModuleRequest request);
+        ModuleDto createModule(CreateModuleRequest request);
         void deleteModule(int moduleId);
         void updateModule(int moduleId, UpdateModuleRequest request);
         void assignMatrix(int moduleId, int matrixId, AssignModuleToMatrixRequest request);
         void detachMatrix(int moduleId, int matrixId);
+        StudentModuleDto? getStudentModule(int userId, int moduleId);
+        void toggleComplete(int userId, int assignmentId);
     }
 }

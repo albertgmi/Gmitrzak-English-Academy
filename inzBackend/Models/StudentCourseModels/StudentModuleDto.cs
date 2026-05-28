@@ -15,5 +15,11 @@
         public bool IsCompleted { get; set; }
         public bool IsOverdue { get; set; }
         public string Url { get; set; } = string.Empty;
+        public int ActivityDaysCount { get; set; }
+        public int ActivityDaysRequired { get; set; }
+        public bool CanComplete { get; set; }
+        public string? CompletionBlockReason { get; set; }
+        public string? PresentationUrl { get; set; }
+        public string? PresentationText { get; set; }
     }
 }

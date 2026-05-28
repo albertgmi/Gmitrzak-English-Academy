@@ -6,5 +6,6 @@
         public string Category { get; set; } = string.Empty;
         public decimal Percentage { get; set; }
         public DateOnly GradeDate { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }

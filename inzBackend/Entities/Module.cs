@@ -11,5 +11,6 @@ namespace inzBackend.Models
         public ICollection<MatrixModule> MatrixModules { get; set; } = new List<MatrixModule>();
         public int? TheaterItemId { get; set; }
         public TheaterItem? TheaterItem { get; set; }
+        public ModulePresentation? Presentation { get; set; }
     }
 }
