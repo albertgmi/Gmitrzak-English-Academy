@@ -41,6 +41,7 @@ namespace inzBackend.Services.DashboardServices
 
             var recentGrades = _dbContext.Grades
                 .Include(x => x.User)
+                    .ThenInclude(u => u.Profile)
                 .OrderByDescending(x => x.GradeDate)
                 .Take(8)
                 .Select(x => new RecentGradeDto
@@ -48,7 +49,8 @@ namespace inzBackend.Services.DashboardServices
                     Username = x.User.Username,
                     Category = x.Category,
                     Percentage = x.Percentage,
-                    GradeDate = x.GradeDate
+                    GradeDate = x.GradeDate,
+                    AvatarUrl = x.User.Profile.AvatarUrl
                 })
                 .ToList();
 
