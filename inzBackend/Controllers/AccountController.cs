@@ -18,7 +18,7 @@ namespace inzBackend.Controllers
 
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<AppUser> register([FromBody] RegisterUserRequest request)
+        public ActionResult<AppUserDto> register([FromBody] RegisterUserRequest request)
         {
             var user = _userService.registerUser(request);
             return user;

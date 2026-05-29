@@ -84,12 +84,12 @@ namespace inzBackend.Controllers
             return Ok(result);
         }
 
-        [HttpPost("student-module/{assignmentId}/toggle-complete")]
+        [HttpPost("student-module/{moduleId}/complete")]
         [Authorize(Roles = "User")]
-        public IActionResult toggleComplete(int assignmentId)
+        public ActionResult completeStudentModule(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
-            _moduleService.toggleComplete(userId, assignmentId);
+            _moduleService.completeStudentModule(userId, moduleId);
             return Ok();
         }
 
