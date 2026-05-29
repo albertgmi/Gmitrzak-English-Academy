@@ -227,6 +227,139 @@ namespace inzBackend.Services.StudentCourseServices
                 .ToList();
         }
 
+        public StudentModuleDto? getStudentModule(int moduleId)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            var today = PolandTime.Today;
+
+            var directAssignment = _dbContext.UserModuleAssignments
+                .Include(x => x.Module)
+                    .ThenInclude(m => m.Presentation)
+                .Include(x => x.Module)
+                    .ThenInclude(m => m.TheaterItem)
+                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
+
+            if (directAssignment is not null)
+            {
+                return buildModuleDto(
+                    id: directAssignment.Id,
+                    moduleId: moduleId,
+                    module: directAssignment.Module,
+                    order: 1,
+                    weekNumber: 0,
+                    dayOfWeek: 0,
+                    unlockDate: directAssignment.DueDate,
+                    isUnlocked: true,
+                    isCompleted: directAssignment.IsCompleted,
+                    isOverdue: directAssignment.DueDate < today,
+                    userId: userId,
+                    today: today,
+                    url: directAssignment.Module?.TheaterItem?.Url,
+                    assignedDate: DateOnly.FromDateTime(directAssignment.CreatedAt.DateTime)
+                );
+            }
+
+            var matrixModule = _dbContext.MatrixModules
+                .Include(x => x.Module)
+                    .ThenInclude(m => m.Presentation)
+                .Include(x => x.Module)
+                    .ThenInclude(m => m.TheaterItem)
+                .Include(x => x.Matrix)
+                .FirstOrDefault(x => x.ModuleId == moduleId);
+
+            if (matrixModule is null) return null;
+
+            var matrixAssignment = _dbContext.UserMatrixAssignments
+                .FirstOrDefault(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
+
+            if (matrixAssignment is null) return null;
+
+            var unlockDate = calculateUnlockDate(
+                matrixAssignment.StartDate,
+                matrixModule.Matrix.RefreshIntervalDays,
+                matrixModule.WeekNumber,
+                matrixModule.DayOfWeek);
+
+            var isCompleted = _dbContext.UserMatrixModuleCompletions
+                .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
+
+            return buildModuleDto(
+                id: matrixModule.Id,
+                moduleId: moduleId,
+                module: matrixModule.Module,
+                order: 1,
+                weekNumber: matrixModule.WeekNumber,
+                dayOfWeek: matrixModule.DayOfWeek,
+                unlockDate: unlockDate,
+                isUnlocked: today >= unlockDate,
+                isCompleted: isCompleted,
+                isOverdue: false,
+                userId: userId,
+                today: today,
+                url: matrixModule.Module?.TheaterItem?.Url,
+                assignedDate: unlockDate
+            );
+        }
+
+        public void completeStudentModule(int moduleId)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            var today = PolandTime.Today;
+
+            var direct = _dbContext.UserModuleAssignments
+                .Include(x => x.Module)
+                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
+
+            if (direct is not null)
+            {
+                if (direct.IsCompleted) return;
+
+                var assignedDate = DateOnly.FromDateTime(direct.CreatedAt.DateTime);
+                var (_, _, canComplete, blockReason) = getActivityStatus(userId, moduleId, direct.Module.Category, today, assignedDate);
+                if (!canComplete) throw new BadRequestException(blockReason ?? "Not enough activity days.");
+
+                direct.IsCompleted = true;
+                _lessonPanelService.addActivityPoints(userId, 10, $"Completed assignment {direct.Module.Name}");
+                _dbContext.SaveChanges();
+                return;
+            }
+
+            var userMatrixIds = _dbContext.UserMatrixAssignments
+                .Where(x => x.UserId == userId)
+                .Select(x => x.MatrixId)
+                .ToList();
+
+            var matrixModule = _dbContext.MatrixModules
+                .Include(x => x.Module)
+                .Include(x => x.Matrix)
+                .FirstOrDefault(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId));
+
+            if (matrixModule is null)
+                throw new NotFoundException("Module assignment not found");
+
+            var alreadyCompleted = _dbContext.UserMatrixModuleCompletions
+                .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
+
+            if (alreadyCompleted) return;
+
+            var matrixAssignment = _dbContext.UserMatrixAssignments.First(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
+            var unlockDate = calculateUnlockDate(matrixAssignment.StartDate, matrixModule.Matrix.RefreshIntervalDays, matrixModule.WeekNumber, matrixModule.DayOfWeek);
+
+            var (_, _, mCanComplete, mBlockReason) = getActivityStatus(userId, moduleId, matrixModule.Module.Category, today, unlockDate);
+            if (!mCanComplete) throw new BadRequestException(mBlockReason ?? "Not enough activity days.");
+
+            _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
+            {
+                UserId = userId,
+                MatrixModuleId = matrixModule.Id,
+                CompletedDate = today
+            });
+
+            _lessonPanelService.addActivityPoints(userId, 10, $"Completed curriculum module ({matrixModule.Module.Name})");
+            _dbContext.SaveChanges();
+        }
+
+
         private StudentAssignmentDto mapToStudentAssignmentDto(
             UserMatrixAssignment assignment,
             List<int> completedMatrixModuleIds,

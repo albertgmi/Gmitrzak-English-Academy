@@ -54,9 +54,13 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
 
-            var upcomingAssignments = _dbContext.UserModuleAssignments
+            var upcomingAssignmentsQuery = _dbContext.UserModuleAssignments
+                .Where(x => !x.IsCompleted && x.DueDate >= today);
+
+            var totalUpcomingCount = upcomingAssignmentsQuery.Count();
+
+            var upcomingAssignments = upcomingAssignmentsQuery
                 .Include(x => x.Module)
-                .Where(x => !x.IsCompleted && x.DueDate >= today)
                 .OrderBy(x => x.DueDate)
                 .Take(8)
                 .Select(x => new UpcomingAssignmentDto
@@ -100,6 +104,7 @@ namespace inzBackend.Services.DashboardServices
                 TotalAssignmentsPending = totalPending,
                 RecentGrades = recentGrades,
                 UpcomingAssignments = upcomingAssignments,
+                TotalUpcomingAssignmentsCount = totalUpcomingCount,
                 TopStudentsByPoints = topStudents
             };
         }

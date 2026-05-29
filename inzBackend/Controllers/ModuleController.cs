@@ -73,25 +73,5 @@ namespace inzBackend.Controllers
             _moduleService.detachMatrix(moduleId, matrixId);
             return NoContent();
         }
-        // todo przeniesc do kontrolera studenta nie admina 
-        [HttpGet("student-module/{moduleId}")]
-        [Authorize(Roles = "User")]
-        public ActionResult<StudentModuleDto> getStudentModule(int moduleId)
-        {
-            var userId = _userContextService.GetUserId!.Value;
-            var result = _moduleService.getStudentModule(userId, moduleId);
-            if (result is null) return NotFound();
-            return Ok(result);
-        }
-
-        [HttpPost("student-module/{moduleId}/complete")]
-        [Authorize(Roles = "User")]
-        public ActionResult completeStudentModule(int moduleId)
-        {
-            var userId = _userContextService.GetUserId!.Value;
-            _moduleService.completeStudentModule(userId, moduleId);
-            return Ok();
-        }
-
     }
 }

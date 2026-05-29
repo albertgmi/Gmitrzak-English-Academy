@@ -17,5 +17,6 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         IEnumerable<AttendanceDto> getAttendance(int studentId);
         AttendanceDto addAttendance(CreateAttendanceDto dto);
         bool deleteAttendance(int id);
+        IEnumerable<AttendanceDto> getAttendanceHistory(int studentId);
     }
 }

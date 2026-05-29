@@ -13,7 +13,5 @@ namespace inzBackend.Services.ModuleServices
         void updateModule(int moduleId, UpdateModuleRequest request);
         void assignMatrix(int moduleId, int matrixId, AssignModuleToMatrixRequest request);
         void detachMatrix(int moduleId, int matrixId);
-        StudentModuleDto? getStudentModule(int userId, int moduleId);
-        void completeStudentModule(int userId, int moduleId);
     }
 }

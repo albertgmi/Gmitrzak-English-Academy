@@ -54,6 +54,7 @@ namespace inzBackend.Controllers
             _studentCourseService.uncompleteModule(matrixModuleId);
             return Ok();
         }
+
         [HttpGet("courses")]
         public ActionResult<List<StudentAssignmentDto>> getCourses()
         {
@@ -108,6 +109,21 @@ namespace inzBackend.Controllers
         public ActionResult<List<StudentModuleDto>> getCompletedSingleModules()
         {
             return _studentCourseService.getCompletedSingleModules();
+        }
+
+        [HttpGet("module/{moduleId}")]
+        public ActionResult<StudentModuleDto> getStudentModule([FromRoute] int moduleId)
+        {
+            var result = _studentCourseService.getStudentModule(moduleId);
+            if (result is null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpPost("module/{moduleId}/complete")]
+        public ActionResult completeStudentModule([FromRoute] int moduleId)
+        {
+            _studentCourseService.completeStudentModule(moduleId);
+            return Ok();
         }
     }
 }
