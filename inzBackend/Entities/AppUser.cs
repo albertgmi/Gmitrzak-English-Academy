@@ -13,5 +13,7 @@ namespace inzBackend.Models
         public IEnumerable<FlashcardStudyLog> FlashcardStudyLogs { get; set; } = new List<FlashcardStudyLog>();
         public Profile Profile { get; set; }
         public IEnumerable<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public ICollection<UserModuleAssignment> UserModuleAssignments { get; set; } = new List<UserModuleAssignment>();
+        public ICollection<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; } = new List<UserMatrixModuleCompletion>();
     }
 }

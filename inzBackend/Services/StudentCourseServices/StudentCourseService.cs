@@ -454,7 +454,8 @@ namespace inzBackend.Services.StudentCourseServices
             };
         }
 
-        private (int days, int required, bool canComplete, string? blockReason) getActivityStatus(int userId, int moduleId, string category, DateOnly today, DateOnly? assignedDate = null)
+        private (int days, int required, bool canComplete, string? blockReason) getActivityStatus(int userId, int moduleId, string category,
+                      DateOnly today, DateOnly? assignedDate = null)
         {
             const int REQUIRED_DAYS = 3;
             var countFrom = assignedDate ?? DateOnly.MinValue;
@@ -463,60 +464,68 @@ namespace inzBackend.Services.StudentCourseServices
             {
                 case "Flashcards":
                     {
-                        var days = _dbContext.FlashcardStudyLogs
+                        var activeDates = _dbContext.FlashcardStudyLogs
                             .Where(x => x.UserId == userId && x.StudyDate >= countFrom)
                             .Select(x => x.StudyDate)
                             .Distinct()
-                            .Count();
+                            .OrderByDescending(x => x)
+                            .ToList();
 
-                        return (days, REQUIRED_DAYS, days >= REQUIRED_DAYS,
-                            days >= REQUIRED_DAYS ? null
-                                : $"Study flashcards for {REQUIRED_DAYS - days} more day(s).");
+                        var streak = countConsecutiveStreak(activeDates, today);
+                        return (streak, REQUIRED_DAYS, streak >= REQUIRED_DAYS,
+                            streak >= REQUIRED_DAYS ? null
+                                : $"Study flashcards for {REQUIRED_DAYS - streak} more consecutive day(s).");
                     }
 
                 case "SentenceFlashcards":
                     {
-                        var days = _dbContext.SectionActivityLogs
+                        var activeDates = _dbContext.SectionActivityLogs
                             .Where(x => x.UserId == userId
                                      && x.Section == "sentenceflashcards"
                                      && x.ActivityDate >= countFrom)
                             .Select(x => x.ActivityDate)
                             .Distinct()
-                            .Count();
+                            .OrderByDescending(x => x)
+                            .ToList();
 
-                        return (days, REQUIRED_DAYS, days >= REQUIRED_DAYS,
-                            days >= REQUIRED_DAYS ? null
-                                : $"Practice sentence flashcards for {REQUIRED_DAYS - days} more day(s).");
+                        var streak = countConsecutiveStreak(activeDates, today);
+                        return (streak, REQUIRED_DAYS, streak >= REQUIRED_DAYS,
+                            streak >= REQUIRED_DAYS ? null
+                                : $"Practice sentence flashcards for {REQUIRED_DAYS - streak} more consecutive day(s).");
                     }
 
                 case "Memories":
                     {
-                        var days = _dbContext.SectionActivityLogs
+                        var activeDates = _dbContext.SectionActivityLogs
                             .Where(x => x.UserId == userId
                                      && x.Section == "memories"
                                      && x.ActivityDate >= countFrom)
                             .Select(x => x.ActivityDate)
                             .Distinct()
-                            .Count();
+                            .OrderByDescending(x => x)
+                            .ToList();
 
-                        return (days, REQUIRED_DAYS, days >= REQUIRED_DAYS,
-                            days >= REQUIRED_DAYS ? null
-                                : $"Visit Memories for {REQUIRED_DAYS - days} more day(s).");
+                        var streak = countConsecutiveStreak(activeDates, today);
+                        return (streak, REQUIRED_DAYS, streak >= REQUIRED_DAYS,
+                            streak >= REQUIRED_DAYS ? null
+                                : $"Visit Memories for {REQUIRED_DAYS - streak} more consecutive day(s).");
                     }
 
                 case "Pronunciation":
                     {
-                        var days = _dbContext.SectionActivityLogs
+                        var activeDates = _dbContext.SectionActivityLogs
                             .Where(x => x.UserId == userId
                                      && x.Section == "pronunciation"
                                      && x.ActivityDate >= countFrom)
                             .Select(x => x.ActivityDate)
                             .Distinct()
-                            .Count();
+                            .OrderByDescending(x => x)
+                            .ToList();
 
-                        return (days, REQUIRED_DAYS, days >= REQUIRED_DAYS,
-                            days >= REQUIRED_DAYS ? null
-                                : $"Practice pronunciation for {REQUIRED_DAYS - days} more day(s).");
+                        var streak = countConsecutiveStreak(activeDates, today);
+                        return (streak, REQUIRED_DAYS, streak >= REQUIRED_DAYS,
+                            streak >= REQUIRED_DAYS ? null
+                                : $"Practice pronunciation for {REQUIRED_DAYS - streak} more consecutive day(s).");
                     }
 
                 case "Sentences":
@@ -525,6 +534,33 @@ namespace inzBackend.Services.StudentCourseServices
                 default:
                     return (0, 0, true, null);
             }
+        }
+
+        private static int countConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
+        {
+            if (!datesDesc.Any()) return 0;
+
+            var mostRecent = datesDesc.First();
+
+            if (mostRecent < today.AddDays(-1)) return 0;
+
+            var streak = 0;
+            var expected = mostRecent;
+
+            foreach (var date in datesDesc)
+            {
+                if (date == expected)
+                {
+                    streak++;
+                    expected = expected.AddDays(-1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return streak;
         }
     }
 }
