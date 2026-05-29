@@ -317,9 +317,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public List<ListeningReportDto> getListeningReports(int studentUserId)
         {
-            return _dbContext.ListeningReports
+            var listeningReports = _dbContext.ListeningReports
                 .Where(x => x.UserId == studentUserId)
-                .OrderByDescending(x => x.ReportDate)
                 .Select(x => new ListeningReportDto
                 {
                     Id = x.Id,
@@ -328,6 +327,53 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     MediaType = x.MediaType.ToString(),
                     EpisodeCount = x.EpisodeCount
                 })
+                .ToList();
+
+            var singleModules = _dbContext.UserModuleAssignments
+                .Include(ua => ua.Module)
+                    .ThenInclude(m => m.TheaterItem)
+                .Where(ua => ua.UserId == studentUserId && ua.Module.Category == "Watching")
+                .ToList()
+                .Select(ua => new ListeningReportDto
+                {
+                    Id = ua.Module.Id,
+                    ReportDate = DateOnly.FromDateTime(ua.CreatedAt.DateTime),
+
+                    Title = ua.Module.TheaterItem != null
+                        ? $"{ua.Module.TheaterItem.Title} | (From watching module)"
+                        : ua.Module.Name,
+
+                    MediaType = ua.Module.TheaterItem != null
+                        ? ua.Module.TheaterItem.MediaType.ToString()
+                        : "Video",
+                    EpisodeCount = 0
+                });
+
+            var matrixModules = _dbContext.UserMatrixModuleCompletions
+                .Include(mc => mc.MatrixModule)
+                    .ThenInclude(mm => mm.Module)
+                        .ThenInclude(m => m.TheaterItem)
+                .Where(mc => mc.UserId == studentUserId && mc.MatrixModule.Module.Category == "Watching")
+                .ToList()
+                .Select(mc => new ListeningReportDto
+                {
+                    Id = mc.MatrixModule.Id,
+                    ReportDate = DateOnly.FromDateTime(mc.CreatedAt.DateTime),
+
+                    Title = mc.MatrixModule.Module.TheaterItem != null
+                        ? $"{mc.MatrixModule.Module.TheaterItem.Title} | (From watching module)"
+                        : mc.MatrixModule.Module.Name,
+
+                    MediaType = mc.MatrixModule.Module.TheaterItem != null
+                        ? mc.MatrixModule.Module.TheaterItem.MediaType.ToString()
+                        : "Video",
+                    EpisodeCount = 0
+                });
+
+            return listeningReports
+                .Concat(singleModules)
+                .Concat(matrixModules)
+                .OrderByDescending(x => x.ReportDate)
                 .ToList();
         }
 

@@ -10,7 +10,7 @@ namespace inzBackend.Entities.Configurations
             builder.HasKey(x => x.Id);
 
             builder.HasOne(x => x.User)
-                .WithMany()
+                .WithMany(u => u.UserMatrixModuleCompletions)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
