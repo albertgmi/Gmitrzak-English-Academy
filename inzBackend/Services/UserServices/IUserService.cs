@@ -5,7 +5,7 @@ namespace inzBackend.Services.UserServices
 {
     public interface IUserService
     {
-        AppUser registerUser(RegisterUserRequest request);
+        AppUserDto registerUser(RegisterUserRequest request);
         string login(LoginUserRequest request);
         List<AppUserDto> getAllUsers();
         List<AppUserDto> getAllInactiveUsers();

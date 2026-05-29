@@ -33,7 +33,7 @@ namespace inzBackend.Services.UserServices
             _userContextService = userContextService;
         }
 
-        public AppUser registerUser(RegisterUserRequest request)
+        public AppUserDto registerUser(RegisterUserRequest request)
         {
             var newUser = new AppUser()
             {
@@ -49,7 +49,7 @@ namespace inzBackend.Services.UserServices
             var profile = new Entities.Profile { UserId = newUser.Id, CurrentSemester = 1, EnglishLevel = Enums.EnglishLevel.Communicative };
             _dbContext.Profiles.Add(profile);
             _dbContext.SaveChanges();
-            return newUser;
+            return _mapper.Map<AppUserDto>(newUser);
         }
 
         public string login(LoginUserRequest request)

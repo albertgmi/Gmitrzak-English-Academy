@@ -272,37 +272,50 @@ namespace inzBackend.Services.ModuleServices
             };
         }
         // todo przeniesc do innego miejsca, tu jest logika admina
-        public void toggleComplete(int userId, int assignmentId)
+        public void completeStudentModule(int userId, int moduleId)
         {
+            var today = PolandTime.Today;
+
+            // direct assignment
             var direct = _dbContext.UserModuleAssignments
-                .FirstOrDefault(x => x.Id == assignmentId && x.UserId == userId);
+                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
 
             if (direct is not null)
             {
-                direct.IsCompleted = !direct.IsCompleted;
+                if (direct.IsCompleted) return;
+                direct.IsCompleted = true;
                 _dbContext.SaveChanges();
                 return;
             }
 
-            var completion = _dbContext.UserMatrixModuleCompletions
-                .FirstOrDefault(x => x.MatrixModuleId == assignmentId && x.UserId == userId);
+            // matrix module
+            var userMatrixIds = _dbContext.UserMatrixAssignments
+                .Where(x => x.UserId == userId)
+                .Select(x => x.MatrixId)
+                .ToList();
 
-            if (completion is not null)
+            var matrixModule = _dbContext.MatrixModules
+                .FirstOrDefault(x => x.ModuleId == moduleId
+                                  && userMatrixIds.Contains(x.MatrixId));
+
+            if (matrixModule is null)
+                throw new NotFoundException("Module assignment not found");
+
+            var alreadyCompleted = _dbContext.UserMatrixModuleCompletions
+                .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
+
+            if (alreadyCompleted) return;
+
+            _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
             {
-                _dbContext.UserMatrixModuleCompletions.Remove(completion);
-            }
-            else
-            {
-                _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
-                {
-                    UserId = userId,
-                    MatrixModuleId = assignmentId,
-                    CompletedDate = PolandTime.Today
-                });
-            }
+                UserId = userId,
+                MatrixModuleId = matrixModule.Id,
+                CompletedDate = today
+            });
 
             _dbContext.SaveChanges();
         }
+
         private (int days, int required, bool canComplete, string? blockReason) getActivityStatus(int userId, int moduleId, string category, DateOnly today)
         {
             const int REQUIRED_DAYS = 3;
