@@ -81,6 +81,13 @@ namespace inzBackend.Controllers
             return Ok(records);
         }
 
+        [HttpGet("attendance/{studentUserId}/history")]
+        public ActionResult<IEnumerable<AttendanceDto>> getAttendanceHistory([FromRoute] int studentUserId)
+        {
+            var records = _service.getAttendanceHistory(studentUserId);
+            return Ok(records);
+        }
+
         [HttpPost("attendance")]
         public ActionResult<AttendanceDto> AddAttendance([FromBody] CreateAttendanceDto dto)
         {

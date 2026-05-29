@@ -9,5 +9,6 @@
         public List<RecentGradeDto> RecentGrades { get; set; } = [];
         public List<UpcomingAssignmentDto> UpcomingAssignments { get; set; } = [];
         public List<StudentPointsDto> TopStudentsByPoints { get; set; } = [];
+        public int TotalUpcomingAssignmentsCount { get; set; }
     }
 }

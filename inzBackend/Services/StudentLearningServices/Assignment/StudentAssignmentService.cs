@@ -34,7 +34,11 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                 .ToList();
 
             var directDtos = _mapper.Map<List<AssignmentStudentDto>>(directAssignments);
-            directDtos.ForEach(d => d.IsOverdue = d.DueDate < today);
+            directDtos.ForEach(d =>
+            {
+                d.IsOverdue = d.DueDate < today;
+                d.HasDeadline = true;
+            });
             result.AddRange(directDtos);
 
             var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
@@ -59,14 +63,9 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                         .AddDays((mm.WeekNumber - 1) * ma.Matrix.RefreshIntervalDays)
                         .AddDays(mm.DayOfWeek - 1);
 
-                    if (unlockDate > today)
-                        continue;
+                    if (unlockDate > today) continue;
 
-                    var isInDirectAssignments = directAssignments
-                        .Any(d => d.ModuleId == mm.ModuleId);
-
-                    if (isInDirectAssignments)
-                        continue;
+                    if (directAssignments.Any(d => d.ModuleId == mm.ModuleId)) continue;
 
                     result.Add(new AssignmentStudentDto
                     {
@@ -78,6 +77,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                         DueDate = unlockDate,
                         IsCompleted = false,
                         IsOverdue = false,
+                        HasDeadline = false,
                         IsFromMatrix = true,
                         MatrixName = ma.Matrix.Name
                     });
@@ -86,7 +86,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
 
             return result
                 .OrderByDescending(x => x.IsOverdue)
-                .ThenBy(x => x.DueDate)
+                .ThenBy(x => x.HasDeadline ? x.DueDate : DateOnly.MaxValue)
                 .ToList();
         }
 

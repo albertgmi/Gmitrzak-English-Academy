@@ -44,7 +44,6 @@ using Microsoft.Extensions.DependencyInjection;
 using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.AnnouncementsServices;
 using inzBackend.Services.SentenceServices;
-using inzBackend.Services.UserOptionsServices;
 using inzBackend.Services.UserAnswerServices;
 using inzBackend.Services.ReportServices;
 using inzBackend.Services.RankingServices;
@@ -144,7 +143,6 @@ namespace inzBackend
             builder.Services.AddScoped<IAiTranslationService, AiTranslationService>();
             builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
             builder.Services.AddScoped<ISentenceService, SentenceService>();
-            builder.Services.AddScoped<IUserOptionsService, UserOptionsService>();
             builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
             builder.Services.AddScoped<IAiSentenceCheckerService, AiSentenceCheckerService>();
             builder.Services.AddScoped<IModuleReportExportService, ModuleReportExportService>();

@@ -12,5 +12,6 @@
         public bool IsOverdue { get; set; }
         public bool IsFromMatrix { get; set; }
         public string MatrixName { get; set; } = string.Empty;
+        public bool HasDeadline { get; set; }
     }
 }

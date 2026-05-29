@@ -11,5 +11,7 @@ namespace inzBackend.Services.StudentCourseServices
         void completeSingleModule(int id);
         void uncompleteSingleModule(int id);
         List<StudentModuleDto> getCompletedSingleModules();
+        StudentModuleDto? getStudentModule(int moduleId);
+        void completeStudentModule(int moduleId);
     }
 }

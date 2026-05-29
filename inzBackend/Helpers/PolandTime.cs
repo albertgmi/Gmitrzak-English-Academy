@@ -7,5 +7,9 @@
         public static DateTimeOffset Now => TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, PolishZone);
         public static DateTime DateTimeNow => TimeZoneInfo.ConvertTime(DateTime.UtcNow, PolishZone);
         public static DateOnly Today => DateOnly.FromDateTime(DateTimeNow);
+        public static DateTimeOffset Convert(DateTimeOffset dateTimeOffset)
+        {
+            return TimeZoneInfo.ConvertTime(dateTimeOffset, PolishZone);
+        }
     }
 }

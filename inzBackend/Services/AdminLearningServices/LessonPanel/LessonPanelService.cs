@@ -317,24 +317,22 @@ public class LessonPanelService : ILessonPanelService
 
     public IEnumerable<AttendanceDto> getAttendance(int studentId)
     {
-        var nowPoland = PolandTime.Now;
+        var now = PolandTime.Now;
 
-        var firstDayOfMonthPoland = new DateTimeOffset(
-            nowPoland.Year,
-            nowPoland.Month,
+        var firstDayOfMonth = new DateTimeOffset(
+            now.Year,
+            now.Month,
             1,
             0,
             0,
             0,
-            nowPoland.Offset
+            now.Offset
         );
-
-        var firstDayOfMonthUtc = firstDayOfMonthPoland.UtcDateTime;
 
         var records = _dbContext.Attendance
             .Where(a =>
                 a.UserId == studentId &&
-                a.CreatedAt >= firstDayOfMonthUtc)
+                a.CreatedAt >= firstDayOfMonth)
             .OrderByDescending(a => a.CreatedAt)
             .Select(a => new AttendanceDto
             {
@@ -342,7 +340,40 @@ public class LessonPanelService : ILessonPanelService
                 UserId = a.UserId,
                 Type = a.Type.ToString(),
                 Duration = a.DurationInMinutes,
-                CreatedAt = PolandTime.Now.UtcDateTime
+                CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
+            })
+            .ToList();
+
+        return records;
+    }
+
+    public IEnumerable<AttendanceDto> getAttendanceHistory(int studentId)
+    {
+        var now = PolandTime.Now;
+
+        var firstDayOfMonth = new DateTimeOffset(
+            now.Year,
+            now.Month,
+            1,
+            0,
+            0,
+            0,
+            0,
+            now.Offset
+        );
+
+        var records = _dbContext.Attendance
+            .Where(a =>
+                a.UserId == studentId &&
+                a.CreatedAt < firstDayOfMonth)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new AttendanceDto
+            {
+                Id = a.Id,
+                UserId = a.UserId,
+                Type = a.Type.ToString(),
+                Duration = a.DurationInMinutes,
+                CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
             })
             .ToList();
 
@@ -366,7 +397,7 @@ public class LessonPanelService : ILessonPanelService
             UserId = dto.UserId,
             Type = attendanceType,
             DurationInMinutes = dto.Duration,
-            CreatedAt = PolandTime.Now.UtcDateTime
+            CreatedAt = PolandTime.Now
         };
 
         _dbContext.Attendance.Add(attendance);
@@ -378,7 +409,7 @@ public class LessonPanelService : ILessonPanelService
             UserId = attendance.UserId,
             Type = attendance.Type.ToString(),
             Duration = attendance.DurationInMinutes,
-            CreatedAt = PolandTime.Now.UtcDateTime
+            CreatedAt = PolandTime.Now.DateTime
         };
     }
 
