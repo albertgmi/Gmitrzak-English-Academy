@@ -180,6 +180,31 @@ namespace inzBackend
 
             app.MapControllers();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<GmitrzakEnglishAcademyDbContext>();
+                var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUser>>();
+
+                string testUsername = "piotrgmitrzak";
+                var userExists = dbContext.Users.Any(u => u.Username == testUsername);
+
+                if (!userExists)
+                {
+                    var newTestUser = new AppUser
+                    {
+                        Username = testUsername,
+                        Email = "piotrgmitrzak@example.com",
+                        IsActive = true,
+                        Role = Enums.UserRole.Admin
+                    };
+
+                    newTestUser.PasswordHash = passwordHasher.HashPassword(newTestUser, "Barbara1");
+
+                    dbContext.Users.Add(newTestUser);
+                    dbContext.SaveChanges();
+                }
+            }
+
             app.Run();
         }
     }
