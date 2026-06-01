@@ -26,7 +26,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("matrix/user/{userId}")]
-        public List<MatrixAssignmentDto> getMatrixAssignmentsByUser(int userId)
+        public List<MatrixAssignmentDto> getMatrixAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getMatrixAssignmentsByUser(userId);
         }
@@ -38,7 +38,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("matrix/{id}")]
-        public void deleteMatrixAssignment(int id)
+        public void deleteMatrixAssignment([FromRoute] int id)
         {
             _assignmentService.deleteMatrixAssignment(id);
         }
@@ -50,7 +50,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("module/user/{userId}")]
-        public List<ModuleAssignmentDto> getModuleAssignmentsByUser(int userId)
+        public List<ModuleAssignmentDto> getModuleAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getModuleAssignmentsByUser(userId);
         }
@@ -62,19 +62,19 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("module/{id}")]
-        public void deleteModuleAssignment(int id)
+        public void deleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.deleteModuleAssignment(id);
         }
 
         [HttpPatch("module/{id}/complete")]
-        public void completeModuleAssignment(int id)
+        public void completeModuleAssignment([FromRoute] int id)
         {
             _assignmentService.completeModuleAssignment(id);
         }
 
         [HttpPatch("module/{id}/uncomplete")]
-        public void uncompleteModuleAssignment(int id)
+        public void uncompleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.uncompleteModuleAssignment(id);
         }

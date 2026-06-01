@@ -146,16 +146,17 @@ namespace inzBackend.Services.RankingServices
             };
         }
 
-        public void addReaction(int fromUserId, AddReactionRequest request)
+        public void addReaction(AddReactionRequest request)
         {
+            var userId = _userContextService.GetUserId!.Value;
             var validEmojis = new[] { "👏", "👑", "🔥" };
             if (!validEmojis.Contains(request.Emoji)) return;
-            if (fromUserId == request.ToUserId) return;
+            if (userId == request.ToUserId) return;
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var exists = _dbContext.RankingReactions.Any(x =>
-                x.FromUserId == fromUserId &&
+                x.FromUserId == userId &&
                 x.ToUserId == request.ToUserId &&
                 x.Emoji == request.Emoji &&
                 x.Period == request.Period);
@@ -164,7 +165,7 @@ namespace inzBackend.Services.RankingServices
 
             _dbContext.RankingReactions.Add(new RankingReaction
             {
-                FromUserId = fromUserId,
+                FromUserId = userId,
                 ToUserId = request.ToUserId,
                 Emoji = request.Emoji,
                 Period = request.Period,
@@ -173,10 +174,11 @@ namespace inzBackend.Services.RankingServices
             _dbContext.SaveChanges();
         }
 
-        public void removeReaction(int fromUserId, int toUserId, string emoji, string period)
+        public void removeReaction(int toUserId, string emoji, string period)
         {
+            var userId = _userContextService.GetUserId!.Value;
             var reaction = _dbContext.RankingReactions.FirstOrDefault(x =>
-                x.FromUserId == fromUserId &&
+                x.FromUserId == userId &&
                 x.ToUserId == toUserId &&
                 x.Emoji == emoji &&
                 x.Period == period);

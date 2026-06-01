@@ -1,107 +1,107 @@
-﻿using inzBackend.Models.AIAnswerCheckingModels;
-using inzBackend.Models.SentenceSetsModels;
+﻿using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Services.SentenceServices;
-using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-[Route("api/sentence")]
-[ApiController]
-public class SentenceController : ControllerBase
+namespace inzBackend.Controllers
 {
-    private readonly ISentenceService _sentenceService;
-
-    public SentenceController(ISentenceService sentenceService)
+    [Route("api/sentence")]
+    [ApiController]
+    [Authorize(Roles = "Admin")]
+    public class SentenceController : ControllerBase
     {
-        _sentenceService = sentenceService;
-    }
+        private readonly ISentenceService _sentenceService;
 
-    [HttpGet("stock")]
-    [Authorize(Roles = "Admin")]
-    public List<SentenceStockDto> getStock() =>
-        _sentenceService.getAllStock();
+        public SentenceController(ISentenceService sentenceService)
+        {
+            _sentenceService = sentenceService;
+        }
 
-    [HttpPost("stock")]
-    [Authorize(Roles = "Admin")]
-    public ActionResult createStock([FromBody] CreateSentenceStockRequest request)
-    {
-        _sentenceService.createStock(request);
-        return Ok();
-    }
+        [HttpGet("stock")]
+        public List<SentenceStockDto> getStock()
+        {
+            return _sentenceService.getAllStock();
+        }
 
-    [HttpDelete("stock/{id}")]
-    [Authorize(Roles = "Admin")]
-    public ActionResult deleteStock(int id)
-    {
-        _sentenceService.deleteStock(id);
-        return NoContent();
-    }
+        [HttpPost("stock")]
+        public ActionResult createStock([FromBody] CreateSentenceStockRequest request)
+        {
+            _sentenceService.createStock(request);
+            return Ok();
+        }
 
-    [HttpPost("stock/upload")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> uploadStock(IFormFile file)
-    {
-        var allowedExtensions = new[] { ".xlsx", ".xls" };
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        [HttpDelete("stock/{id}")]
+        public ActionResult deleteStock([FromRoute] int id)
+        {
+            _sentenceService.deleteStock(id);
+            return NoContent();
+        }
 
-        if (!allowedExtensions.Contains(ext))
-            return BadRequest(new { message = "Only .xlsx and .xls files are allowed" });
+        [HttpPost("stock/upload")]
+        public async Task<ActionResult> uploadStock(IFormFile file)
+        {
+            var allowedExtensions = new[] { ".xlsx", ".xls" };
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-        var count = await _sentenceService.uploadStockFromExcel(file);
-        return Ok(new { added = count });
-    }
+            if (!allowedExtensions.Contains(ext))
+                return BadRequest(new { message = "Only .xlsx and .xls files are allowed" });
 
-    [HttpGet("sets")]
-    [Authorize(Roles = "Admin")]
-    public List<SentenceSetGroupDto> getSets() =>
-        _sentenceService.getAllSetsGrouped();
+            var count = await _sentenceService.uploadStockFromExcel(file);
+            return Ok(new { added = count });
+        }
 
-    [HttpGet("sets/{id}")]
-    [Authorize(Roles = "Admin")]
-    public SentenceSetDto getSet(int id) =>
-        _sentenceService.getSet(id);
+        [HttpGet("sets")]
+        public List<SentenceSetGroupDto> getSets()
+        {
+            return _sentenceService.getAllSetsGrouped();
+        }
 
-    [HttpPost("sets")]
-    [Authorize(Roles = "Admin")]
-    public SentenceSetDto createSet([FromBody] CreateSentenceSetRequest request) =>
-        _sentenceService.createSet(request);
+        [HttpGet("sets/{id}")]
+        public SentenceSetDto getSet([FromRoute] int id)
+        {
+            return _sentenceService.getSet(id);
+        }
 
-    [HttpDelete("sets/{id}")]
-    [Authorize(Roles = "Admin")]
-    public ActionResult deleteSet(int id)
-    {
-        _sentenceService.deleteSet(id);
-        return NoContent();
-    }
+        [HttpPost("sets")]
+        public SentenceSetDto createSet([FromBody] CreateSentenceSetRequest request)
+        {
+            return _sentenceService.createSet(request);
+        }
 
-    [HttpPost("assign-to-module")]
-    [Authorize(Roles = "Admin")]
-    public ActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
-    {
-        _sentenceService.assignToModule(request);
-        return Ok();
-    }
+        [HttpDelete("sets/{id}")]
+        public ActionResult deleteSet([FromRoute] int id)
+        {
+            _sentenceService.deleteSet(id);
+            return NoContent();
+        }
 
-    [HttpGet("module/{moduleId}/sets")]
-    [Authorize(Roles = "Admin")]
-    public List<SentenceSetDto> getSetsForModule(int moduleId) =>
-        _sentenceService.getSetsForModule(moduleId);
+        [HttpPost("assign-to-module")]
+        public ActionResult assignToModule([FromBody] AssignSetToModuleRequest request)
+        {
+            _sentenceService.assignToModule(request);
+            return Ok();
+        }
 
-    [HttpDelete("module/{moduleId}/set/{setId}")]
-    [Authorize(Roles = "Admin")]
-    public IActionResult removeSetFromModule(int moduleId, int setId)
-    {
-        _sentenceService.removeSetFromModule(moduleId, setId);
-        return NoContent();
-    }
+        [HttpGet("module/{moduleId}/sets")]
+        public List<SentenceSetDto> getSetsForModule([FromRoute] int moduleId)
+        {
+            return _sentenceService.getSetsForModule(moduleId);
+        }
 
-    [HttpPut("stock/{id}")]
-    [Authorize(Roles = "Admin")]
-    public ActionResult updateStock(int id, [FromBody] UpdateSentenceStockRequest request)
-    {
-        _sentenceService.updateStock(id, request);
-        return Ok();
+        [HttpDelete("module/{moduleId}/set/{setId}")]
+        public ActionResult removeSetFromModule([FromRoute] int moduleId, [FromRoute] int setId)
+        {
+            _sentenceService.removeSetFromModule(moduleId, setId);
+            return NoContent();
+        }
+
+        [HttpPut("stock/{id}")]
+        public ActionResult updateStock([FromRoute] int id, [FromBody] UpdateSentenceStockRequest request)
+        {
+            _sentenceService.updateStock(id, request);
+            return Ok();
+        }
     }
 }

@@ -29,16 +29,14 @@ namespace inzBackend.Controllers
         [HttpPost("reaction")]
         public ActionResult addReaction([FromBody] AddReactionRequest request)
         {
-            var userId = _userContextService.GetUserId!.Value;
-            _rankingService.addReaction(userId, request);
+            _rankingService.addReaction(request);
             return Ok();
         }
 
         [HttpDelete("reaction")]
         public ActionResult removeReaction([FromQuery] int toUserId, [FromQuery] string emoji, [FromQuery] string period)
         {
-            var userId = _userContextService.GetUserId!.Value;
-            _rankingService.removeReaction(userId, toUserId, emoji, period);
+            _rankingService.removeReaction(toUserId, emoji, period);
             return Ok();
         }
     }

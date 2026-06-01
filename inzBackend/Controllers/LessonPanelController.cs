@@ -19,63 +19,63 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("agenda/{studentUserId}")]
-        public AgendaDto getAgenda(int studentUserId)
+        public AgendaDto getAgenda([FromRoute] int studentUserId)
         {
             return _service.getAgenda(studentUserId);
         }
 
         [HttpPut("agenda/{studentUserId}")]
-        public IActionResult updateAgenda(int studentUserId, [FromBody] UpdateAgendaRequest request)
+        public IActionResult updateAgenda([FromRoute] int studentUserId, [FromBody] UpdateAgendaRequest request)
         {
             _service.updateAgenda(studentUserId, request);
             return Ok();
         }
 
         [HttpGet("grades/{studentUserId}")]
-        public List<LessonGradeDto> getGrades(int studentUserId)
+        public List<LessonGradeDto> getGrades([FromRoute] int studentUserId)
         {
             return _service.getGrades(studentUserId);
         }
             
         [HttpGet("activity-points/{studentUserId}")]
-        public ActivityPointsLessonSummaryDto getActivityPoints(int studentUserId)
+        public ActivityPointsLessonSummaryDto getActivityPoints([FromRoute] int studentUserId)
         {
             return _service.getActivityPoints(studentUserId);
         }
             
         [HttpPost("activity-points/{studentUserId}")]
-        public IActionResult addActivityPoints(int studentUserId, [FromBody] AddPointsRequest request)
+        public IActionResult addActivityPoints([FromRoute] int studentUserId, [FromBody] AddPointsRequest request)
         {
             _service.addActivityPoints(studentUserId, request.Points, request.Reason);
             return Ok();
         }
 
         [HttpGet("flashcards/{studentUserId}")]
-        public LessonFlashcardSummaryDto getFlashcards(int studentUserId)
+        public LessonFlashcardSummaryDto getFlashcards([FromRoute] int studentUserId)
         {
             return _service.getFlashcardSummary(studentUserId);
         }
 
         [HttpGet("study-time/{studentUserId}")]
-        public StudentStudyTimeDto getStudyTime(int studentUserId)
+        public StudentStudyTimeDto getStudyTime([FromRoute] int studentUserId)
         {
             return _service.getStudyTime(studentUserId);
         }
             
         [HttpGet("last-week/{studentUserId}")]
-        public LessonLastWeekDto getLastWeek(int studentUserId)
+        public LessonLastWeekDto getLastWeek([FromRoute] int studentUserId)
         {
             return _service.getLastWeek(studentUserId);
         }
 
         [HttpGet("stats/{studentUserId}")]
-        public LessonStatsDto getStats(int studentUserId)
+        public LessonStatsDto getStats([FromRoute] int studentUserId)
         {
             return _service.getStats(studentUserId);
         }
 
         [HttpGet("attendance/{studentUserId}")]
-        public ActionResult<IEnumerable<AttendanceDto>> GetAttendance([FromRoute] int studentUserId)
+        public ActionResult<IEnumerable<AttendanceDto>> getAttendance([FromRoute] int studentUserId)
         {
             var records = _service.getAttendance(studentUserId);
             return Ok(records);
@@ -89,14 +89,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("attendance")]
-        public ActionResult<AttendanceDto> AddAttendance([FromBody] CreateAttendanceDto dto)
+        public ActionResult<AttendanceDto> addAttendance([FromBody] CreateAttendanceDto dto)
         {
             var attendance = _service.addAttendance(dto);
             return Ok(attendance);
         }
 
         [HttpDelete("attendance/{id}")]
-        public ActionResult DeleteAttendance([FromRoute] int id)
+        public ActionResult deleteAttendance([FromRoute] int id)
         {
             var deleted = _service.deleteAttendance(id);
             return NoContent();

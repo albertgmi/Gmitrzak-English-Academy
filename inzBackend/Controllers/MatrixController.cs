@@ -1,6 +1,5 @@
 ﻿using inzBackend.Models.MatrixModels;
 using inzBackend.Services.MatrixServices;
-using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,14 +44,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("{matrixId}/courses/{courseId}")]
-        public ActionResult assignCourse(int matrixId, int courseId)
+        public ActionResult assignCourse([FromRoute] int matrixId, [FromRoute] int courseId)
         {
             _matrixService.assignCourse(matrixId, courseId);
             return Ok();
         }
 
         [HttpDelete("{matrixId}/courses/{courseId}")]
-        public ActionResult detachCourse(int matrixId, int courseId)
+        public ActionResult detachCourse([FromRoute] int matrixId, [FromRoute] int courseId)
         {
             _matrixService.detachCourse(matrixId, courseId);
             return Ok();

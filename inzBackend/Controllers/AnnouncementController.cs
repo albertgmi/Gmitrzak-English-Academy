@@ -44,7 +44,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("{recipientId}/read")]
-        public ActionResult markRead(int recipientId)
+        public ActionResult markRead([FromRoute] int recipientId)
         {
             _announcementService.markRead(recipientId);
             return Ok();
@@ -59,7 +59,7 @@ namespace inzBackend.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult delete(int id)
+        public ActionResult delete([FromRoute] int id)
         {
             _announcementService.delete(id);
             return NoContent();

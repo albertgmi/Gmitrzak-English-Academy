@@ -14,9 +14,7 @@ namespace inzBackend.Controllers
         private readonly IUserAnswerService _service;
         private readonly IModuleReportExportService _reportExportService;
 
-        public UserAnswerController(
-            IUserAnswerService service,
-            IModuleReportExportService reportExportService)
+        public UserAnswerController(IUserAnswerService service, IModuleReportExportService reportExportService)
         {
             _service = service;
             _reportExportService = reportExportService;
@@ -32,23 +30,21 @@ namespace inzBackend.Controllers
 
         [HttpGet("module/{moduleId}")]
         [Authorize(Roles = "User")]
-        public ActionResult<List<AnswerResultDto>> getAnswersForModule(int moduleId)
+        public ActionResult<List<AnswerResultDto>> getAnswersForModule([FromRoute] int moduleId)
         {
             return Ok(_service.getAnswersForModule(moduleId));
         }
 
         [HttpGet("module/{moduleId}/student/{studentId}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<AnswerResultDto>> getAnswersForStudent(
-            int moduleId,
-            int studentId)
+        public ActionResult<List<AnswerResultDto>> getAnswersForStudent([FromRoute] int moduleId, [FromRoute] int studentId)
         {
             return Ok(_service.getAnswersForModuleByStudent(moduleId, studentId));
         }
 
         [HttpPatch("{answerId}/override")]
         [Authorize(Roles = "Admin")]
-        public ActionResult overrideAnswer(int answerId, [FromBody] TeacherOverrideRequest request)
+        public ActionResult overrideAnswer([FromRoute] int answerId, [FromBody] TeacherOverrideRequest request)
         {
             _service.overrideAnswer(answerId, request);
             return Ok();
@@ -56,7 +52,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("module/{moduleId}/student/{studentId}/report/pdf")]
         [Authorize(Roles = "Admin")]
-        public ActionResult generatePdfReport(int moduleId, int studentId)
+        public ActionResult generatePdfReport([FromRoute] int moduleId, [FromRoute] int studentId)
         {
             var report = _service.generateReport(moduleId, studentId);
 
@@ -71,7 +67,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("module/{moduleId}/student/{studentId}/report/docx")]
         [Authorize(Roles = "Admin")]
-        public ActionResult generateDocxReport(int moduleId, int studentId)
+        public ActionResult generateDocxReport([FromRoute] int moduleId, [FromRoute] int studentId)
         {
             var report = _service.generateReport(moduleId, studentId);
 

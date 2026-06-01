@@ -1,5 +1,4 @@
-﻿using inzBackend.Models;
-using inzBackend.Models.UserModels;
+﻿using inzBackend.Models.UserModels;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

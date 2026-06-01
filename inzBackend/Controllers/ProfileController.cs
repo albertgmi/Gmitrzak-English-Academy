@@ -18,23 +18,23 @@ namespace inzBackend.Controllers
 
         [HttpGet("{userId}")]
         [Authorize(Roles ="Admin,User")]
-        public ProfileDto GetProfile(int userId)
+        public ProfileDto getProfile([FromRoute] int userId)
         {
-            return _profileService.GetProfile(userId);
+            return _profileService.getProfile(userId);
         }
 
         [HttpPut("{userId}")]
         [Authorize(Roles = "Admin")]
-        public void UpdateProfile(int userId, [FromBody] UpdateProfileRequest request)
+        public void updateProfile([FromRoute] int userId, [FromBody] UpdateProfileRequest request)
         {
-            _profileService.UpdateProfile(userId, request);
+            _profileService.updateProfile(userId, request);
         }
 
         [HttpPost("{userId}/avatar")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<string> UploadAvatar(int userId, IFormFile file)
+        public async Task<string> uploadAvatar([FromRoute] int userId, IFormFile file)
         {
-            return await _profileService.UploadAvatar(userId, file);
+            return await _profileService.uploadAvatar(userId, file);
         }
     }
 }

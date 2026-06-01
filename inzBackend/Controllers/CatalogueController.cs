@@ -30,19 +30,9 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("entries")]
-        public List<CatalogueEntryDto> getEntries(
-            [FromQuery] string? catalogueName,
-            [FromQuery] string? userRef,
-            [FromQuery] DateOnly? dateFrom,
-            [FromQuery] DateOnly? dateTo)
+        public List<CatalogueEntryDto> getEntries([FromQuery] CatalogueEntryFilterRequest filter)
         {
-            return _catalogueService.getEntries(new CatalogueEntryFilterRequest
-            {
-                CatalogueName = catalogueName,
-                UserRef = userRef,
-                DateFrom = dateFrom,
-                DateTo = dateTo
-            });
+            return _catalogueService.getEntries(filter);
         }
 
         [HttpDelete("{catalogueId}")]
@@ -53,8 +43,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPut("entries/{entryId}")]
-        public ActionResult updateTranslation([FromBody] UpdateTranslationRequest request,
-            [FromRoute] int entryId)
+        public ActionResult updateTranslation([FromBody] UpdateTranslationRequest request, [FromRoute] int entryId)
         {
             _catalogueService.updateTranslation(request, entryId);
             return Ok();

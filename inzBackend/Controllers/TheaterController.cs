@@ -30,7 +30,7 @@ namespace inzBackend.Controllers
         } 
 
         [HttpGet("{id}")]
-        public TheaterItemDto getById(int id)
+        public TheaterItemDto getById([FromRoute] int id)
         {
             return _theaterService.getById(id);
         }
@@ -42,21 +42,21 @@ namespace inzBackend.Controllers
         }
             
         [HttpPut("{id}")]
-        public IActionResult update(int id, [FromBody] UpdateTheaterItemRequest request)
+        public ActionResult update([FromRoute] int id, [FromBody] UpdateTheaterItemRequest request)
         {
             _theaterService.update(id, request);
             return Ok();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult delete(int id)
+        public ActionResult delete([FromRoute] int id)
         {
             _theaterService.delete(id);
             return NoContent();
         }
 
         [HttpPatch("{id}/toggle")]
-        public IActionResult toggle(int id)
+        public ActionResult toggle([FromRoute] int id)
         {
             _theaterService.toggleActive(id);
             return Ok();
