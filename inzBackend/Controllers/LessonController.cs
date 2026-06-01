@@ -1,5 +1,4 @@
-﻿using inzBackend.Entities;
-using inzBackend.Models.AdminLearningModels;
+﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,49 +39,49 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("homework/{studentUserId}")]
-        public ActionResult<List<HomeworkItemDto>> getHomework(int studentUserId)
+        public ActionResult<List<HomeworkItemDto>> getHomework([FromRoute] int studentUserId)
         {
             var result = _lessonService.getHomeworkForWeek(studentUserId);
             return Ok(result);
         }
 
         [HttpPatch("homework/{id}/check")]
-        public ActionResult checkHomework(int id)
+        public ActionResult checkHomework([FromRoute] int id)
         {
             _lessonService.checkHomework(id);
             return Ok();
         }
 
         [HttpPatch("homework/{id}/uncheck")]
-        public ActionResult uncheckHomework(int id)
+        public ActionResult uncheckHomework([FromRoute] int id)
         {
             _lessonService.uncheckHomework(id);
             return Ok();
         }
 
         [HttpGet("pronunciation-test/{studentUserId}")]
-        public ActionResult<List<PronunciationTestItemDto>> getPronunciationTest(int studentUserId)
+        public ActionResult<List<PronunciationTestItemDto>> getPronunciationTest([FromRoute] int studentUserId)
         {
             var result = _lessonService.getPronunciationList(studentUserId);
             return Ok(result);
         }
 
         [HttpPatch("pronunciation-test/{id}/check")]
-        public ActionResult checkWord(int id)
+        public ActionResult checkWord([FromRoute] int id)
         {
             _lessonService.checkPronunciationWord(id);
             return Ok();
         }
 
         [HttpPatch("pronunciation-test/{id}/uncheck")]
-        public ActionResult uncheckWord(int id)
+        public ActionResult uncheckWord([FromRoute] int id)
         {
             _lessonService.uncheckPronunciationWord(id);
             return Ok();
         }
 
         [HttpGet("grades/{studentUserId}")]
-        public ActionResult<List<GradeListDto>> getGrades(int studentUserId)
+        public ActionResult<List<GradeListDto>> getGrades([FromRoute] int studentUserId)
         {
             var result = _lessonService.getGrades(studentUserId);
             return Ok(result);
@@ -96,14 +95,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("grades/{gradeId}")]
-        public ActionResult removeGrade(int gradeId)
+        public ActionResult removeGrade([FromRoute] int gradeId)
         {
             _lessonService.removeGrade(gradeId);
             return NoContent();
         }
 
         [HttpGet("notes/{studentUserId}")]
-        public ActionResult<List<TeacherNoteDto>> getNotes(int studentUserId)
+        public ActionResult<List<TeacherNoteDto>> getNotes([FromRoute] int studentUserId)
         {
             var result = _lessonService.getNotes(studentUserId);
             return Ok(result);
@@ -117,14 +116,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("notes/{noteId}")]
-        public ActionResult deleteNote(int noteId)
+        public ActionResult deleteNote([FromRoute] int noteId)
         {
             _lessonService.deleteNote(noteId);
             return NoContent();
         }
 
         [HttpGet("listening/{studentUserId}")]
-        public ActionResult<List<ListeningReportDto>> getListeningReports(int studentUserId)
+        public ActionResult<List<ListeningReportDto>> getListeningReports([FromRoute] int studentUserId)
         {
             var result = _lessonService.getListeningReports(studentUserId);
             return Ok(result);

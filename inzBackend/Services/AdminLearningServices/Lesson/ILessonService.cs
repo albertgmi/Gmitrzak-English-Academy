@@ -26,6 +26,5 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         void deleteNote(int noteId);
         void addListeningReport(AddListeningReportRequest request);
         List<ListeningReportDto> getListeningReports(int studentUserId);
-        AdminStudentStudySummaryDto getStudyLogsReport(int studentUserId);
     }
 }

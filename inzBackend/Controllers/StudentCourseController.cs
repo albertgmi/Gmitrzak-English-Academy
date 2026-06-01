@@ -20,12 +20,8 @@ namespace inzBackend.Controllers
         private readonly IGradesService _gradesService;
         private readonly IStatsService _statsService;
 
-        public StudentCourseController(
-            IStudentCourseService studentCourseService,
-            ILastWeekService lastWeekService,
-            IActivityPointService activityPointService,
-            IGradesService gradesService,
-            IStatsService statsService)
+        public StudentCourseController(IStudentCourseService studentCourseService, ILastWeekService lastWeekService,
+            IActivityPointService activityPointService, IGradesService gradesService, IStatsService statsService)
         {
             _studentCourseService = studentCourseService;
             _lastWeekService = lastWeekService;
@@ -42,14 +38,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("complete/{matrixModuleId}")]
-        public ActionResult completeModule(int matrixModuleId)
+        public ActionResult completeModule([FromRoute] int matrixModuleId)
         {
             _studentCourseService.completeModule(matrixModuleId);
             return Ok();
         }
 
         [HttpDelete("complete/{matrixModuleId}")]
-        public ActionResult uncompleteModule(int matrixModuleId)
+        public ActionResult uncompleteModule([FromRoute] int matrixModuleId)
         {
             _studentCourseService.uncompleteModule(matrixModuleId);
             return Ok();
@@ -92,14 +88,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("single-modules/complete/{id}")]
-        public ActionResult CompleteSingleModule(int id)
+        public ActionResult CompleteSingleModule([FromRoute] int id)
         {
             _studentCourseService.completeSingleModule(id);
             return Ok();
         }
 
         [HttpDelete("single-modules/complete/{id}")]
-        public ActionResult UncompleteSingleModule(int id)
+        public ActionResult UncompleteSingleModule([FromRoute] int id)
         {
             _studentCourseService.uncompleteSingleModule(id);
             return Ok();

@@ -1,9 +1,6 @@
-﻿using AutoMapper;
-using inzBackend.Models;
+﻿using inzBackend.Models;
 using inzBackend.Models.ModuleModels;
-using inzBackend.Models.StudentCourseModels;
 using inzBackend.Services.ModuleServices;
-using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,39 +8,34 @@ namespace inzBackend.Controllers
 {
     [Route("api/module")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ModuleController : ControllerBase
     {
         private readonly IModuleService _moduleService;
-        private readonly IUserContextService _userContextService;
-        public ModuleController(IModuleService moduleService, IMapper mapper, IUserContextService userContextService)
+        public ModuleController(IModuleService moduleService)
         {
             _moduleService = moduleService;
-            _userContextService = userContextService;
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public ActionResult<List<ModuleDto>> getAllModules()
         {
             return _moduleService.getAllModules();
         }
 
         [HttpGet("student/{studentId}/sentences")]
-        [Authorize(Roles = "Admin")]
         public ActionResult<List<ModuleDto>> getSentenceModulesForStudent([FromRoute] int studentId)
         {
             return Ok(_moduleService.getSentenceModulesForStudent(studentId));
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public ActionResult<Module> createModule([FromBody] CreateModuleRequest request)
         {
             return Ok(_moduleService.createModule(request));
         }
 
         [HttpPut("{moduleId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult updateModule([FromRoute] int moduleId, [FromBody] UpdateModuleRequest request)
         {
             _moduleService.updateModule(moduleId, request);
@@ -51,7 +43,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("{moduleId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult deleteModule([FromRoute] int moduleId)
         {
             _moduleService.deleteModule(moduleId);
@@ -59,7 +50,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("{moduleId}/matrix/{matrixId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult assignMatrix([FromRoute] int moduleId, [FromRoute] int matrixId, [FromBody] AssignModuleToMatrixRequest request)
         {
             _moduleService.assignMatrix(moduleId, matrixId, request);
@@ -67,7 +57,6 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("{moduleId}/matrix/{matrixId}")]
-        [Authorize(Roles = "Admin")]
         public ActionResult detachMatrix([FromRoute] int moduleId, [FromRoute] int matrixId)
         {
             _moduleService.detachMatrix(moduleId, matrixId);

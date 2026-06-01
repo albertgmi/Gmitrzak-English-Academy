@@ -6,7 +6,6 @@ using inzBackend.Models;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
-using inzBackend.Services.AdminFlashcardServices;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.AssignmentServices;
@@ -133,7 +132,6 @@ namespace inzBackend
             builder.Services.AddScoped<IFlashcardsService, FlashcardsService>();
             builder.Services.AddScoped<IVocabularyService, VocabularyService>();
             builder.Services.AddScoped<IStudentAssignmentService, StudentAssignmentService>();
-            builder.Services.AddScoped<IAdminFlashcardService, AdminFlashcardService>();
             builder.Services.AddScoped<ILessonService, LessonService>();
             builder.Services.AddScoped<ILessonPanelService, LessonPanelService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();

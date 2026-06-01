@@ -13,7 +13,6 @@ using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Controllers
 {
@@ -66,14 +65,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("pronunciation/{id}/check")]
-        public IActionResult checkPronunciation(int id)
+        public IActionResult checkPronunciation([FromRoute] int id)
         {
             _pronunciationService.checkEntry(id);
             return Ok();
         }
 
         [HttpPatch("pronunciation/{id}/uncheck")]
-        public IActionResult uncheckPronunciation(int id)
+        public IActionResult uncheckPronunciation([FromRoute] int id)
         {
             _pronunciationService.uncheckEntry(id);
             return Ok();
@@ -104,9 +103,9 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("flashcards/search")]
-        public ActionResult<List<FlashcardDto>> searchFlashcards([FromQuery] string q)
+        public ActionResult<List<FlashcardDto>> searchFlashcards([FromQuery] string query)
         {
-            return _flashcardsService.searchFlashcards(q);
+            return _flashcardsService.searchFlashcards(query);
         }
 
         [HttpGet("vocabulary")]
@@ -128,20 +127,20 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("flashcards/{id}/review")]
-        public ActionResult reviewCard(int id, [FromBody] ReviewCardRequest request)
+        public ActionResult reviewCard([FromRoute] int id, [FromBody] ReviewCardRequest request)
         {
             _flashcardsService.reviewCard(id, request);
             return Ok();
         }
 
         [HttpGet("module/{moduleId}/sentences")]
-        public ActionResult<ModuleSentenceSessionDto> getModuleSentences(int moduleId)
+        public ActionResult<ModuleSentenceSessionDto> getModuleSentences([FromRoute] int moduleId)
         {
             return Ok(_sentencesService.getModuleSentences(moduleId));
         }
 
         [HttpPatch("sentences/{id}/review")]
-        public ActionResult reviewSentence(int id, [FromBody] ReviewSentenceRequest request)
+        public ActionResult reviewSentence([FromRoute] int id, [FromBody] ReviewSentenceRequest request)
         {
             _sentencesService.reviewSentence(id, request);
             return Ok();

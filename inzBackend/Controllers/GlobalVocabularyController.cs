@@ -62,7 +62,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("assign-multiple")]
-        public IActionResult AssignMultiple([FromBody] AssignMultipleVocabularyToStudentRequest request)
+        public ActionResult AssignMultiple([FromBody] AssignMultipleVocabularyToStudentRequest request)
         {
             _globalVocabularyService.assignMultipleVocabularyToStudent(request);
             return Ok();
