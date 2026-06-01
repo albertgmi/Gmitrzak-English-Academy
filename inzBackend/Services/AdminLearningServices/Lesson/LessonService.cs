@@ -9,6 +9,7 @@ using AutoMapper;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Helpers;
+using inzBackend.Models.StudentLearningModels.MemoryModels;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {
@@ -398,6 +399,19 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 throw new NotFoundException("Student not found");
 
             return report;
+        }
+
+        public List<MemoryDto> getMemories(int studentUserId)
+        {
+            return _dbContext.Memories
+                .Where(x => x.UserId == studentUserId)
+                .Select(x => new MemoryDto
+                {
+                    Id = x.Id,
+                    Content = x.Content,
+                    Notes = x.Notes
+                })
+                .ToList();
         }
     }
 }
