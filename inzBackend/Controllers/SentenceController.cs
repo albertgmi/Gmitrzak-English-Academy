@@ -103,5 +103,12 @@ namespace inzBackend.Controllers
             _sentenceService.updateStock(id, request);
             return Ok();
         }
+
+        [HttpPost("assign")]
+        public ActionResult assignToUser([FromBody] AssignSentenceRequest request)
+        {
+            _sentenceService.assignToUser(request);
+            return Ok();
+        }
     }
 }

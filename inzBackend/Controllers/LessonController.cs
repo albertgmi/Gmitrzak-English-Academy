@@ -1,4 +1,5 @@
 ﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -134,6 +135,12 @@ namespace inzBackend.Controllers
         {
             _lessonService.addListeningReport(request);
             return Ok();
+        }
+        [HttpGet("memory/{studentUserId}")]
+        public ActionResult<List<MemoryDto>> getMemories([FromRoute] int studentUserId)
+        {
+            var result = _lessonService.getMemories(studentUserId);
+            return Ok(result);
         }
     }
 }

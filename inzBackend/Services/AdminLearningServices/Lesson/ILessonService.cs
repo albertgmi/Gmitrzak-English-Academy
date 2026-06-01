@@ -1,5 +1,6 @@
 ﻿using inzBackend.Entities;
 using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
@@ -26,5 +27,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         void deleteNote(int noteId);
         void addListeningReport(AddListeningReportRequest request);
         List<ListeningReportDto> getListeningReports(int studentUserId);
+        List<MemoryDto> getMemories(int studentUserId);
     }
 }
