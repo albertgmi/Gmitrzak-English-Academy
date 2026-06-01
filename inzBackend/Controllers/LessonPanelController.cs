@@ -25,7 +25,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPut("agenda/{studentUserId}")]
-        public IActionResult updateAgenda([FromRoute] int studentUserId, [FromBody] UpdateAgendaRequest request)
+        public ActionResult updateAgenda([FromRoute] int studentUserId, [FromBody] UpdateAgendaRequest request)
         {
             _service.updateAgenda(studentUserId, request);
             return Ok();
@@ -44,7 +44,7 @@ namespace inzBackend.Controllers
         }
             
         [HttpPost("activity-points/{studentUserId}")]
-        public IActionResult addActivityPoints([FromRoute] int studentUserId, [FromBody] AddPointsRequest request)
+        public ActionResult addActivityPoints([FromRoute] int studentUserId, [FromBody] AddPointsRequest request)
         {
             _service.addActivityPoints(studentUserId, request.Points, request.Reason);
             return Ok();

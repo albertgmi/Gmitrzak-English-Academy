@@ -65,14 +65,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("pronunciation/{id}/check")]
-        public IActionResult checkPronunciation([FromRoute] int id)
+        public ActionResult checkPronunciation([FromRoute] int id)
         {
             _pronunciationService.checkEntry(id);
             return Ok();
         }
 
         [HttpPatch("pronunciation/{id}/uncheck")]
-        public IActionResult uncheckPronunciation([FromRoute] int id)
+        public ActionResult uncheckPronunciation([FromRoute] int id)
         {
             _pronunciationService.uncheckEntry(id);
             return Ok();
