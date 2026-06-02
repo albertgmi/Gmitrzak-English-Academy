@@ -180,6 +180,13 @@ namespace inzBackend
 
             app.MapControllers();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<GmitrzakEnglishAcademyDbContext>();
+
+                if (dbContext.Database.GetPendingMigrations().Any())
+                    dbContext.Database.Migrate();
+            }
             app.Run();
         }
     }
