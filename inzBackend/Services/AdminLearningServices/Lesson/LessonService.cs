@@ -129,11 +129,16 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public void addMemory(AddMemoryRequest request)
         {
+            var generatedContent = generatePrompts(request.OptionA, request.OptionB, request.Category);
+
             _dbContext.Memories.Add(new Memory
             {
                 UserId = request.StudentUserId,
-                Content = request.Content,
-                Notes = request.Notes
+                OptionA = request.OptionA,
+                OptionB = request.OptionB,
+                Content = generatedContent,
+                Notes = request.Notes,
+                Category = request.Category
             });
             _dbContext.SaveChanges();
         }
@@ -405,13 +410,55 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         {
             return _dbContext.Memories
                 .Where(x => x.UserId == studentUserId)
+                .OrderByDescending(x => x.CreatedAt)
                 .Select(x => new MemoryDto
                 {
                     Id = x.Id,
+                    OptionA = x.OptionA,
+                    OptionB = x.OptionB,
                     Content = x.Content,
-                    Notes = x.Notes
+                    Notes = x.Notes,
+                    Category = x.Category
                 })
                 .ToList();
+        }
+
+        private static readonly List<(string Key, string Template)> PromptTemplates = new()
+        {
+            ("difference",   "What's the difference between {A} and {B}? Provide examples."),
+            ("comma_before", "Do you put a comma before {A}? Are there any exceptions? Back it up with examples."),
+            ("position",     "Where do you put the word {A} in a sentence? Is there only one option? Give examples."),
+            ("past",         "What are the past forms of the word {A}? Is it regular or irregular? Use all in sentences."),
+            ("change",       "How do you change a verb after the word {A}?"),
+            ("synonym",      "What are the synonyms of {A}? Show the difference between them in context."),
+            ("antonym",      "What are the antonyms of {A}? Provide example sentences."),
+            ("preposition",  "What prepositions are used with {A}? Give examples for each."),
+            ("collocations", "What are the most common collocations with {A}? Use them in sentences."),
+            ("formal",       "Is {A} formal or informal? What's the formal/informal alternative?"),
+            ("grammar",      "Explain the grammar rules for using {A}. What are the most common mistakes?")
+        };
+
+        private string generatePrompts(string optionA, string? optionB, string? category)
+        {
+            var templates = string.IsNullOrWhiteSpace(category)
+                ? PromptTemplates
+                : PromptTemplates.Where(t => t.Key == category).ToList();
+
+            var lines = new List<string>();
+
+            foreach (var (key, template) in templates)
+            {
+                if (template.Contains("{B}") && string.IsNullOrWhiteSpace(optionB))
+                    continue;
+
+                var prompt = template.Trim()
+                    .Replace("{A}", optionA.Trim())
+                    .Replace("{B}", optionB.Trim() ?? string.Empty);
+
+                lines.Add($"{prompt}");
+            }
+
+            return string.Join("\n", lines);
         }
     }
 }
