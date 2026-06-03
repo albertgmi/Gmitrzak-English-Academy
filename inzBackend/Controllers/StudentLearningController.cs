@@ -1,4 +1,7 @@
-﻿using inzBackend.Models.ModuleSentenceModels;
+﻿using inzBackend.Enums;
+using inzBackend.Helpers;
+using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
@@ -13,6 +16,7 @@ using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Controllers
 {
@@ -64,18 +68,10 @@ namespace inzBackend.Controllers
             return _pronunciationService.getAllEntries();
         }
 
-        [HttpPatch("pronunciation/{id}/check")]
-        public ActionResult checkPronunciation([FromRoute] int id)
+        [HttpGet("pronunciation/correct")]
+        public ActionResult<List<PronunciationTestItemDto>> getCorrectPronunciation()
         {
-            _pronunciationService.checkEntry(id);
-            return Ok();
-        }
-
-        [HttpPatch("pronunciation/{id}/uncheck")]
-        public ActionResult uncheckPronunciation([FromRoute] int id)
-        {
-            _pronunciationService.uncheckEntry(id);
-            return Ok();
+            return _pronunciationService.getCorrectPronunciation();
         }
 
         [HttpGet("flashcards")]
@@ -136,7 +132,7 @@ namespace inzBackend.Controllers
         [HttpGet("module/{moduleId}/sentences")]
         public ActionResult<ModuleSentenceSessionDto> getModuleSentences([FromRoute] int moduleId)
         {
-            return Ok(_sentencesService.getModuleSentences(moduleId));
+            return _sentencesService.getModuleSentences(moduleId);
         }
 
         [HttpPatch("sentences/{id}/review")]

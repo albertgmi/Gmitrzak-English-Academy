@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using inzBackend.Models;
@@ -11,9 +12,11 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    partial class GmitrzakEnglishAcademyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602094036_fix")]
+    partial class fix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1601,10 +1604,10 @@ namespace inzBackend.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsChecked")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsInCurrentSession")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
@@ -1613,13 +1616,7 @@ namespace inzBackend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("MarkedCorrectAt")
-                        .HasColumnType("date");
-
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<int>("UserId")
@@ -2179,13 +2176,11 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.PronunciationEntry", b =>
                 {
-                    b.HasOne("inzBackend.Models.AppUser", "User")
+                    b.HasOne("inzBackend.Models.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Sentence", b =>

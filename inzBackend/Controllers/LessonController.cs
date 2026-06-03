@@ -81,6 +81,13 @@ namespace inzBackend.Controllers
             return Ok();
         }
 
+        [HttpGet("pronunciation/correct/{studentId}")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<List<PronunciationTestItemDto>> getCorrectEntries(int studentId)
+        {
+            return Ok(_lessonService.getCorrectEntries(studentId));
+        }
+
         [HttpGet("grades/{studentUserId}")]
         public ActionResult<List<GradeListDto>> getGrades([FromRoute] int studentUserId)
         {
@@ -136,11 +143,20 @@ namespace inzBackend.Controllers
             _lessonService.addListeningReport(request);
             return Ok();
         }
+
         [HttpGet("memory/{studentUserId}")]
         public ActionResult<List<MemoryDto>> getMemories([FromRoute] int studentUserId)
         {
             var result = _lessonService.getMemories(studentUserId);
             return Ok(result);
+        }
+
+        [HttpPost("pronunciation/mark")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult markPronunciation([FromBody] MarkPronunciationRequest request)
+        {
+            _lessonService.markPronunciationResult(request);
+            return Ok();
         }
     }
 }

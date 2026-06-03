@@ -28,5 +28,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         void addListeningReport(AddListeningReportRequest request);
         List<ListeningReportDto> getListeningReports(int studentUserId);
         List<MemoryDto> getMemories(int studentUserId);
+        void markPronunciationResult(MarkPronunciationRequest request);
+        List<PronunciationTestItemDto> getCorrectEntries(int studentUserId);
     }
 }
