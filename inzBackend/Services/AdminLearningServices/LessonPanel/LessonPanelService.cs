@@ -8,14 +8,18 @@ using DocumentFormat.OpenXml.InkML;
 using inzBackend.Enums;
 using inzBackend.Models.AttendanceModels;
 using inzBackend.Exceptions;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using AutoMapper;
 
 public class LessonPanelService : ILessonPanelService
 {
     private readonly GmitrzakEnglishAcademyDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public LessonPanelService(GmitrzakEnglishAcademyDbContext dbContext)
+    public LessonPanelService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper)
     {
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
     public AgendaDto getAgenda(int studentUserId)
@@ -158,6 +162,16 @@ public class LessonPanelService : ILessonPanelService
                 .Select(MapFlashcard).ToList(),
             RecentLogs = recentLogs
         };
+    }
+
+    public List<FlashcardDto> getAllFlashcardsForUser(int userId)
+    {
+        var flashcards = _dbContext.Flashcards
+            .Include(x => x.Vocabulary)
+            .Where(x => x.UserId == userId)
+            .OrderBy(x => x.NextReviewDate)
+            .ToList();
+        return _mapper.Map<List<FlashcardDto>>(flashcards);
     }
 
     public StudentStudyTimeDto getStudyTime(int studentUserId)
@@ -315,7 +329,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public IEnumerable<AttendanceDto> getAttendance(int studentId)
+    public List<AttendanceDto> getAttendance(int studentId)
     {
         var now = PolandTime.Now;
 
@@ -347,7 +361,7 @@ public class LessonPanelService : ILessonPanelService
         return records;
     }
 
-    public IEnumerable<AttendanceDto> getAttendanceHistory(int studentId)
+    public List<AttendanceDto> getAttendanceHistory(int studentId)
     {
         var now = PolandTime.Now;
 

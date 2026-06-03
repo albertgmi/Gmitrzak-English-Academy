@@ -1,5 +1,6 @@
 ﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -51,9 +52,15 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("flashcards/{studentUserId}")]
-        public LessonFlashcardSummaryDto getFlashcards([FromRoute] int studentUserId)
+        public ActionResult<LessonFlashcardSummaryDto> getFlashcards([FromRoute] int studentUserId)
         {
             return _service.getFlashcardSummary(studentUserId);
+        }
+
+        [HttpGet("flashcards/all/{studentUserId}")]
+        public ActionResult<List<FlashcardDto>> getAllFlashcardsForUser(int studentUserId)
+        {
+            return _service.getAllFlashcardsForUser(studentUserId);
         }
 
         [HttpGet("study-time/{studentUserId}")]

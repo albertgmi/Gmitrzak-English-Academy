@@ -5,6 +5,7 @@ using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Helpers;
+using inzBackend.Enums;
 
 namespace inzBackend.Services.AnnouncementsServices
 {
@@ -13,9 +14,7 @@ namespace inzBackend.Services.AnnouncementsServices
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
 
-        public AnnouncementService(
-            GmitrzakEnglishAcademyDbContext dbContext,
-            IUserContextService userContextService)
+        public AnnouncementService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
@@ -35,7 +34,11 @@ namespace inzBackend.Services.AnnouncementsServices
                     SenderUsername = x.Sender.Username,
                     CreatedAt = x.CreatedAt,
                     TotalRecipients = x.Recipients.Count(),
-                    ReadCount = x.Recipients.Count(r => r.IsRead)
+                    ReadCount = x.Recipients.Count(r => r.IsRead),
+                    Type = x.Type.ToString(),
+                    SignUpCount = x.Recipients.Count(r => r.SignedUp == true),
+                    VoteYesCount = x.Recipients.Count(r => r.Vote == true),
+                    VoteNoCount = x.Recipients.Count(r => r.Vote == false)
                 })
                 .ToList();
         }
@@ -44,7 +47,9 @@ namespace inzBackend.Services.AnnouncementsServices
         {
             var userId = _userContextService.GetUserId;
             return _dbContext.AnnouncementRecipients
-                .Include(x => x.Announcement).ThenInclude(a => a.Sender)
+                .Include(x => x.Announcement)
+                    .ThenInclude(a => a.Sender)
+                        .ThenInclude(s => s.Profile)
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.Announcement.CreatedAt)
                 .Select(x => new AnnouncementInboxDto
@@ -54,9 +59,13 @@ namespace inzBackend.Services.AnnouncementsServices
                     Title = x.Announcement.Title,
                     Content = x.Announcement.Content,
                     SenderUsername = x.Announcement.Sender.Username,
+                    SenderAvatarUrl = x.Announcement.Sender.Profile.AvatarUrl,
                     CreatedAt = x.Announcement.CreatedAt,
                     IsRead = x.IsRead,
-                    ReadAt = x.ReadAt
+                    ReadAt = x.ReadAt,
+                    Type = x.Announcement.Type.ToString(),
+                    SignedUp = x.SignedUp,
+                    Vote = x.Vote
                 })
                 .ToList();
         }
@@ -73,11 +82,17 @@ namespace inzBackend.Services.AnnouncementsServices
         {
             var senderId = _userContextService.GetUserId!.Value;
 
+            if (!Enum.TryParse<AnnouncementType>(request.Type, true, out var announcementType))
+            {
+                announcementType = AnnouncementType.Announcement;
+            }
+
             var announcement = new Announcement
             {
                 SenderId = senderId,
                 Title = request.Title,
-                Content = request.Content
+                Content = request.Content,
+                Type = announcementType
             };
 
             _dbContext.Announcements.Add(announcement);
@@ -104,6 +119,32 @@ namespace inzBackend.Services.AnnouncementsServices
             }).ToList();
 
             _dbContext.AnnouncementRecipients.AddRange(recipients);
+            _dbContext.SaveChanges();
+        }
+
+        public void signUp(int recipientId)
+        {
+            var userId = _userContextService.GetUserId;
+            var recipient = _dbContext.AnnouncementRecipients
+                .Include(x => x.Announcement)
+                .FirstOrDefault(x => x.Id == recipientId && x.UserId == userId);
+
+            if (recipient is null || recipient.Announcement.Type != AnnouncementType.Listing) return;
+
+            recipient.SignedUp = !(recipient.SignedUp ?? false);
+            _dbContext.SaveChanges();
+        }
+
+        public void vote(int recipientId, bool voteValue)
+        {
+            var userId = _userContextService.GetUserId;
+            var recipient = _dbContext.AnnouncementRecipients
+                .Include(x => x.Announcement)
+                .FirstOrDefault(x => x.Id == recipientId && x.UserId == userId);
+
+            if (recipient is null || recipient.Announcement.Type != AnnouncementType.Voting) return;
+
+            recipient.Vote = voteValue;
             _dbContext.SaveChanges();
         }
 
@@ -143,6 +184,40 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.AnnouncementRecipients.RemoveRange(announcement.Recipients);
             _dbContext.Announcements.Remove(announcement);
             _dbContext.SaveChanges();
+        }
+
+        public AnnouncementDetailsDto getDetails(int announcementId)
+        {
+            var announcement = _dbContext.Announcements
+                .Include(a => a.Recipients)
+                    .ThenInclude(r => r.User)
+                        .ThenInclude(u => u.Profile)
+                .FirstOrDefault(a => a.Id == announcementId);
+
+            if (announcement is null)
+                throw new NotFoundException("Announcement not found");
+
+            return new AnnouncementDetailsDto
+            {
+                AnnouncementId = announcement.Id,
+                Title = announcement.Title,
+                Type = announcement.Type.ToString(),
+
+                Recipients = announcement.Recipients
+                    .Select(r => new AnnouncementRecipientDetailsDto
+                    {
+                        UserId = r.UserId,
+                        Username = r.User.Username,
+                        Email = r.User.Email,
+                        IsRead = r.IsRead,
+                        ReadAt = r.ReadAt,
+                        SignedUp = r.SignedUp,
+                        Vote = r.Vote,
+                        AvatarUrl = r.User.Profile.AvatarUrl
+                    })
+                    .OrderBy(x => x.Username)
+                    .ToList()
+            };
         }
     }
 }

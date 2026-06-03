@@ -11,9 +11,9 @@ namespace inzBackend.Controllers
     public class AnnouncementController : ControllerBase
     {
         private readonly IAnnouncementService _announcementService;
-        public AnnouncementController(IAnnouncementService announcementService) 
+        public AnnouncementController(IAnnouncementService announcementService)
         {
-            _announcementService = announcementService; 
+            _announcementService = announcementService;
         }
 
         [HttpGet]
@@ -50,6 +50,20 @@ namespace inzBackend.Controllers
             return Ok();
         }
 
+        [HttpPatch("{recipientId}/signup")]
+        public ActionResult signUp([FromRoute] int recipientId)
+        {
+            _announcementService.signUp(recipientId);
+            return Ok();
+        }
+
+        [HttpPatch("{recipientId}/vote")]
+        public ActionResult vote([FromRoute] int recipientId, [FromQuery] bool value)
+        {
+            _announcementService.vote(recipientId, value);
+            return Ok();
+        }
+
         [HttpPatch("read-all")]
         public ActionResult markAllRead()
         {
@@ -63,6 +77,13 @@ namespace inzBackend.Controllers
         {
             _announcementService.delete(id);
             return NoContent();
+        }
+
+        [HttpGet("{id}/details")]
+        [Authorize(Roles = "Admin")]
+        public AnnouncementDetailsDto getDetails([FromRoute] int id)
+        {
+            return _announcementService.getDetails(id);
         }
     }
 }
