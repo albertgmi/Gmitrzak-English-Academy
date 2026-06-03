@@ -4,7 +4,8 @@ namespace inzBackend.Services.ReportServices
 {
     public interface IModuleReportExportService
     {
-        byte[] GeneratePdf(ModuleReportDto report);
-        byte[] GenerateDocx(ModuleReportDto report);
+        byte[] generateRangePdf(DateRangeReportDto report);
+        byte[] generateRangeDocx(DateRangeReportDto report);
+        byte[] generateActiveStudentsZipReport(DateOnly dateFrom, DateOnly dateTo);
     }
 }
