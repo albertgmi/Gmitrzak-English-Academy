@@ -198,6 +198,110 @@ namespace inzBackend.Services.UserAnswerServices
             };
         }
 
+        public List<CompletedSentenceModuleDto> getCompletedSentenceModules(int studentId, DateOnly dateFrom, DateOnly dateTo)
+        {
+            var result = new List<CompletedSentenceModuleDto>();
+
+            var directCompleted = _dbContext.UserModuleAssignments
+                .Include(x => x.Module)
+                .Where(x => x.UserId == studentId
+                         && x.IsCompleted
+                         && x.Module.Category == "Sentences"
+                         && x.LastModifiedAt.HasValue
+                         && DateOnly.FromDateTime(x.LastModifiedAt.Value.DateTime) >= dateFrom
+                         && DateOnly.FromDateTime(x.LastModifiedAt.Value.DateTime) <= dateTo)
+                .ToList();
+
+            foreach (var a in directCompleted)
+            {
+                var totalSentences = _dbContext.ModuleSentenceSets
+                    .Include(x => x.SentenceSet).ThenInclude(s => s.Items)
+                    .Where(x => x.ModuleId == a.ModuleId)
+                    .SelectMany(x => x.SentenceSet.Items)
+                    .Count();
+
+                var answeredCount = _dbContext.UserSentenceAnswers
+                    .Count(x => x.UserId == studentId && x.ModuleId == a.ModuleId);
+
+                result.Add(new CompletedSentenceModuleDto
+                {
+                    ModuleId = a.ModuleId,
+                    ModuleName = a.Module.Name,
+                    CompletedDate = DateOnly.FromDateTime(a.LastModifiedAt!.Value.DateTime),
+                    IsFromMatrix = false,
+                    TotalSentences = totalSentences,
+                    AnsweredCount = answeredCount
+                });
+            }
+
+            var matrixCompleted = _dbContext.UserMatrixModuleCompletions
+                .Include(x => x.MatrixModule)
+                    .ThenInclude(mm => mm.Module)
+                .Include(x => x.MatrixModule)
+                    .ThenInclude(mm => mm.Matrix)
+                .Where(x => x.UserId == studentId
+                         && x.MatrixModule.Module.Category == "Sentences"
+                         && x.CompletedDate >= dateFrom
+                         && x.CompletedDate <= dateTo)
+                .ToList();
+
+            foreach (var c in matrixCompleted)
+            {
+                var moduleId = c.MatrixModule.ModuleId;
+
+                var totalSentences = _dbContext.ModuleSentenceSets
+                    .Include(x => x.SentenceSet).ThenInclude(s => s.Items)
+                    .Where(x => x.ModuleId == moduleId)
+                    .SelectMany(x => x.SentenceSet.Items)
+                    .Count();
+
+                var answeredCount = _dbContext.UserSentenceAnswers
+                    .Count(x => x.UserId == studentId && x.ModuleId == moduleId);
+
+                result.Add(new CompletedSentenceModuleDto
+                {
+                    ModuleId = moduleId,
+                    ModuleName = c.MatrixModule.Module.Name,
+                    CompletedDate = c.CompletedDate,
+                    IsFromMatrix = true,
+                    MatrixName = c.MatrixModule.Matrix.Name,
+                    TotalSentences = totalSentences,
+                    AnsweredCount = answeredCount
+                });
+            }
+
+            return result
+                .OrderBy(x => x.CompletedDate)
+                .ToList();
+        }
+
+        public DateRangeReportDto generateDateRangeReport(int studentId, DateOnly dateFrom, DateOnly dateTo)
+        {
+            var student = _dbContext.Users.FirstOrDefault(x => x.Id == studentId)
+                ?? throw new NotFoundException("Student not found");
+
+            var modules = getCompletedSentenceModules(studentId, dateFrom, dateTo);
+
+            var moduleReports = modules
+                .Select(m => generateReport(m.ModuleId, studentId))
+                .ToList();
+
+            return new DateRangeReportDto
+            {
+                StudentUsername = student.Username,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                GeneratedDate = PolandTime.Today,
+                Modules = moduleReports,
+                TotalCorrect = moduleReports.Sum(m => m.CorrectCount),
+                TotalPartial = moduleReports.Sum(m => m.PartialCount),
+                TotalIncorrect = moduleReports.Sum(m => m.IncorrectCount),
+                TotalSentences = moduleReports.Sum(m => m.TotalSentences)
+            };
+        }
+
+
+
         private List<AnswerResultDto> mapAnswers(int moduleId, int userId)
         {
             return _dbContext.UserSentenceAnswers

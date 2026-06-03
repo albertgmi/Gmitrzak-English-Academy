@@ -11,5 +11,9 @@
         {
             return TimeZoneInfo.ConvertTime(dateTimeOffset, PolishZone);
         }
+        public static DateOnly ParseDate(string dateText)
+        {
+            return DateOnly.Parse(dateText, System.Globalization.CultureInfo.InvariantCulture);
+        }
     }
 }

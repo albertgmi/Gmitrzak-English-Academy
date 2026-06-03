@@ -1,4 +1,6 @@
-﻿using inzBackend.Models.AIAnswerCheckingModels;
+﻿using inzBackend.Helpers;
+using inzBackend.Models.AIAnswerCheckingModels;
+using inzBackend.Models.ModuleReportModels;
 using inzBackend.Services.ReportServices;
 using inzBackend.Services.UserAnswerServices;
 using Microsoft.AspNetCore.Authorization;
@@ -50,37 +52,53 @@ namespace inzBackend.Controllers
             return Ok();
         }
 
-        [HttpGet("module/{moduleId}/student/{studentId}/report/pdf")]
+        [HttpGet("modules/completed")]
         [Authorize(Roles = "Admin")]
-        public ActionResult generatePdfReport([FromRoute] int moduleId, [FromRoute] int studentId)
+        public ActionResult<List<CompletedSentenceModuleDto>> getCompletedModules([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
         {
-            var report = _service.generateReport(moduleId, studentId);
+            var from = PolandTime.ParseDate(dateFrom);
+            var to = PolandTime.ParseDate(dateTo);
+            return Ok(_service.getCompletedSentenceModules(studentId, from, to));
+        }
 
-            var pdf = _reportExportService.GeneratePdf(report);
-
-            var filename =
-                $"report_{report.StudentUsername}_{report.ModuleName}_{report.GeneratedDate}.pdf"
+        [HttpGet("report/range")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult generateRangeReportPdf([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
+        {
+            var from = PolandTime.ParseDate(dateFrom);
+            var to = PolandTime.ParseDate(dateTo);
+            var report = _service.generateDateRangeReport(studentId, from, to);
+            var pdf = _reportExportService.generateRangePdf(report);
+            var filename = $"report_{report.StudentUsername}_{from}_{to}.pdf"
                 .Replace(" ", "_");
-
             return File(pdf, "application/pdf", filename);
         }
 
-        [HttpGet("module/{moduleId}/student/{studentId}/report/docx")]
+        [HttpGet("report/range/docx")]
         [Authorize(Roles = "Admin")]
-        public ActionResult generateDocxReport([FromRoute] int moduleId, [FromRoute] int studentId)
+        public ActionResult generateRangeReportDocx([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
         {
-            var report = _service.generateReport(moduleId, studentId);
-
-            var docx = _reportExportService.GenerateDocx(report);
-
-            var filename =
-                $"report_{report.StudentUsername}_{report.ModuleName}_{report.GeneratedDate}.docx"
+            var from = PolandTime.ParseDate(dateFrom);
+            var to = PolandTime.ParseDate(dateTo);
+            var report = _service.generateDateRangeReport(studentId, from, to);
+            var docx = _reportExportService.generateRangeDocx(report);
+            var filename = $"report_{report.StudentUsername}_{from}_{to}.docx"
                 .Replace(" ", "_");
-
-            return File(
-                docx,
+            return File(docx,
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 filename);
+        }
+        [HttpGet("report/all")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult getActiveStudentsReportsZip([FromQuery] string dateFrom, [FromQuery] string dateTo)
+        {
+            var from = PolandTime.ParseDate(dateFrom);
+            var to = PolandTime.ParseDate(dateTo);
+
+            byte[] zipFileBytes = _reportExportService.generateActiveStudentsZipReport(from, to);
+
+            var fileName = $"Reports_Active_Users_{dateFrom:yyyyMMdd}-{dateTo:yyyyMMdd}.zip";
+            return File(zipFileBytes, "application/zip", fileName);
         }
     }
 }
