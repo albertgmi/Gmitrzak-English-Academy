@@ -10,5 +10,7 @@ namespace inzBackend.Entities
         public AppUser User { get; set; } = null!;
         public bool IsRead { get; set; }
         public DateTimeOffset? ReadAt { get; set; }
+        public bool? SignedUp { get; set; }
+        public bool? Vote { get; set; }
     }
 }

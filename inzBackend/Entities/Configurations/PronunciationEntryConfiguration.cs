@@ -11,6 +11,7 @@ namespace inzBackend.Models.Configurations
             builder.HasOne(x=>x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserId);
+            builder.Property(x => x.Status).HasConversion<string>();
         }
     }
 }

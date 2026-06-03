@@ -10,5 +10,9 @@
         public DateTimeOffset CreatedAt { get; set; }
         public bool IsRead { get; set; }
         public DateTimeOffset? ReadAt { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public bool? SignedUp { get; set; }
+        public bool? Vote { get; set; }
+        public string? SenderAvatarUrl { get; set; }
     }
 }

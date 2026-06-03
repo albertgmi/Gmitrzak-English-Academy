@@ -1,5 +1,6 @@
 ﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
 
 namespace inzBackend.Services.AdminLearningServices.LessonPanel
 {
@@ -14,9 +15,10 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         StudentStudyTimeDto getStudyTime(int studentUserId);
         LessonLastWeekDto getLastWeek(int studentUserId);
         LessonStatsDto getStats(int studentUserId);
-        IEnumerable<AttendanceDto> getAttendance(int studentId);
+        List<AttendanceDto> getAttendance(int studentId);
         AttendanceDto addAttendance(CreateAttendanceDto dto);
         bool deleteAttendance(int id);
-        IEnumerable<AttendanceDto> getAttendanceHistory(int studentId);
+        List<AttendanceDto> getAttendanceHistory(int studentId);
+        List<FlashcardDto> getAllFlashcardsForUser(int userId);
     }
 }
