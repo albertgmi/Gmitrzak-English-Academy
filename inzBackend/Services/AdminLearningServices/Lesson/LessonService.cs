@@ -6,7 +6,6 @@ using inzBackend.Services.UserServices;
 using inzBackend.Enums;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
-using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Helpers;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
@@ -18,6 +17,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
+        private const int SESSION_SIZE = 20;
+        private const int CORRECT_EXPIRY_DAYS = 30;
 
         public LessonService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService, IMapper mapper)
         {
@@ -145,6 +146,12 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public void addPronunciation(AddPronunciationRequest request)
         {
+            var alreadyExists = _dbContext.PronunciationEntries
+                .Any(x => x.UserId == request.StudentUserId
+                       && x.Word.ToLower() == request.Word.ToLower().Trim());
+
+            if (alreadyExists) return;
+
             var maxOrder = _dbContext.PronunciationEntries
                 .Where(x => x.UserId == request.StudentUserId)
                 .Select(x => (int?)x.SortOrder)
@@ -153,11 +160,14 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.PronunciationEntries.Add(new PronunciationEntry
             {
                 UserId = request.StudentUserId,
-                Word = request.Word,
-                IsChecked = false,
-                SortOrder = maxOrder + 1
+                Word = request.Word.Trim(),
+                Status = PronunciationStatus.Pending,
+                SortOrder = maxOrder + 1,
+                IsInCurrentSession = false
             });
             _dbContext.SaveChanges();
+
+            refreshSession(request.StudentUserId);
         }
 
         public List<HomeworkItemDto> getHomeworkForWeek(int studentUserId)
@@ -202,33 +212,145 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public List<PronunciationTestItemDto> getPronunciationList(int studentUserId)
         {
+            refreshSession(studentUserId);
+
             return _dbContext.PronunciationEntries
-                .Where(x => x.UserId == studentUserId)
-                .OrderBy(x => x.IsChecked)
+                .Where(x => x.UserId == studentUserId
+                         && x.IsInCurrentSession)
+                .OrderBy(x => x.Status == PronunciationStatus.Incorrect ? 0
+                            : x.Status == PronunciationStatus.Pending ? 1 : 2)
                 .ThenBy(x => x.SortOrder)
                 .Select(x => new PronunciationTestItemDto
                 {
                     Id = x.Id,
                     Word = x.Word,
-                    IsChecked = x.IsChecked,
+                    Status = x.Status.ToString(),
                     SortOrder = x.SortOrder
+                })
+                .ToList();
+        }
+
+        public List<PronunciationTestItemDto> getCorrectEntries(int studentUserId)
+        {
+            var today = PolandTime.Today;
+
+            return _dbContext.PronunciationEntries
+                .Where(x => x.UserId == studentUserId
+                         && x.Status == PronunciationStatus.Correct)
+                .OrderByDescending(x => x.MarkedCorrectAt)
+                .Select(x => new PronunciationTestItemDto
+                {
+                    Id = x.Id,
+                    Word = x.Word,
+                    Status = x.Status.ToString(),
+                    SortOrder = x.SortOrder,
+                    MarkedCorrectAt = x.MarkedCorrectAt,
+                    DaysUntilRefresh = x.MarkedCorrectAt.HasValue
+                        ? Math.Max(0, CORRECT_EXPIRY_DAYS -
+                            (today.DayNumber - x.MarkedCorrectAt.Value.DayNumber))
+                        : null
                 })
                 .ToList();
         }
 
         public void checkPronunciationWord(int entryId)
         {
-            var entry = _dbContext.PronunciationEntries.FirstOrDefault(x => x.Id == entryId);
+            var entry = _dbContext.PronunciationEntries
+                .FirstOrDefault(x => x.Id == entryId);
             if (entry is null) return;
-            entry.IsChecked = true;
+
+            entry.Status = PronunciationStatus.Correct;
+            entry.MarkedCorrectAt = PolandTime.Today;
+            entry.IsInCurrentSession = false;
+
             _dbContext.SaveChanges();
+
+            refreshSession(entry.UserId);
         }
 
         public void uncheckPronunciationWord(int entryId)
         {
-            var entry = _dbContext.PronunciationEntries.FirstOrDefault(x => x.Id == entryId);
+            var entry = _dbContext.PronunciationEntries
+                .FirstOrDefault(x => x.Id == entryId);
             if (entry is null) return;
-            entry.IsChecked = false;
+
+            entry.Status = PronunciationStatus.Pending;
+            entry.MarkedCorrectAt = null;
+            entry.IsInCurrentSession = true;
+
+            _dbContext.SaveChanges();
+        }
+
+        public void markPronunciationResult(MarkPronunciationRequest request)
+        {
+            var entry = _dbContext.PronunciationEntries
+                .FirstOrDefault(x => x.Id == request.EntryId)
+                ?? throw new NotFoundException("Entry not found");
+
+            if (request.Result.ToLower() == "correct")
+            {
+                entry.Status = PronunciationStatus.Correct;
+                entry.MarkedCorrectAt = PolandTime.Today;
+                entry.IsInCurrentSession = false;
+            }
+            else
+            {
+                entry.Status = PronunciationStatus.Incorrect;
+                entry.MarkedCorrectAt = null;
+                entry.IsInCurrentSession = true;
+            }
+
+            _dbContext.SaveChanges();
+            refreshSession(entry.UserId);
+        }
+
+        private void refreshSession(int userId)
+        {
+            var today = PolandTime.Today;
+
+            var expiredCorrect = _dbContext.PronunciationEntries
+                .Where(x => x.UserId == userId
+                         && x.IsInCurrentSession
+                         && x.Status == PronunciationStatus.Correct
+                         && x.MarkedCorrectAt.HasValue
+                         && x.MarkedCorrectAt.Value.AddDays(CORRECT_EXPIRY_DAYS) < today)
+                .ToList();
+
+            foreach (var e in expiredCorrect)
+                e.IsInCurrentSession = false;
+
+            var currentSessionCount = _dbContext.PronunciationEntries
+                .Count(x => x.UserId == userId
+                         && x.IsInCurrentSession
+                         && !(x.Status == PronunciationStatus.Correct
+                              && x.MarkedCorrectAt.HasValue
+                              && x.MarkedCorrectAt.Value.AddDays(CORRECT_EXPIRY_DAYS) < today));
+
+            var needed = SESSION_SIZE - currentSessionCount;
+            if (needed <= 0)
+            {
+                _dbContext.SaveChanges();
+                return;
+            }
+
+            var inSessionIds = _dbContext.PronunciationEntries
+                .Where(x => x.UserId == userId && x.IsInCurrentSession)
+                .Select(x => x.Id)
+                .ToList();
+
+            var toAdd = _dbContext.PronunciationEntries
+                .Where(x => x.UserId == userId
+                         && !x.IsInCurrentSession
+                         && !inSessionIds.Contains(x.Id)
+                         && x.Status != PronunciationStatus.Correct)
+                .OrderBy(x => x.Status == PronunciationStatus.Incorrect ? 0 : 1)
+                .ThenBy(x => x.SortOrder)
+                .Take(needed)
+                .ToList();
+
+            foreach (var e in toAdd)
+                e.IsInCurrentSession = true;
+
             _dbContext.SaveChanges();
         }
 

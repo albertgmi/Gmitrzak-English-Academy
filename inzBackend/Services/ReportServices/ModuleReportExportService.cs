@@ -176,7 +176,6 @@ namespace inzBackend.Services.ReportServices
                 });
             }).GeneratePdf();
         }
-
         public byte[] GenerateDocx(ModuleReportDto report)
         {
             using var stream = new MemoryStream();
@@ -200,25 +199,15 @@ namespace inzBackend.Services.ReportServices
                 foreach (var item in report.Items)
                 {
                     string displayResult = item.FinalResult == "Correct" ? "Correct" : "Incorrect";
+                    body.Append(CreateCustomParagraph(displayResult, bold: false, italic: true, fontSize: 18));
 
-                    body.Append(CreateHeading($"#{item.Order} {item.Polish}", 24));
-                    body.Append(CreateParagraph($"Status: {displayResult}", true));
-                    body.Append(CreateParagraph($"Students Translate: {item.StudentAnswer}"));
+                    body.Append(CreateCustomParagraph($"#{item.Order} {item.Polish}", bold: true, italic: false, fontSize: 28));
 
-                    if (!string.IsNullOrWhiteSpace(item.AiExplanation))
-                    {
-                        body.Append(CreateParagraph($"AI Explanation: {item.AiExplanation}"));
-                    }
+                    if (!string.IsNullOrWhiteSpace(item.StudentAnswer))
+                        body.Append(CreateParagraph($"Students translation: {item.StudentAnswer}"));
 
-                    if (!string.IsNullOrWhiteSpace(item.TeacherOverride))
-                    {
-                        body.Append(CreateParagraph($"Teacher Override: {item.TeacherOverride}", true));
-
-                        if (!string.IsNullOrWhiteSpace(item.TeacherExplanation))
-                        {
-                            body.Append(CreateParagraph($"Teacher Explanation: {item.TeacherExplanation}"));
-                        }
-                    }
+                    if (!string.IsNullOrWhiteSpace(item.ExpectedTranslation))
+                        body.Append(CreateParagraph($"Expected translation: {item.ExpectedTranslation}"));
 
                     body.Append(CreateParagraph(" "));
                 }
@@ -230,13 +219,7 @@ namespace inzBackend.Services.ReportServices
             return stream.ToArray();
         }
 
-        private static void BuildSummaryBox(
-            RowDescriptor row,
-            string value,
-            string label,
-            string borderColor,
-            string bgColor,
-            string textColor)
+        private static void BuildSummaryBox(RowDescriptor row, string value, string label, string borderColor, string bgColor, string textColor)
         {
             row.RelativeItem()
                 .Border(1)
@@ -263,9 +246,7 @@ namespace inzBackend.Services.ReportServices
         {
             var run = new Run();
             if (bold)
-            {
                 run.Append(new RunProperties(new Bold()));
-            }
             run.Append(new Text(text));
             return new Paragraph(run);
         }
@@ -279,6 +260,27 @@ namespace inzBackend.Services.ReportServices
                         new FontSize { Val = size.ToString() }
                     ),
                     new Text(text)));
+        }
+
+        private static Paragraph CreateCustomParagraph(string text, bool bold = false, bool italic = false, int? fontSize = null)
+        {
+            var run = new Run();
+            var runProperties = new RunProperties();
+
+            if (bold)
+                runProperties.Append(new Bold());
+
+            if (italic)
+                runProperties.Append(new Italic());
+
+            if (fontSize.HasValue)
+                runProperties.Append(new FontSize { Val = fontSize.Value.ToString() });
+
+            if (bold || italic || fontSize.HasValue)
+                run.Append(runProperties);
+
+            run.Append(new Text(text));
+            return new Paragraph(run);
         }
     }
 }
