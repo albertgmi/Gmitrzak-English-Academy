@@ -20,5 +20,6 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         bool deleteAttendance(int id);
         List<AttendanceDto> getAttendanceHistory(int studentId);
         List<FlashcardDto> getAllFlashcardsForUser(int userId);
+        void updateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
     }
 }

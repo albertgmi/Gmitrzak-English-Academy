@@ -154,18 +154,17 @@ namespace inzBackend.Services.CatalogueServices
                     .ToList();
 
                 var existingWordsInDb = await _dbContext.Vocabulary
-                    .Where(v => distinctVocabularies.Select(d => d.Front).Contains(v.Front))
+                    .Where(v => distinctVocabularies.Select(d => d.Front)
+                        .Any(e => e.Equals(v.Front, StringComparison.OrdinalIgnoreCase)))
                     .Select(v => v.Front)
                     .ToListAsync();
 
                 var vocabulariesToInsert = distinctVocabularies
-                    .Where(v => !existingWordsInDb.Contains(v.Front))
+                    .Where(v => !existingWordsInDb.Any(e => e.Equals(v.Front, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
 
                 if (vocabulariesToInsert.Any())
-                {
                     _dbContext.Vocabulary.AddRange(vocabulariesToInsert);
-                }
 
                 _dbContext.CatalogueEntries.AddRange(catEntries);
 
@@ -249,23 +248,23 @@ namespace inzBackend.Services.CatalogueServices
 
         public void updateTranslation(UpdateTranslationRequest request, int entryId)
         {
-            var entry = _dbContext
-                .CatalogueEntries
-                .FirstOrDefault(x => x.Id == entryId);
+            var entry = _dbContext.CatalogueEntries.FirstOrDefault(x => x.Id == entryId);
             if (entry is null)
                 throw new NotFoundException($"Entry with Id: {entryId} was not found");
 
             var oldTranslation = entry.TranslatedEntry;
+            var newTranslation = request.TranslatedEntry;
 
-            entry.TranslatedEntry = request.TranslatedEntry;
+            if (oldTranslation == newTranslation)
+                return;
+
+            entry.TranslatedEntry = newTranslation;
 
             var vocabularyWord = _dbContext.Vocabulary
-                .FirstOrDefault(x => x.CatalogueId == entry.CatalogueId
-                          && x.Front == entry.Entry
-                          && x.Back == oldTranslation);
+                .FirstOrDefault(x => x.Front == entry.Entry);
 
             if (vocabularyWord is not null)
-                vocabularyWord.Back = request.TranslatedEntry;
+                vocabularyWord.Back = newTranslation;
 
             _dbContext.SaveChanges();
         }

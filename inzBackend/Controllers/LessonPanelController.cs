@@ -108,5 +108,12 @@ namespace inzBackend.Controllers
             var deleted = _service.deleteAttendance(id);
             return NoContent();
         }
+
+        [HttpPut("flashcards/{studentUserId}/{flashcardId}/interval")]
+        public ActionResult UpdateInterval([FromRoute] int studentUserId, [FromRoute] int flashcardId, [FromBody] int interval)
+        {
+            _service.updateFlashcardInterval(studentUserId, flashcardId, interval);
+            return NoContent();
+        }
     }
 }

@@ -10,16 +10,19 @@ using inzBackend.Models.AttendanceModels;
 using inzBackend.Exceptions;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using AutoMapper;
+using inzBackend.Services.UserServices;
 
 public class LessonPanelService : ILessonPanelService
 {
     private readonly GmitrzakEnglishAcademyDbContext _dbContext;
     private readonly IMapper _mapper;
+    private readonly IUserContextService _userContextService;
 
-    public LessonPanelService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper)
+    public LessonPanelService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper, IUserContextService userContextService)
     {
         _dbContext = dbContext;
         _mapper = mapper;
+        _userContextService = userContextService;
     }
 
     public AgendaDto getAgenda(int studentUserId)
@@ -440,6 +443,18 @@ public class LessonPanelService : ILessonPanelService
         _dbContext.SaveChanges();
 
         return true;
+    }
+    public void updateFlashcardInterval(int studentUserId, int flashcardId, int newInterval)
+    {
+        var card = _dbContext.Flashcards
+            .FirstOrDefault(x => x.Id == flashcardId && x.UserId == studentUserId);
+
+        if (card == null)
+            throw new NotFoundException("Flashcard not found for this student");
+
+        card.Interval = newInterval;
+
+        _dbContext.SaveChanges();
     }
 
     private static LessonFlashcardDto MapFlashcard(Flashcard x)
