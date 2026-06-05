@@ -8,6 +8,5 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
         List<SentenceDto> getAllSentences();
         ModuleSentenceSessionDto getModuleSentences(int moduleId);
         void reviewSentence(int id, ReviewSentenceRequest request);
-        List<SentenceDto> getOtherSentences();
     }
 }

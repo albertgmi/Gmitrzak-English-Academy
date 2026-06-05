@@ -109,7 +109,7 @@ namespace inzBackend.Services.ReportServices
                                         c.Item().PaddingTop(2)
                                             .Text($"Student: {item.StudentAnswer}");
                                         c.Item().PaddingTop(3)
-                                            .Text($"AI: {item.AiExplanation}")
+                                            .Text($"{item.AiExplanation}")
                                             .FontSize(9).Italic();
 
                                         if (!string.IsNullOrWhiteSpace(item.TeacherOverride))

@@ -118,6 +118,15 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public void addSentence(AddSentenceRequest request)
         {
+            var normalizedContent = request.Content.Trim().ToLower();
+
+            var alreadyExists = _dbContext.Sentences
+                .Any(x => x.UserId == request.StudentUserId
+                       && x.Content.ToLower() == normalizedContent);
+
+            if (alreadyExists)
+                return;
+
             _dbContext.Sentences.Add(new Sentence
             {
                 UserId = request.StudentUserId,

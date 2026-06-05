@@ -4,6 +4,7 @@ using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Services.SentenceServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using inzBackend.Models.AdminLearningModels;
 
 namespace inzBackend.Controllers
 {
@@ -109,6 +110,13 @@ namespace inzBackend.Controllers
         {
             _sentenceService.assignToUser(request);
             return Ok();
+        }
+
+        [HttpGet("search")]
+        public ActionResult<SearchSentenceResultDto> SearchSentence([FromQuery] string query, [FromQuery] int studentId)
+        {
+            var result = _sentenceService.searchSentence(query, studentId);
+            return Ok(result);
         }
     }
 }

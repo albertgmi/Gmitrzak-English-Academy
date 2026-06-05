@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Services.UserServices;
@@ -130,46 +132,6 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             sentence.IsLeech = sentence.EaseFactor <= 150;
 
             _dbContext.SaveChanges();
-        }
-
-        public List<SentenceDto> getOtherSentences()
-        {
-            var userId = _userContextService.GetUserId!.Value;
-
-            var sentencesFromSetsQuery = _dbContext.SentenceSetItems
-                .Where(item => _dbContext.UserSentenceAssignments
-                    .Any(ua => ua.UserId == userId && ua.SentenceSetId == item.SentenceSetId))
-                .Select(item => new SentenceDto
-                {
-                    Id = item.SentenceStockId,
-                    Content = item.SentenceStock.Polish,
-                    Translation = item.SentenceStock.EnglishTranslation,
-                    Notes = "Assigned from set: " + item.SentenceSet.Name,
-                    IsReviewed = _dbContext.UserSentenceAssignments
-                        .Where(ua => ua.UserId == userId && ua.SentenceSetId == item.SentenceSetId)
-                        .Select(ua => ua.IsReviewed)
-                        .FirstOrDefault(),
-                    IsPrivate = false
-                });
-
-            var singleAssignedSentencesQuery = _dbContext.UserSentenceAssignments
-                .Where(x => x.UserId == userId && x.SentenceStockId != null)
-                .Select(x => new SentenceDto
-                {
-                    Id = x.SentenceStockId!.Value,
-                    Content = x.SentenceStock.Polish,
-                    Translation = x.SentenceStock.EnglishTranslation,
-                    Notes = "Single sentence assigned",
-                    IsReviewed = x.IsReviewed,
-                    IsPrivate = false
-                });
-
-            var otherSentences = sentencesFromSetsQuery
-                .Concat(singleAssignedSentencesQuery)
-                .Distinct()
-                .ToList();
-
-            return otherSentences;
         }
     }
 }
