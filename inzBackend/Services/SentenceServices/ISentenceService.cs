@@ -1,4 +1,5 @@
-﻿using inzBackend.Models.AIAnswerCheckingModels;
+﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
@@ -20,5 +21,6 @@ namespace inzBackend.Services.SentenceServices
         List<SentenceSetDto> getSetsForModule(int moduleId);
         void removeSetFromModule(int moduleId, int setId);
         void updateStock(int id, UpdateSentenceStockRequest request);
+        SearchSentenceResultDto searchSentence(string query, int studentId);
     }
 }

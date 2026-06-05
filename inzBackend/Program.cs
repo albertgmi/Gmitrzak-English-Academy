@@ -47,6 +47,7 @@ using inzBackend.Services.UserAnswerServices;
 using inzBackend.Services.ReportServices;
 using inzBackend.Services.RankingServices;
 using inzBackend.Services.SectionActivityServices;
+using inzBackend.Services.ExaminationServices;
 
 namespace inzBackend
 {
@@ -146,6 +147,7 @@ namespace inzBackend
             builder.Services.AddScoped<IModuleReportExportService, ModuleReportExportService>();
             builder.Services.AddScoped<IRankingService, RankingService>();
             builder.Services.AddScoped<ISectionActivityService, SectionActivityService>();
+            builder.Services.AddScoped<IExaminationService, ExaminationService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
