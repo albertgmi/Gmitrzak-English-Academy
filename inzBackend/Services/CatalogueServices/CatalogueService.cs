@@ -153,9 +153,12 @@ namespace inzBackend.Services.CatalogueServices
                     .Select(g => g.First())
                     .ToList();
 
+                var rawWordsToCompare = distinctVocabularies
+                    .Select(d => d.Front.ToLower())
+                    .ToList();
+
                 var existingWordsInDb = await _dbContext.Vocabulary
-                    .Where(v => distinctVocabularies.Select(d => d.Front)
-                        .Any(e => e.Equals(v.Front, StringComparison.OrdinalIgnoreCase)))
+                    .Where(v => rawWordsToCompare.Contains(v.Front.ToLower()))
                     .Select(v => v.Front)
                     .ToListAsync();
 

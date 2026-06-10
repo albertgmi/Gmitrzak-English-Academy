@@ -25,7 +25,7 @@ namespace inzBackend.Services.AiIntegrationServices
             {
                 ChatMessage.CreateSystemMessage(
                     "You are a precise dictionary translator. Translate the array of string items into the requested target language. " +
-                    "Keep the context of product catalogs (short descriptions, names, keys). " +
+                    "It is very importat to keep the context of product catalogs (short descriptions, names, keys). " +
                     "CRITICAL: You must return ONLY a JSON object matching this schema: { \"translations\": [\"string\", \"string\", ...] }. " +
                     "The number of translated items MUST match exactly the number of input items. Do not change the order. Do not include conversational filler."
                 ),

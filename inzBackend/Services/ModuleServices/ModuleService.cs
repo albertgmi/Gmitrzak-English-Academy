@@ -31,8 +31,6 @@ namespace inzBackend.Services.ModuleServices
                 .Include(m => m.MatrixModules).ThenInclude(mm => mm.Matrix)
                 .Include(m => m.TheaterItem)
                 .ToList();
-            if (modules is null || modules.Count == 0)
-                throw new NotFoundException("No modules were found");
 
             return _mapper.Map<List<ModuleDto>>(modules);
         }

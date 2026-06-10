@@ -1,16 +1,11 @@
 ﻿using AutoMapper;
-using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Spreadsheet;
-using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Services.UserServices;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace inzBackend.Services.StudentLearningServices.Sentences
 {
@@ -42,8 +37,10 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                     EaseFactor = x.EaseFactor,
                     Interval = x.Interval,
                     IsLeech = x.IsLeech,
-                    NextReviewDate = x.NextReviewDate
-                }).ToList();
+                    NextReviewDate = (DateOnly)x.NextReviewDate
+                })
+                .Distinct()
+                .ToList();
 
             return allSentences;
         }

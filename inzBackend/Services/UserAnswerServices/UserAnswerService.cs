@@ -75,30 +75,19 @@ namespace inzBackend.Services.UserAnswerServices
             }
 
             var alreadyExists = await _dbContext.Sentences
-                .AnyAsync(x => x.UserId == userId && x.Content == sentence.Polish);
-
-            var isCorrectOrPartial = result == "Correct" || result == "Partial";
+                .AnyAsync(x => x.UserId == userId
+                && x.Content.ToLower().Trim() == sentence.Polish.ToLower().Trim());
 
             if (!alreadyExists)
             {
-                _dbContext.Sentences.Add(new Sentence
-                {
-                    UserId = userId,
-                    Content = sentence.Polish,
-                    Translation = result == "Correct" || result == "Partial"
-                        ? request.UserAnswer
-                        : sentence.EnglishTranslation
-                });
-            }
+                var isCorrectOrPartial = result == "Correct" || result == "Partial";
 
-            if(!isCorrectOrPartial && !alreadyExists)
-            {
                 _dbContext.Sentences.Add(new Sentence
                 {
                     UserId = userId,
                     Content = sentence.Polish,
-                    Translation = sentence.EnglishTranslation,
-                    NextReviewDate = PolandTime.Today
+                    Translation = isCorrectOrPartial ? request.UserAnswer : sentence.EnglishTranslation,
+                    NextReviewDate = isCorrectOrPartial ? null : PolandTime.Today
                 });
             }
 

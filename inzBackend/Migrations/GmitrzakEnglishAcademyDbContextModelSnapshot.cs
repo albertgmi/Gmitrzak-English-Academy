@@ -1686,7 +1686,7 @@ namespace inzBackend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<DateOnly>("NextReviewDate")
+                    b.Property<DateOnly?>("NextReviewDate")
                         .HasColumnType("date");
 
                     b.Property<string>("Notes")

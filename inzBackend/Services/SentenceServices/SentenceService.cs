@@ -309,39 +309,70 @@ namespace inzBackend.Services.SentenceServices
             var stock = _dbContext.SentenceStocks.FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Sentence not found");
 
+            var cleanPolish = RemovePunctuation(stock.Polish.ToLower().Trim());
+            var cleanEnglish = RemovePunctuation(stock.EnglishTranslation.ToLower().Trim());
+
+            var stockInSentences = _dbContext.Sentences
+                .Where(x => x.Content.ToLower().Trim()
+                    .Replace(".", "").Replace("?", "").Replace("!", "").Replace(",", "") == cleanPolish
+                    && x.Translation.ToLower().Trim()
+                    .Replace(".", "").Replace("?", "").Replace("!", "").Replace(",", "") == cleanEnglish)
+                .FirstOrDefault();
+
+            if (stockInSentences is not null)
+                stockInSentences.Content = request.Polish;
+
             stock.Polish = request.Polish;
             _dbContext.SaveChanges();
         }
 
-        public SearchSentenceResultDto searchSentence(string query, int studentId)
+        public List<SearchSentenceResultDto> searchSentence(string query, int studentId)
         {
             var normalizedQuery = query.Trim().ToLower();
 
-            var globalSentence = _dbContext.SentenceStocks
-                .FirstOrDefault(s => s.EnglishTranslation.ToLower().Contains(normalizedQuery) ||
-                                     s.Polish.ToLower().Contains(normalizedQuery));
+            // 1. Pobieramy wszystkie pasujące zdania z bazy globalnej
+            var globalSentences = _dbContext.SentenceStocks
+                .Where(s => s.EnglishTranslation.ToLower().Contains(normalizedQuery) ||
+                            s.Polish.ToLower().Contains(normalizedQuery))
+                .ToList();
 
-            bool isAssigned;
+            // 2. Pobieramy przypisane zdania studenta, aby sprawdzić stan 'isAssigned' w pamięci (optymalizacja)
+            // Pobieramy tylko te, które mogą pasować do znalezionych zdań globalnych lub do samej frazy
+            var studentSentences = _dbContext.Sentences
+                .Where(s => s.UserId == studentId)
+                .Select(s => new { Content = s.Content.ToLower(), Translation = s.Translation.ToLower() })
+                .ToList();
 
-            if (globalSentence != null)
+            var results = new List<SearchSentenceResultDto>();
+
+            // 3. Jeśli znaleźliśmy zdania w bazie globalnej, mapujemy je na listę wynikową
+            if (globalSentences.Any())
             {
-                var globalEnglish = globalSentence.EnglishTranslation.ToLower();
-                var globalPolish = globalSentence.Polish.ToLower();
+                foreach (var globalSentence in globalSentences)
+                {
+                    var globalEnglish = globalSentence.EnglishTranslation.ToLower();
+                    var globalPolish = globalSentence.Polish.ToLower();
 
-                isAssigned = _dbContext.Sentences.Any(s =>
-                    s.UserId == studentId &&
-                    (s.Content.ToLower() == globalPolish || s.Translation.ToLower() == globalEnglish));
+                    // Sprawdzamy w pamięci, czy student ma już to konkretne zdanie
+                    bool isAssigned = studentSentences.Any(s => s.Content == globalPolish || s.Translation == globalEnglish);
+
+                    results.Add(new SearchSentenceResultDto
+                    {
+                        Id = globalSentence.Id,
+                        EnglishTranslation = globalSentence.EnglishTranslation,
+                        Polish = globalSentence.Polish,
+                        Category = globalSentence.Category,
+                        ExistsInGlobal = true,
+                        AlreadyAssignedToStudent = isAssigned
+                    });
+                }
             }
             else
             {
-                isAssigned = _dbContext.Sentences.Any(s =>
-                    s.UserId == studentId &&
-                    (s.Content.ToLower().Contains(normalizedQuery) || s.Translation.ToLower().Contains(normalizedQuery)));
-            }
+                // 4. Jeśli nic nie ma w bazie globalnej, zwracamy jeden obiekt (tak jak w Twoim kodzie pierwotnym)
+                bool isAssigned = studentSentences.Any(s => s.Content.Contains(normalizedQuery) || s.Translation.Contains(normalizedQuery));
 
-            if (globalSentence == null)
-            {
-                return new SearchSentenceResultDto
+                results.Add(new SearchSentenceResultDto
                 {
                     Id = null,
                     EnglishTranslation = query,
@@ -349,18 +380,15 @@ namespace inzBackend.Services.SentenceServices
                     Category = "Vocabulary",
                     ExistsInGlobal = false,
                     AlreadyAssignedToStudent = isAssigned
-                };
+                });
             }
 
-            return new SearchSentenceResultDto
-            {
-                Id = globalSentence.Id,
-                EnglishTranslation = globalSentence.EnglishTranslation,
-                Polish = globalSentence.Polish,
-                Category = globalSentence.Category,
-                ExistsInGlobal = true,
-                AlreadyAssignedToStudent = isAssigned
-            };
+            return results;
+        }
+
+        string RemovePunctuation(string input)
+        {
+            return new string(input.Where(c => !char.IsPunctuation(c)).ToArray());
         }
     }
 }
