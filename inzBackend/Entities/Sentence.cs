@@ -12,6 +12,6 @@ namespace inzBackend.Models
         public int EaseFactor { get; set; } = 250;
         public int Interval { get; set; } = 0;
         public bool IsLeech { get; set; } = false;
-        public DateOnly NextReviewDate { get; set; } = PolandTime.Today;
+        public DateOnly? NextReviewDate { get; set; } = PolandTime.Today;
     }
 }

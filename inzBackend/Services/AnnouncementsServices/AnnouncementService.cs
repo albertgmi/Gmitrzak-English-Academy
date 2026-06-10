@@ -213,7 +213,7 @@ namespace inzBackend.Services.AnnouncementsServices
                         ReadAt = r.ReadAt,
                         SignedUp = r.SignedUp,
                         Vote = r.Vote,
-                        AvatarUrl = r.User.Profile.AvatarUrl
+                        AvatarUrl = r.User.Profile?.AvatarUrl
                     })
                     .OrderBy(x => x.Username)
                     .ToList()

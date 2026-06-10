@@ -21,6 +21,6 @@ namespace inzBackend.Services.SentenceServices
         List<SentenceSetDto> getSetsForModule(int moduleId);
         void removeSetFromModule(int moduleId, int setId);
         void updateStock(int id, UpdateSentenceStockRequest request);
-        SearchSentenceResultDto searchSentence(string query, int studentId);
+        List<SearchSentenceResultDto> searchSentence(string query, int studentId);
     }
 }

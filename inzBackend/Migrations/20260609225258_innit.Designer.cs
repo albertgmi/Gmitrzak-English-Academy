@@ -12,8 +12,8 @@ using inzBackend.Models;
 namespace inzBackend.Migrations
 {
     [DbContext(typeof(GmitrzakEnglishAcademyDbContext))]
-    [Migration("20260521090216_categoryColumnAdded")]
-    partial class categoryColumnAdded
+    [Migration("20260609225258_innit")]
+    partial class innit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -107,6 +107,10 @@ namespace inzBackend.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SenderId");
@@ -134,8 +138,14 @@ namespace inzBackend.Migrations
                     b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool?>("SignedUp")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
+
+                    b.Property<bool?>("Vote")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -144,6 +154,75 @@ namespace inzBackend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AnnouncementRecipients");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.Attendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DurationInMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Attendance");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.ModulePresentation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuleId")
+                        .IsUnique();
+
+                    b.ToTable("ModulePresentations");
                 });
 
             modelBuilder.Entity("inzBackend.Entities.ModuleSentenceSet", b =>
@@ -277,6 +356,72 @@ namespace inzBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Profiles");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.RankingReaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("FromUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("ReactionDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ToUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromUserId");
+
+                    b.HasIndex("ToUserId");
+
+                    b.ToTable("RankingReactions");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.SectionActivityLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("ActivityDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Section", "ActivityDate")
+                        .IsUnique();
+
+                    b.ToTable("SectionActivityLogs");
                 });
 
             modelBuilder.Entity("inzBackend.Entities.SentenceSet", b =>
@@ -500,6 +645,33 @@ namespace inzBackend.Migrations
                     b.ToTable("TheaterItems");
                 });
 
+            modelBuilder.Entity("inzBackend.Entities.UserLoginLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LoginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("LoginDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LoginDate");
+
+                    b.ToTable("UserLoginLogs");
+                });
+
             modelBuilder.Entity("inzBackend.Entities.UserMatrixModuleCompletion", b =>
                 {
                     b.Property<int>("Id")
@@ -586,61 +758,6 @@ namespace inzBackend.Migrations
                     b.ToTable("UserModuleAssignments");
                 });
 
-            modelBuilder.Entity("inzBackend.Entities.UserOptions", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("EmailNotifications")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("IncorrectStepFourMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("IncorrectStepOneMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("IncorrectStepThreeMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("IncorrectStepTwoMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset?>("LastModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("text");
-
-                    b.Property<int>("LeechThreshold")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MinDailyFlashcards")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("UserOptions");
-                });
-
             modelBuilder.Entity("inzBackend.Entities.UserSentenceAnswer", b =>
                 {
                     b.Property<int>("Id")
@@ -657,9 +774,6 @@ namespace inzBackend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("AssignmentId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -675,8 +789,14 @@ namespace inzBackend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SentenceStockId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("TeacherExplanation")
+                        .HasColumnType("text");
 
                     b.Property<string>("TeacherOverride")
                         .HasColumnType("text");
@@ -691,13 +811,18 @@ namespace inzBackend.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UserSentenceAssignmentId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignmentId");
+                    b.HasIndex("ModuleId");
 
                     b.HasIndex("SentenceStockId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserSentenceAssignmentId");
 
                     b.ToTable("UserSentenceAnswers");
                 });
@@ -767,6 +892,9 @@ namespace inzBackend.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int?>("CatalogueId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -793,6 +921,8 @@ namespace inzBackend.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CatalogueId");
 
                     b.ToTable("Vocabulary");
                 });
@@ -876,36 +1006,6 @@ namespace inzBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 99,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 615, DateTimeKind.Unspecified).AddTicks(6570), new TimeSpan(0, 0, 0, 0, 0)),
-                            CreatedBy = "System",
-                            Email = "admin@example.com",
-                            IsActive = true,
-                            IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 615, DateTimeKind.Unspecified).AddTicks(6580), new TimeSpan(0, 0, 0, 0, 0)),
-                            LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL/lkPGMNlrnOKTWtueeaw2CsRENqmFucnz8or4/btBP6k4VEj7l9qxF0J74P3oCng==",
-                            Role = "Admin",
-                            Username = "testadmin"
-                        },
-                        new
-                        {
-                            Id = 100,
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 726, DateTimeKind.Unspecified).AddTicks(691), new TimeSpan(0, 0, 0, 0, 0)),
-                            CreatedBy = "System",
-                            Email = "user@example.com",
-                            IsActive = true,
-                            IsDeleted = false,
-                            LastModifiedAt = new DateTimeOffset(new DateTime(2026, 5, 21, 9, 2, 14, 726, DateTimeKind.Unspecified).AddTicks(698), new TimeSpan(0, 0, 0, 0, 0)),
-                            LastModifiedBy = "System",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDiJ+RjBHwo+UnvHNbjPXH9GSx/QXOcI2avKc4AlY+XaNXQsAazF6VIM6Mn70Mo2ww==",
-                            Role = "User",
-                            Username = "testauser"
-                        });
                 });
 
             modelBuilder.Entity("inzBackend.Models.Catalogue", b =>
@@ -1341,6 +1441,9 @@ namespace inzBackend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Category")
+                        .HasColumnType("text");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1361,6 +1464,13 @@ namespace inzBackend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OptionA")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OptionB")
                         .HasColumnType("text");
 
                     b.Property<int>("UserId")
@@ -1411,7 +1521,12 @@ namespace inzBackend.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int?>("TheaterItemId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TheaterItemId");
 
                     b.ToTable("Modules");
                 });
@@ -1499,10 +1614,10 @@ namespace inzBackend.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsChecked")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsInCurrentSession")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
@@ -1511,8 +1626,15 @@ namespace inzBackend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
+                    b.Property<DateOnly?>("MarkedCorrectAt")
+                        .HasColumnType("date");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -1546,7 +1668,16 @@ namespace inzBackend.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<int>("EaseFactor")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Interval")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLeech")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsReviewed")
@@ -1557,6 +1688,9 @@ namespace inzBackend.Migrations
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateOnly>("NextReviewDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
@@ -1573,38 +1707,6 @@ namespace inzBackend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Sentences");
-                });
-
-            modelBuilder.Entity("inzBackend.Models.StreamEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Command")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("ExecutedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("StreamEntries");
                 });
 
             modelBuilder.Entity("inzBackend.Models.UserMatrixAssignment", b =>
@@ -1689,6 +1791,28 @@ namespace inzBackend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("inzBackend.Entities.Attendance", b =>
+                {
+                    b.HasOne("inzBackend.Models.AppUser", "User")
+                        .WithMany("Attendances")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.ModulePresentation", b =>
+                {
+                    b.HasOne("inzBackend.Models.Module", "Module")
+                        .WithOne("Presentation")
+                        .HasForeignKey("inzBackend.Entities.ModulePresentation", "ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+                });
+
             modelBuilder.Entity("inzBackend.Entities.ModuleSentenceSet", b =>
                 {
                     b.HasOne("inzBackend.Models.Module", "Module")
@@ -1711,8 +1835,38 @@ namespace inzBackend.Migrations
             modelBuilder.Entity("inzBackend.Entities.Profile", b =>
                 {
                     b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithOne()
+                        .WithOne("Profile")
                         .HasForeignKey("inzBackend.Entities.Profile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.RankingReaction", b =>
+                {
+                    b.HasOne("inzBackend.Models.AppUser", "FromUser")
+                        .WithMany()
+                        .HasForeignKey("FromUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("inzBackend.Models.AppUser", "ToUser")
+                        .WithMany()
+                        .HasForeignKey("ToUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FromUser");
+
+                    b.Navigation("ToUser");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.SectionActivityLog", b =>
+                {
+                    b.HasOne("inzBackend.Models.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1757,6 +1911,17 @@ namespace inzBackend.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("inzBackend.Entities.UserLoginLog", b =>
+                {
+                    b.HasOne("inzBackend.Models.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("inzBackend.Entities.UserMatrixModuleCompletion", b =>
                 {
                     b.HasOne("inzBackend.Models.MatrixModule", "MatrixModule")
@@ -1766,7 +1931,7 @@ namespace inzBackend.Migrations
                         .IsRequired();
 
                     b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithMany()
+                        .WithMany("UserMatrixModuleCompletions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1785,7 +1950,7 @@ namespace inzBackend.Migrations
                         .IsRequired();
 
                     b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithMany()
+                        .WithMany("UserModuleAssignments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1795,22 +1960,11 @@ namespace inzBackend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("inzBackend.Entities.UserOptions", b =>
-                {
-                    b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithOne()
-                        .HasForeignKey("inzBackend.Entities.UserOptions", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("inzBackend.Entities.UserSentenceAnswer", b =>
                 {
-                    b.HasOne("inzBackend.Entities.UserSentenceAssignment", "Assignment")
-                        .WithMany("Answers")
-                        .HasForeignKey("AssignmentId")
+                    b.HasOne("inzBackend.Models.Module", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1826,7 +1980,11 @@ namespace inzBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Assignment");
+                    b.HasOne("inzBackend.Entities.UserSentenceAssignment", null)
+                        .WithMany("Answers")
+                        .HasForeignKey("UserSentenceAssignmentId");
+
+                    b.Navigation("Module");
 
                     b.Navigation("SentenceStock");
 
@@ -1856,6 +2014,16 @@ namespace inzBackend.Migrations
                     b.Navigation("SentenceStock");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("inzBackend.Entities.Vocabulary", b =>
+                {
+                    b.HasOne("inzBackend.Models.Catalogue", "Catalogue")
+                        .WithMany()
+                        .HasForeignKey("CatalogueId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Catalogue");
                 });
 
             modelBuilder.Entity("inzBackend.Models.ActivityPoint", b =>
@@ -1957,11 +2125,13 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.ListeningReport", b =>
                 {
-                    b.HasOne("inzBackend.Models.AppUser", null)
+                    b.HasOne("inzBackend.Models.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Models.MatrixModule", b =>
@@ -1992,6 +2162,16 @@ namespace inzBackend.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("inzBackend.Models.Module", b =>
+                {
+                    b.HasOne("inzBackend.Entities.TheaterItem", "TheaterItem")
+                        .WithMany()
+                        .HasForeignKey("TheaterItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("TheaterItem");
+                });
+
             modelBuilder.Entity("inzBackend.Models.ProgramCourse", b =>
                 {
                     b.HasOne("inzBackend.Models.Course", "Course")
@@ -2013,11 +2193,13 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.PronunciationEntry", b =>
                 {
-                    b.HasOne("inzBackend.Models.AppUser", null)
+                    b.HasOne("inzBackend.Models.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Sentence", b =>
@@ -2027,17 +2209,6 @@ namespace inzBackend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("inzBackend.Models.StreamEntry", b =>
-                {
-                    b.HasOne("inzBackend.Models.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("inzBackend.Models.UserMatrixAssignment", b =>
@@ -2088,7 +2259,16 @@ namespace inzBackend.Migrations
 
             modelBuilder.Entity("inzBackend.Models.AppUser", b =>
                 {
+                    b.Navigation("Attendances");
+
                     b.Navigation("FlashcardStudyLogs");
+
+                    b.Navigation("Profile")
+                        .IsRequired();
+
+                    b.Navigation("UserMatrixModuleCompletions");
+
+                    b.Navigation("UserModuleAssignments");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Catalogue", b =>
@@ -2113,6 +2293,8 @@ namespace inzBackend.Migrations
             modelBuilder.Entity("inzBackend.Models.Module", b =>
                 {
                     b.Navigation("MatrixModules");
+
+                    b.Navigation("Presentation");
                 });
 
             modelBuilder.Entity("inzBackend.Models.Program", b =>
