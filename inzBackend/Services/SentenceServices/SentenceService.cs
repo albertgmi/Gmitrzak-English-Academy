@@ -330,14 +330,11 @@ namespace inzBackend.Services.SentenceServices
         {
             var normalizedQuery = query.Trim().ToLower();
 
-            // 1. Pobieramy wszystkie pasujące zdania z bazy globalnej
             var globalSentences = _dbContext.SentenceStocks
                 .Where(s => s.EnglishTranslation.ToLower().Contains(normalizedQuery) ||
                             s.Polish.ToLower().Contains(normalizedQuery))
                 .ToList();
 
-            // 2. Pobieramy przypisane zdania studenta, aby sprawdzić stan 'isAssigned' w pamięci (optymalizacja)
-            // Pobieramy tylko te, które mogą pasować do znalezionych zdań globalnych lub do samej frazy
             var studentSentences = _dbContext.Sentences
                 .Where(s => s.UserId == studentId)
                 .Select(s => new { Content = s.Content.ToLower(), Translation = s.Translation.ToLower() })
@@ -345,7 +342,6 @@ namespace inzBackend.Services.SentenceServices
 
             var results = new List<SearchSentenceResultDto>();
 
-            // 3. Jeśli znaleźliśmy zdania w bazie globalnej, mapujemy je na listę wynikową
             if (globalSentences.Any())
             {
                 foreach (var globalSentence in globalSentences)
@@ -353,7 +349,6 @@ namespace inzBackend.Services.SentenceServices
                     var globalEnglish = globalSentence.EnglishTranslation.ToLower();
                     var globalPolish = globalSentence.Polish.ToLower();
 
-                    // Sprawdzamy w pamięci, czy student ma już to konkretne zdanie
                     bool isAssigned = studentSentences.Any(s => s.Content == globalPolish || s.Translation == globalEnglish);
 
                     results.Add(new SearchSentenceResultDto
@@ -369,7 +364,6 @@ namespace inzBackend.Services.SentenceServices
             }
             else
             {
-                // 4. Jeśli nic nie ma w bazie globalnej, zwracamy jeden obiekt (tak jak w Twoim kodzie pierwotnym)
                 bool isAssigned = studentSentences.Any(s => s.Content.Contains(normalizedQuery) || s.Translation.Contains(normalizedQuery));
 
                 results.Add(new SearchSentenceResultDto

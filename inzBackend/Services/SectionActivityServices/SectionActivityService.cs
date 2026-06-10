@@ -3,8 +3,9 @@ using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.ModuleModels;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
+using inzBackend.Services.CreditServices;
 using inzBackend.Services.UserServices;
-using Microsoft.AspNetCore.Mvc;
 
 namespace inzBackend.Services.SectionActivityServices
 {
@@ -12,11 +13,16 @@ namespace inzBackend.Services.SectionActivityServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly ILessonPanelService _lessonPanelService;
+        private readonly ICreditService _creditService;
 
-        public SectionActivityService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
+        public SectionActivityService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
+            ILessonPanelService lessonPanelService, ICreditService creditService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _lessonPanelService = lessonPanelService;
+            _creditService = creditService;
         }
 
         public void logActivity(LogActivityRequest request)
@@ -41,7 +47,27 @@ namespace inzBackend.Services.SectionActivityServices
                     Section = request.Section.ToLower(),
                     ActivityDate = today
                 });
+
+                var points = request.Section.ToLower() switch
+                {
+                    "memories" => 3,
+                    "pronunciation" => 3,
+                    "sentenceflashcards" => 2,
+                    "flashcards" => 2,
+                    _ => 1
+                };
+
+                _lessonPanelService.addActivityPoints(
+                    userId, points, $"Daily visit: {request.Section.ToLower()}");
+
                 _dbContext.SaveChanges();
+
+                if (request.Section.ToLower() == "flashcards" ||
+                    request.Section.ToLower() == "sentenceflashcards")
+                {
+                    _creditService.checkAndAwardDailyChallenge(userId);
+                    _creditService.checkAndAwardWeeklyChallenge(userId);
+                }
             }
         }
     }

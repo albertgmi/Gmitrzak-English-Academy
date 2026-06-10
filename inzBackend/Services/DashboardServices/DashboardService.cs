@@ -54,6 +54,8 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
 
+            //todo dodac filtr ktory wyswietla tylko upcomingi z kolejnego tygodnia nie wiecej
+
             var upcomingAssignmentsQuery = _dbContext.UserModuleAssignments
                 .Where(x => !x.IsCompleted && x.DueDate >= today);
 

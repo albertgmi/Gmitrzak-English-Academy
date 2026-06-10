@@ -3,6 +3,7 @@ using inzBackend.Models.RankingModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
 
 namespace inzBackend.Services.RankingServices
 {
@@ -10,6 +11,7 @@ namespace inzBackend.Services.RankingServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly ILessonPanelService _lessonPanelService;
 
         private static readonly string[] Titles =
         [
@@ -25,48 +27,33 @@ namespace inzBackend.Services.RankingServices
             "The Beginner"
         ];
 
-        public RankingService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
+        public RankingService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
+            ILessonPanelService lessonPanelService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _lessonPanelService = lessonPanelService;
         }
 
         public RankingDto getRanking(string period)
         {
             var currentUserId = _userContextService.GetUserId!.Value;
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
             var (dateFrom, dateTo) = getDateRange(period, today);
+
+            var dow = ((int)today.DayOfWeek + 6) % 7;
+            var thisWeekStart = today.AddDays(-dow);
+            var lastWeekStart = thisWeekStart.AddDays(-7);
 
             var users = _dbContext.Users
                 .Include(x => x.Profile)
                 .Where(x => x.Role == Enums.UserRole.User && x.IsActive)
                 .ToList();
 
-            var activityPoints = _dbContext.ActivityPoints
-                .Where(x => x.PointDate >= dateFrom && x.PointDate <= dateTo)
-                .GroupBy(x => x.UserId)
-                .Select(g => new { UserId = g.Key, Points = g.Sum(x => x.Points) })
-                .ToList();
-
-            var flashcardsDone = _dbContext.FlashcardStudyLogs
-                .Where(x => x.StudyDate >= dateFrom && x.StudyDate <= dateTo)
-                .GroupBy(x => x.UserId)
-                .Select(g => new
-                {
-                    UserId = g.Key,
-                    Done = g.Sum(x => x.EasyCount + x.HardCount + x.IncorrectCount)
-                })
-                .ToList();
-
             var grades = _dbContext.Grades
                 .Where(x => x.GradeDate >= dateFrom && x.GradeDate <= dateTo)
                 .GroupBy(x => x.UserId)
-                .Select(g => new
-                {
-                    UserId = g.Key,
-                    Average = g.Average(x => (double)x.Percentage)
-                })
+                .Select(g => new { UserId = g.Key, Average = g.Average(x => (double)x.Percentage) })
                 .ToList();
 
             var reactions = _dbContext.RankingReactions
@@ -82,26 +69,28 @@ namespace inzBackend.Services.RankingServices
 
             var entries = users.Select(u =>
             {
-                var pts = activityPoints.FirstOrDefault(x => x.UserId == u.Id)?.Points ?? 0;
-                var fc = flashcardsDone.FirstOrDefault(x => x.UserId == u.Id)?.Done ?? 0;
+                var activityScore = _lessonPanelService
+                    .calculateActivityScore(u.Id, lastWeekStart);
+
                 var avg = (decimal)(grades.FirstOrDefault(x => x.UserId == u.Id)?.Average ?? 0);
-                var score = pts + (fc * 2) + (int)(avg * 3);
+
+                var score = (int)Math.Round(
+                    activityScore.TotalScore * 0.7 +
+                    (double)avg * 0.3
+                );
 
                 var userReactions = reactions
                     .Where(r => r.ToUserId == u.Id)
-                    .ToDictionary(
-                        r => r.Emoji,
-                        r => r.Count
-                    );
+                    .ToDictionary(r => r.Emoji, r => r.Count);
 
                 return new RankingEntryDto
                 {
                     UserId = u.Id,
                     Username = u.Username,
                     AvatarUrl = u.Profile?.AvatarUrl,
-                    ActivityPoints = pts,
+                    ActivityPoints = activityScore.TotalScore,
                     AverageGrade = Math.Round(avg, 1),
-                    FlashcardsDone = fc,
+                    FlashcardsDone = activityScore.FlashcardsDone,
                     Score = score,
                     Reactions = userReactions
                 };

@@ -21,5 +21,6 @@
         public string? CompletionBlockReason { get; set; }
         public string? PresentationUrl { get; set; }
         public string? PresentationText { get; set; }
+        public DateOnly Deadline { get; set; }
     }
 }

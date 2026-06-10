@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Entities;
 using inzBackend.Enums;
 using inzBackend.Exceptions;
@@ -6,6 +7,7 @@ using inzBackend.Helpers;
 using inzBackend.Jwt;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -22,15 +24,17 @@ namespace inzBackend.Services.UserServices
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IMapper _mapper;
         private readonly IUserContextService _userContextService;
-        public UserService(GmitrzakEnglishAcademyDbContext dbContext, 
-            IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings, 
-            IMapper mapper, IUserContextService userContextService)
+        private readonly ILessonPanelService _lessonPanelService;
+        public UserService(GmitrzakEnglishAcademyDbContext dbContext,
+            IPasswordHasher<AppUser> passwordHasher, AuthenticationSettings authenticationSettings,
+            IMapper mapper, IUserContextService userContextService, ILessonPanelService lessonPanelService)
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
             _mapper = mapper;
             _userContextService = userContextService;
+            _lessonPanelService = lessonPanelService;
         }
 
         public AppUserDto registerUser(RegisterUserRequest request)
@@ -98,6 +102,21 @@ namespace inzBackend.Services.UserServices
                     LoginDate = today,
                     LoginAt = PolandTime.Now
                 });
+                _dbContext.SaveChanges();
+
+                var recentLoginDates = _dbContext.UserLoginLogs
+                    .Where(x => x.UserId == user.Id)
+                    .Select(x => x.LoginDate)
+                    .Distinct()
+                    .OrderByDescending(d => d)
+                    .ToList();
+
+                int currentStreak = CalculateStreak(recentLoginDates, today);
+
+                var pointsToAward = Math.Ceiling((double)currentStreak / 2);
+
+                _lessonPanelService.addActivityPoints(user.Id, (int)pointsToAward, $"Logging streak - {currentStreak} days in a row!");
+
                 _dbContext.SaveChanges();
             }
 
@@ -184,6 +203,29 @@ namespace inzBackend.Services.UserServices
                 .ToList();
 
             return users;
+        }
+        private int CalculateStreak(List<DateOnly> sortedDates, DateOnly today)
+        {
+            if (sortedDates == null || !sortedDates.Any())
+                return 0;
+
+            int streak = 0;
+            DateOnly expectedDate = today;
+
+            foreach (var date in sortedDates)
+            {
+                if (date == expectedDate)
+                {
+                    streak++;
+                    expectedDate = expectedDate.AddDays(-1);
+                }
+                else if (date < expectedDate)
+                {
+                    break;
+                }
+            }
+
+            return streak;
         }
     }
 }

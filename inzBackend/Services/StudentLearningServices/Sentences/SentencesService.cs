@@ -4,6 +4,7 @@ using inzBackend.Models;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,11 +14,14 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly ILessonPanelService _lessonPanelService;
 
-        public SentencesService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService, IMapper mapper)
+        public SentencesService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
+            IMapper mapper, ILessonPanelService lessonPanelService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _lessonPanelService = lessonPanelService;
         }
 
         public List<SentenceDto> getAllSentences()
@@ -126,6 +130,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             }
 
             sentence.IsReviewed = true;
+            _lessonPanelService.addActivityPoints((int)userId, 2, "Sentence reviewed");
             sentence.IsLeech = sentence.EaseFactor <= 150;
 
             _dbContext.SaveChanges();

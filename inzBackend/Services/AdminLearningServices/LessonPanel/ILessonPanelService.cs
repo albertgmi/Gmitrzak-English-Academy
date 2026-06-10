@@ -1,5 +1,6 @@
 ﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
+using inzBackend.Models.CreditModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 
 namespace inzBackend.Services.AdminLearningServices.LessonPanel
@@ -21,5 +22,6 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         List<AttendanceDto> getAttendanceHistory(int studentId);
         List<FlashcardDto> getAllFlashcardsForUser(int userId);
         void updateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
+        ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart);
     }
 }
