@@ -146,6 +146,7 @@ namespace inzBackend.Services.StudentCourseServices
                 weekNumber: 0,
                 dayOfWeek: 0,
                 deadline: x.DueDate,
+                unlockDate: DateOnly.FromDateTime(x.CreatedAt.DateTime),
                 isUnlocked: true,
                 isCompleted: x.IsCompleted,
                 isOverdue: x.DueDate < today,
@@ -240,6 +241,7 @@ namespace inzBackend.Services.StudentCourseServices
                     weekNumber: 0,
                     dayOfWeek: 0,
                     deadline: directAssignment.DueDate,
+                    unlockDate: DateOnly.FromDateTime(directAssignment.CreatedAt.DateTime),
                     isUnlocked: true,
                     isCompleted: directAssignment.IsCompleted,
                     isOverdue: directAssignment.DueDate < today,
@@ -270,11 +272,8 @@ namespace inzBackend.Services.StudentCourseServices
 
             if (matrixAssignment is null) return null;
 
-            var deadline = calculateDeadline(
-                matrixAssignment.StartDate,
-                matrixModule.WeekNumber,
-                matrixModule.DayOfWeek);
-
+            var deadline = calculateDeadline(matrixAssignment.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek);
+            var unlockDate = getWeekMonday(deadline);
             var isCompleted = _dbContext.UserMatrixModuleCompletions
                 .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
 
@@ -285,14 +284,15 @@ namespace inzBackend.Services.StudentCourseServices
                 order: 1,
                 weekNumber: matrixModule.WeekNumber,
                 dayOfWeek: matrixModule.DayOfWeek,
+                unlockDate: unlockDate,
                 deadline: deadline,
-                isUnlocked: today <= deadline,
+                isUnlocked: today >= unlockDate,
                 isCompleted: isCompleted,
                 isOverdue: today > deadline && !isCompleted,
                 userId: userId,
                 today: today,
                 url: matrixModule.Module?.TheaterItem?.Url,
-                assignedDate: deadline
+                assignedDate: unlockDate
             );
         }
 
@@ -388,17 +388,13 @@ namespace inzBackend.Services.StudentCourseServices
         private StudentModuleDto? mapToStudentModuleDto(MatrixModule mm, UserMatrixAssignment assignment,
             List<int> completedMatrixModuleIds, DateOnly today, DateOnly currentWeekMonday, int order)
         {
-            var deadline = calculateDeadline(
-                assignment.StartDate,
-                mm.WeekNumber,
-                mm.DayOfWeek);
+            var deadline = calculateDeadline(assignment.StartDate, mm.WeekNumber, mm.DayOfWeek);
+            var unlockDate = getWeekMonday(deadline);
 
             var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
             var isOverdue = today > deadline && !isCompleted;
-            var deadlineWeekMonday = getWeekMonday(deadline);
-            var isCurrentWeek = deadlineWeekMonday == currentWeekMonday;
+            var deadlineWeekMonday = unlockDate;
             var isFutureWeek = deadlineWeekMonday > currentWeekMonday;
-            var isPastWeek = deadlineWeekMonday < currentWeekMonday;
 
             var userId = _userContextService.GetUserId!.Value;
             var module = _dbContext.Modules
@@ -413,6 +409,7 @@ namespace inzBackend.Services.StudentCourseServices
                 order: order,
                 weekNumber: mm.WeekNumber,
                 dayOfWeek: mm.DayOfWeek,
+                unlockDate: unlockDate,
                 deadline: deadline,
                 isUnlocked: !isFutureWeek || isOverdue,
                 isCompleted: isCompleted,
@@ -420,7 +417,7 @@ namespace inzBackend.Services.StudentCourseServices
                 userId: userId,
                 today: today,
                 url: module?.TheaterItem?.Url,
-                assignedDate: deadline
+                assignedDate: unlockDate
             );
         }
 
@@ -437,12 +434,9 @@ namespace inzBackend.Services.StudentCourseServices
             return date.AddDays(-(dow - 1));
         }
 
-        private StudentModuleDto buildModuleDto(
-            int id, int moduleId, Module module, int order,
-            int weekNumber, int dayOfWeek, DateOnly deadline,
-            bool isUnlocked, bool isCompleted, bool isOverdue,
-            int userId, DateOnly today, string? url,
-            DateOnly? assignedDate = null)
+        private StudentModuleDto buildModuleDto(int id, int moduleId, Module module, int order,
+            int weekNumber, int dayOfWeek, DateOnly unlockDate, DateOnly deadline, bool isUnlocked, 
+            bool isCompleted, bool isOverdue, int userId, DateOnly today, string? url, DateOnly? assignedDate = null)
         {
             var (activityDays, required, canComplete, blockReason) =
                 getActivityStatus(userId, moduleId, module.Category, today, assignedDate);
@@ -457,7 +451,8 @@ namespace inzBackend.Services.StudentCourseServices
                 Order = order,
                 WeekNumber = weekNumber,
                 DayOfWeek = dayOfWeek,
-                UnlockDate = deadline,
+                UnlockDate = unlockDate,
+                Deadline = deadline,
                 IsUnlocked = isUnlocked,
                 IsCompleted = isCompleted,
                 IsOverdue = isOverdue,

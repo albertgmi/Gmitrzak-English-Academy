@@ -36,10 +36,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OpenAI.Chat;
 using OpenAI;
-using System.ClientModel;
 using System.Text;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.DependencyInjection;
 using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.AnnouncementsServices;
 using inzBackend.Services.SentenceServices;
@@ -48,6 +46,7 @@ using inzBackend.Services.ReportServices;
 using inzBackend.Services.RankingServices;
 using inzBackend.Services.SectionActivityServices;
 using inzBackend.Services.ExaminationServices;
+using inzBackend.Services.CreditServices;
 
 namespace inzBackend
 {
@@ -148,6 +147,7 @@ namespace inzBackend
             builder.Services.AddScoped<IRankingService, RankingService>();
             builder.Services.AddScoped<ISectionActivityService, SectionActivityService>();
             builder.Services.AddScoped<IExaminationService, ExaminationService>();
+            builder.Services.AddScoped<ICreditService, CreditService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();

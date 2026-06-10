@@ -11,6 +11,7 @@ using inzBackend.Exceptions;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using AutoMapper;
 using inzBackend.Services.UserServices;
+using inzBackend.Models.CreditModels;
 
 public class LessonPanelService : ILessonPanelService
 {
@@ -455,6 +456,106 @@ public class LessonPanelService : ILessonPanelService
         card.Interval = newInterval;
 
         _dbContext.SaveChanges();
+    }
+
+    public ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart)
+    {
+        var weekEnd = weekStart.AddDays(6);
+
+        var dueModules = _dbContext.UserModuleAssignments
+            .Where(x => x.UserId == studentUserId
+                     && x.DueDate >= weekStart
+                     && x.DueDate <= weekEnd)
+            .ToList();
+
+        double homeworkScore = 0;
+        if (dueModules.Any())
+        {
+            var onTime = dueModules.Count(x => x.IsCompleted);
+            homeworkScore = (double)onTime / dueModules.Count * 100;
+        }
+        else
+        {
+            homeworkScore = 100;
+        }
+
+        var startDate = weekStart.ToDateTime(TimeOnly.MinValue);
+        var endDate = weekEnd.ToDateTime(TimeOnly.MaxValue);
+
+        var attendanceCount = _dbContext.Attendance
+            .Where(x => x.UserId == studentUserId
+                     && x.CreatedAt >= new DateTimeOffset(startDate, PolandTime.GetOffset(startDate))
+                     && x.CreatedAt <= new DateTimeOffset(endDate, PolandTime.GetOffset(endDate)))
+            .Count();
+
+        double attendanceScore = Math.Min(100, attendanceCount / 2.0 * 100);
+
+        var watchingDone = _dbContext.UserModuleAssignments
+            .Where(x => x.UserId == studentUserId
+                     && x.IsCompleted
+                     && x.Module.Category == "Watching"
+                     && x.DueDate >= weekStart
+                     && x.DueDate <= weekEnd)
+            .Count();
+
+        var watchingFromMatrix = _dbContext.UserMatrixModuleCompletions
+            .Where(x => x.UserId == studentUserId
+                     && x.CompletedDate >= weekStart
+                     && x.CompletedDate <= weekEnd
+                     && x.MatrixModule.Module.Category == "Watching")
+            .Count();
+
+        var totalWatching = watchingDone + watchingFromMatrix;
+        double watchingScore = totalWatching > 0 ? 100 : 0;
+
+        var flashcardDays = _dbContext.FlashcardStudyLogs
+            .Where(x => x.UserId == studentUserId
+                     && x.StudyDate >= weekStart
+                     && x.StudyDate <= weekEnd)
+            .Select(x => x.StudyDate)
+            .Distinct()
+            .Count();
+
+        double regularityScore = Math.Min(100, flashcardDays / 3.0 * 100);
+
+        var agenda = _dbContext.Agendas
+            .FirstOrDefault(x => x.UserId == studentUserId);
+
+        var fcTarget = agenda?.FlashcardTarget ?? 50;
+
+        var fcDone = _dbContext.FlashcardStudyLogs
+            .Where(x => x.UserId == studentUserId
+                     && x.StudyDate >= weekStart
+                     && x.StudyDate <= weekEnd)
+            .Sum(x => (int?)(x.EasyCount + x.HardCount + x.IncorrectCount)) ?? 0;
+
+        double flashcardScore = Math.Min(100, (double)fcDone / fcTarget * 100);
+
+        var totalScore = Math.Round(
+            homeworkScore * 0.30 +
+            attendanceScore * 0.20 +
+            watchingScore * 0.15 +
+            regularityScore * 0.20 +
+            flashcardScore * 0.15
+        );
+
+        return new ActivityScoreDto
+        {
+            WeekStart = weekStart,
+            WeekEnd = weekEnd,
+            TotalScore = (int)totalScore,
+            HomeworkScore = (int)Math.Round(homeworkScore),
+            AttendanceScore = (int)Math.Round(attendanceScore),
+            WatchingScore = (int)Math.Round(watchingScore),
+            RegularityScore = (int)Math.Round(regularityScore),
+            FlashcardScore = (int)Math.Round(flashcardScore),
+            HomeworkDone = dueModules.Count(x => x.IsCompleted),
+            HomeworkTotal = dueModules.Count,
+            AttendanceCount = attendanceCount,
+            FlashcardDays = flashcardDays,
+            FlashcardsDone = fcDone,
+            FlashcardTarget = fcTarget
+        };
     }
 
     private static LessonFlashcardDto MapFlashcard(Flashcard x)

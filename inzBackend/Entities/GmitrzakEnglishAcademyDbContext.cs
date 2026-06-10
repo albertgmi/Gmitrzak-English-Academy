@@ -52,6 +52,9 @@ namespace inzBackend.Models
         public DbSet<Attendance> Attendance { get; set; }
         public DbSet<ModulePresentation> ModulePresentations { get; set; }
         public DbSet<SectionActivityLog> SectionActivityLogs { get; set; }
+        public DbSet<Credit> Credits { get; set; }
+        public DbSet<ShopItem> ShopItems { get; set; }
+        public DbSet<ShopPurchase> ShopPurchases { get; set; }
 
         public override int SaveChanges()
         {

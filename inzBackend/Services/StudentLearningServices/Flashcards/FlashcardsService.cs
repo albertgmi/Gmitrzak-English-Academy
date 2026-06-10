@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
+using inzBackend.Services.CreditServices;
 
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
@@ -15,14 +16,16 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
         private readonly ILessonPanelService _lessonPanelService;
+        private readonly ICreditService _creditService;
 
         public FlashcardsService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
-            IMapper mapper, ILessonPanelService lessonPanelService)
+            IMapper mapper, ILessonPanelService lessonPanelService, ICreditService creditService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
             _mapper = mapper;
             _lessonPanelService = lessonPanelService;
+            _creditService = creditService;
         }
 
         public List<FlashcardDto> getAllFlashcards()
@@ -113,23 +116,24 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                     card.Interval = card.Interval == 0 ? 2 : card.Interval * 2;
                     card.NextReviewDate = today.AddDays(card.Interval);
                     card.EaseFactor = Math.Min(card.EaseFactor + 10, 300);
-                    _lessonPanelService.addActivityPoints((int)userId, 3, "Flashcard done on easy level");
                     break;
 
                 case "hard":
                     card.Interval = 1;
                     card.NextReviewDate = today.AddDays(1);
                     card.EaseFactor = Math.Max(card.EaseFactor - 15, 130);
-                    _lessonPanelService.addActivityPoints((int)userId, 2, "Flashcard done on hard level");
                     break;
 
                 case "incorrect":
                     card.Interval = 0;
                     card.NextReviewDate = today;
                     card.EaseFactor = Math.Max(card.EaseFactor - 20, 130);
-                    _lessonPanelService.addActivityPoints((int)userId, 1, "Flashcard incorrect, points for trying");
                     break;
             }
+
+            _lessonPanelService.addActivityPoints((int)userId, 2, "Flashcard done");
+            _creditService.checkAndAwardDailyChallenge((int)userId);
+            _creditService.checkAndAwardWeeklyChallenge((int)userId);
 
             card.IsLeech = card.EaseFactor <= 150;
 

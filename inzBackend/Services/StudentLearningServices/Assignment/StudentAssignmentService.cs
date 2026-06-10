@@ -53,19 +53,27 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                 .Where(x => x.UserId == userId)
                 .ToList();
 
+            var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
+            var weekEnd = weekStart.AddDays(6);
+
             foreach (var ma in matrixAssignments)
             {
                 foreach (var mm in ma.Matrix.MatrixModules)
                 {
-                    if (completedMatrixModuleIds.Contains(mm.Id)) continue;
+                    if (completedMatrixModuleIds.Contains(mm.Id))
+                        continue;
 
                     var unlockDate = ma.StartDate
                         .AddDays((mm.WeekNumber - 1) * ma.Matrix.RefreshIntervalDays)
                         .AddDays(mm.DayOfWeek - 1);
 
-                    if (unlockDate > today) continue;
+                    if (directAssignments.Any(d => d.ModuleId == mm.ModuleId))
+                        continue;
 
-                    if (directAssignments.Any(d => d.ModuleId == mm.ModuleId)) continue;
+                    if (unlockDate > weekEnd)
+                        continue;
+
+                    var isOverdue = unlockDate < today;
 
                     result.Add(new AssignmentStudentDto
                     {
@@ -76,7 +84,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                         Category = mm.Module.Category,
                         DueDate = unlockDate,
                         IsCompleted = false,
-                        IsOverdue = false,
+                        IsOverdue = isOverdue,
                         HasDeadline = false,
                         IsFromMatrix = true,
                         MatrixName = ma.Matrix.Name
