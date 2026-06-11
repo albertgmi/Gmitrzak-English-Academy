@@ -103,7 +103,7 @@ namespace inzBackend
 
             }).AddJwtBearer(cfg =>
             {
-                cfg.RequireHttpsMetadata = false;
+                cfg.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                 cfg.SaveToken = true;
                 cfg.TokenValidationParameters = new TokenValidationParameters()
                 {
@@ -112,8 +112,6 @@ namespace inzBackend
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
                 };
             });
-
-            // Dependency injection
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
@@ -161,7 +159,8 @@ namespace inzBackend
             {
                 options.AddPolicy("AngularCorsPolicy", policy =>
                 {
-                    policy.WithOrigins("http://localhost:4200")
+                    var frontendUrl = builder.Configuration["FrontendUrl"] ?? "http://localhost:4200";
+                    policy.WithOrigins(frontendUrl)
                           .AllowAnyMethod()
                           .AllowAnyHeader();
                 });
@@ -171,6 +170,7 @@ namespace inzBackend
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
             app.UseStaticFiles();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -178,10 +178,7 @@ namespace inzBackend
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             using (var scope = app.Services.CreateScope())
