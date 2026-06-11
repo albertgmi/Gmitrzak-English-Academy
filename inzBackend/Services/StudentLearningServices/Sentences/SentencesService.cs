@@ -41,7 +41,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                     EaseFactor = x.EaseFactor,
                     Interval = x.Interval,
                     IsLeech = x.IsLeech,
-                    NextReviewDate = (DateOnly)x.NextReviewDate
+                    NextReviewDate = x.NextReviewDate ?? PolandTime.Today
                 })
                 .Distinct()
                 .ToList();

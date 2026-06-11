@@ -34,6 +34,10 @@ namespace inzBackend.Services.UserAnswerServices
         {
             var userId = _userContextService.GetUserId!.Value;
 
+            var user = _dbContext
+                .Users
+                .FirstOrDefault(x => x.Id == userId);
+
             var module = await _dbContext.Modules
                 .FirstOrDefaultAsync(x => x.Id == request.ModuleId)
                 ?? throw new NotFoundException($"Module {request.ModuleId} not found");
@@ -87,7 +91,10 @@ namespace inzBackend.Services.UserAnswerServices
                     UserId = userId,
                     Content = sentence.Polish,
                     Translation = isCorrectOrPartial ? request.UserAnswer : sentence.EnglishTranslation,
-                    NextReviewDate = isCorrectOrPartial ? null : PolandTime.Today
+                    NextReviewDate = isCorrectOrPartial ? PolandTime.Today.AddDays(3) : PolandTime.Today,
+                    CreatedBy = "System",
+                    LastModifiedAt = PolandTime.Now,
+                    LastModifiedBy = user?.Username ?? "System"
                 });
             }
 
