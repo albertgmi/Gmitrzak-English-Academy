@@ -1,4 +1,5 @@
 ﻿using inzBackend.Entities;
+using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.CreditModels;
@@ -212,6 +213,64 @@ namespace inzBackend.Services.CreditServices
                 Message = $"Successfully purchased {item.Name}!",
                 CreditsRemaining = available - item.CreditCost
             };
+        }
+
+        public List<UserCreditSummaryDto> getAllUsersCreditSummary()
+        {
+            var users = _dbContext.Users
+                .Include(x=>x.Profile)
+                .Where(x => x.Role == Enums.UserRole.User && x.IsActive)
+                .ToList();
+
+            var result = users.Select(u =>
+            {
+                var summary = getCreditSummary(u.Id);
+                return new UserCreditSummaryDto
+                {
+                    UserId = u.Id,
+                    Username = u.Username,
+                    TotalCredits = summary.TotalCredits,
+                    CreditsEarned = summary.CreditsEarned,
+                    CreditsSpent = summary.CreditsSpent,
+                    PurchaseCount = summary.Purchases.Count,
+                    AvatarUrl = u.Profile.AvatarUrl
+                };
+            }).ToList();
+
+            return result;
+        }
+
+        public StudentCreditDetailDto getStudentCreditDetail(int studentId)
+        {
+            var user = _dbContext.Users.FirstOrDefault(x => x.Id == studentId)
+                ?? throw new NotFoundException("Student not found");
+
+            var summary = getCreditSummary(studentId);
+
+            return new StudentCreditDetailDto
+            {
+                UserId = user.Id,
+                Username = user.Username,
+                TotalCredits = summary.TotalCredits,
+                CreditsEarned = summary.CreditsEarned,
+                CreditsSpent = summary.CreditsSpent,
+                History = summary.History,
+                Purchases = summary.Purchases
+            };
+        }
+
+        public void updatePurchaseStatus(int purchaseId, string status)
+        {
+            var purchase = _dbContext.ShopPurchases
+                .FirstOrDefault(x => x.Id == purchaseId)
+                ?? throw new NotFoundException("Purchase not found");
+
+            var validStatuses = new[] { "Pending", "Fulfilled", "Cancelled" };
+            if (!validStatuses.Contains(status))
+                throw new BadRequestException("Invalid status");
+
+            purchase.Status = status;
+            _dbContext.SaveChanges();
         }
     }
 }

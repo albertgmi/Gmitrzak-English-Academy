@@ -15,7 +15,7 @@ namespace inzBackend.Services.ModuleServices
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
-
+        
         public ModuleService(
             GmitrzakEnglishAcademyDbContext dbContext,
             IMapper mapper,
@@ -80,9 +80,12 @@ namespace inzBackend.Services.ModuleServices
                     Url = request.PresentationUrl,
                     Text = request.PresentationText
                 });
-                _dbContext.SaveChanges();
             }
 
+            if (request.Category == "Essay")
+                module.EssayPrompt = request.EssayPrompt;
+
+            _dbContext.SaveChanges();
             return _mapper.Map<ModuleDto>(module);
         }
 
@@ -131,6 +134,9 @@ namespace inzBackend.Services.ModuleServices
             {
                 _dbContext.ModulePresentations.Remove(module.Presentation);
             }
+
+            if (request.Category == "Essay")
+                module.EssayPrompt = request.EssayPrompt;
 
             _dbContext.SaveChanges();
         }

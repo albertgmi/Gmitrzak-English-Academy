@@ -8,5 +8,7 @@
         public DateOnly DueDate { get; set; }
         public bool IsCompleted { get; set; }
         public bool IsOverdue { get; set; }
+        public bool IsFromMatrix { get; set; }
+        public int? ModuleId { get; set; }
     }
 }

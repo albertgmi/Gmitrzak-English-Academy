@@ -9,5 +9,6 @@
         public int? TheaterItemId { get; set; }
         public string? PresentationUrl { get; set; }
         public string? PresentationText { get; set; }
+        public string? EssayPrompt { get; set; }
     }
 }
