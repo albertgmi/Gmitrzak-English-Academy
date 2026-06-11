@@ -1,0 +1,21 @@
+﻿namespace inzBackend.Helpers
+{
+    public static class PolandTime
+    {
+        private static readonly TimeZoneInfo PolishZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        public static DateTimeOffset Now => TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, PolishZone);
+        public static DateTime DateTimeNow => TimeZoneInfo.ConvertTime(DateTime.UtcNow, PolishZone);
+        public static DateOnly Today => DateOnly.FromDateTime(DateTimeNow);
+        public static TimeSpan CurrentOffset => PolishZone.GetUtcOffset(DateTime.UtcNow);
+        public static TimeSpan GetOffset(DateTime dateTime) => PolishZone.GetUtcOffset(dateTime);
+        public static DateTimeOffset Convert(DateTimeOffset dateTimeOffset)
+        {
+            return TimeZoneInfo.ConvertTime(dateTimeOffset, PolishZone);
+        }
+        public static DateOnly ParseDate(string dateText)
+        {
+            return DateOnly.Parse(dateText, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+}
