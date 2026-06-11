@@ -474,18 +474,16 @@ public class LessonPanelService : ILessonPanelService
             var onTime = dueModules.Count(x => x.IsCompleted);
             homeworkScore = (double)onTime / dueModules.Count * 100;
         }
-        else
-        {
-            homeworkScore = 100;
-        }
 
         var startDate = weekStart.ToDateTime(TimeOnly.MinValue);
         var endDate = weekEnd.ToDateTime(TimeOnly.MaxValue);
 
         var attendanceCount = _dbContext.Attendance
             .Where(x => x.UserId == studentUserId
-                     && x.CreatedAt >= new DateTimeOffset(startDate, PolandTime.GetOffset(startDate))
-                     && x.CreatedAt <= new DateTimeOffset(endDate, PolandTime.GetOffset(endDate)))
+                     && x.CreatedAt >= new DateTimeOffset(
+                         startDate, PolandTime.GetOffset(startDate))
+                     && x.CreatedAt <= new DateTimeOffset(
+                         endDate, PolandTime.GetOffset(endDate)))
             .Count();
 
         double attendanceScore = Math.Min(100, attendanceCount / 2.0 * 100);
@@ -505,8 +503,7 @@ public class LessonPanelService : ILessonPanelService
                      && x.MatrixModule.Module.Category == "Watching")
             .Count();
 
-        var totalWatching = watchingDone + watchingFromMatrix;
-        double watchingScore = totalWatching > 0 ? 100 : 0;
+        double watchingScore = (watchingDone + watchingFromMatrix) > 0 ? 100 : 0;
 
         var flashcardDays = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId
@@ -518,9 +515,7 @@ public class LessonPanelService : ILessonPanelService
 
         double regularityScore = Math.Min(100, flashcardDays / 3.0 * 100);
 
-        var agenda = _dbContext.Agendas
-            .FirstOrDefault(x => x.UserId == studentUserId);
-
+        var agenda = _dbContext.Agendas.FirstOrDefault(x => x.UserId == studentUserId);
         var fcTarget = agenda?.FlashcardTarget ?? 50;
 
         var fcDone = _dbContext.FlashcardStudyLogs
@@ -529,9 +524,17 @@ public class LessonPanelService : ILessonPanelService
                      && x.StudyDate <= weekEnd)
             .Sum(x => (int?)(x.EasyCount + x.HardCount + x.IncorrectCount)) ?? 0;
 
-        double flashcardScore = Math.Min(100, (double)fcDone / fcTarget * 100);
+        double flashcardScore = fcTarget > 0
+            ? Math.Min(100, (double)fcDone / fcTarget * 100)
+            : 0;
 
-        var totalScore = Math.Round(
+        var activityPointsSum = _dbContext.ActivityPoints
+            .Where(x => x.UserId == studentUserId
+                     && x.PointDate >= weekStart
+                     && x.PointDate <= weekEnd)
+            .Sum(x => (int?)x.Points) ?? 0;
+
+        var criteriaScore = (int)Math.Round(
             homeworkScore * 0.30 +
             attendanceScore * 0.20 +
             watchingScore * 0.15 +
@@ -543,7 +546,7 @@ public class LessonPanelService : ILessonPanelService
         {
             WeekStart = weekStart,
             WeekEnd = weekEnd,
-            TotalScore = (int)totalScore,
+            TotalScore = criteriaScore + activityPointsSum,
             HomeworkScore = (int)Math.Round(homeworkScore),
             AttendanceScore = (int)Math.Round(attendanceScore),
             WatchingScore = (int)Math.Round(watchingScore),
