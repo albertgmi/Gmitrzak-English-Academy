@@ -48,7 +48,7 @@ namespace inzBackend.Services.RankingServices
             {
                 "weekly" => thisWeekStart,
                 "monthly" => new DateOnly(today.Year, today.Month, 1),
-                "alltime" => DateOnly.MinValue
+                _ => today.AddYears(-20)
             };
 
             var users = _dbContext.Users
@@ -195,7 +195,7 @@ namespace inzBackend.Services.RankingServices
                     new DateOnly(today.Year, today.Month, 1),
                     today
                 ),
-                _ => (DateOnly.MinValue, today)
+                _ => (today.AddYears(-20), today)
             };
         }
     }

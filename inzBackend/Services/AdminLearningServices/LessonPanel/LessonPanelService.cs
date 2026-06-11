@@ -480,10 +480,8 @@ public class LessonPanelService : ILessonPanelService
 
         var attendanceCount = _dbContext.Attendance
             .Where(x => x.UserId == studentUserId
-                     && x.CreatedAt >= new DateTimeOffset(
-                         startDate, PolandTime.GetOffset(startDate))
-                     && x.CreatedAt <= new DateTimeOffset(
-                         endDate, PolandTime.GetOffset(endDate)))
+                     && x.CreatedAt >= startDate
+                     && x.CreatedAt <= endDate)
             .Count();
 
         double attendanceScore = Math.Min(100, attendanceCount / 2.0 * 100);
