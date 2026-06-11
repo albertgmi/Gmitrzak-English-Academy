@@ -4,6 +4,8 @@ using inzBackend.Models.ProfileModels;
 using inzBackend.Models;
 using inzBackend.Enums;
 using Microsoft.EntityFrameworkCore;
+using CloudinaryDotNet.Actions;
+using CloudinaryDotNet;
 
 namespace inzBackend.Services.ProfileServices
 {
@@ -11,11 +13,13 @@ namespace inzBackend.Services.ProfileServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly Cloudinary _cloudinary;
 
-        public ProfileService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper)
+        public ProfileService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper, Cloudinary cloudinary)
         {
             _dbContext = dbContext;
             _mapper = mapper;
+            _cloudinary = cloudinary;
         }
 
         public ProfileDto getProfile(int userId)
@@ -79,26 +83,22 @@ namespace inzBackend.Services.ProfileServices
             if (profile is null)
                 throw new NotFoundException("Profile not found");
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
-            Directory.CreateDirectory(uploadsFolder);
+            using var stream = file.OpenReadStream();
 
-            if (!string.IsNullOrEmpty(profile.AvatarUrl))
+            var uploadParams = new ImageUploadParams()
             {
-                var oldFileName = Path.GetFileName(profile.AvatarUrl);
-                var oldFilePath = Path.Combine(uploadsFolder, oldFileName);
-                if (File.Exists(oldFilePath))
-                    File.Delete(oldFilePath);
-            }
+                File = new FileDescription(file.FileName, stream),
+                PublicId = $"avatars/user_{userId}",
+                Overwrite = true,
+                Invalidate = true
+            };
 
-            var fileName = $"{userId}_{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            if (uploadResult.Error != null)
+                throw new Exception($"Cloudinary error: {uploadResult.Error.Message}");
 
-            profile.AvatarUrl = $"/avatars/{fileName}";
+            profile.AvatarUrl = uploadResult.SecureUrl.ToString();
             _dbContext.SaveChanges();
 
             return profile.AvatarUrl;

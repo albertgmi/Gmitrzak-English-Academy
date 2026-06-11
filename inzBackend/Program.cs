@@ -48,6 +48,7 @@ using inzBackend.Services.SectionActivityServices;
 using inzBackend.Services.ExaminationServices;
 using inzBackend.Services.CreditServices;
 using inzBackend.Services.EssayServices;
+using CloudinaryDotNet;
 
 namespace inzBackend
 {
@@ -113,6 +114,14 @@ namespace inzBackend
                 };
             });
 
+            var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
+            var account = new Account(
+                cloudinarySettings["CloudName"],
+                cloudinarySettings["ApiKey"],
+                cloudinarySettings["ApiSecret"]
+            );
+            var cloudinary = new Cloudinary(account);
+
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IProgramService, ProgramService>();
@@ -153,6 +162,7 @@ namespace inzBackend
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
             builder.Services.AddScoped<IUserContextService, UserContextService>();
             builder.Services.AddSingleton(authenticationSettings);
+            builder.Services.AddSingleton(cloudinary);
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddCors(options =>
