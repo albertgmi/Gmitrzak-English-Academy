@@ -48,7 +48,7 @@ namespace inzBackend.Services.RankingServices
             {
                 "weekly" => thisWeekStart,
                 "monthly" => new DateOnly(today.Year, today.Month, 1),
-                _ => DateOnly.MinValue
+                "alltime" => DateOnly.MinValue
             };
 
             var users = _dbContext.Users
