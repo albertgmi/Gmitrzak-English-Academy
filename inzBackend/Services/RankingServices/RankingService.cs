@@ -43,7 +43,13 @@ namespace inzBackend.Services.RankingServices
 
             var dow = ((int)today.DayOfWeek + 6) % 7;
             var thisWeekStart = today.AddDays(-dow);
-            var lastWeekStart = thisWeekStart.AddDays(-7);
+
+            var scoreWeekStart = period switch
+            {
+                "weekly" => thisWeekStart,
+                "monthly" => new DateOnly(today.Year, today.Month, 1),
+                _ => DateOnly.MinValue
+            };
 
             var users = _dbContext.Users
                 .Include(x => x.Profile)
@@ -70,7 +76,7 @@ namespace inzBackend.Services.RankingServices
             var entries = users.Select(u =>
             {
                 var activityScore = _lessonPanelService
-                    .calculateActivityScore(u.Id, lastWeekStart);
+                    .calculateActivityScore(u.Id, scoreWeekStart);
 
                 var avg = (decimal)(grades.FirstOrDefault(x => x.UserId == u.Id)?.Average ?? 0);
 
