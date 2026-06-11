@@ -11,5 +11,8 @@ namespace inzBackend.Services.CreditServices
         List<ShopItemDto> getShopItems();
         List<ShopItemDto> getShopItems(int userId);
         ShopPurchaseResultDto purchaseItem(int userId, int shopItemId);
+        List<UserCreditSummaryDto> getAllUsersCreditSummary();
+        StudentCreditDetailDto getStudentCreditDetail(int studentId);
+        void updatePurchaseStatus(int purchaseId, string status);
     }
 }

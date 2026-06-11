@@ -47,6 +47,7 @@ using inzBackend.Services.RankingServices;
 using inzBackend.Services.SectionActivityServices;
 using inzBackend.Services.ExaminationServices;
 using inzBackend.Services.CreditServices;
+using inzBackend.Services.EssayServices;
 
 namespace inzBackend
 {
@@ -148,6 +149,7 @@ namespace inzBackend
             builder.Services.AddScoped<ISectionActivityService, SectionActivityService>();
             builder.Services.AddScoped<IExaminationService, ExaminationService>();
             builder.Services.AddScoped<ICreditService, CreditService>();
+            builder.Services.AddScoped<IEssayService, EssayService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();

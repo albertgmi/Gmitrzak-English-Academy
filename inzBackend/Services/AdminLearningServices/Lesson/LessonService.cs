@@ -185,38 +185,133 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
             var weekEnd = weekStart.AddDays(6);
 
-            return _dbContext.UserModuleAssignments
+            var result = new List<HomeworkItemDto>();
+
+            // 1. MODUŁY INDYWIDUALNE
+            var directAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == studentUserId
-                         && x.DueDate >= weekStart
-                         && x.DueDate <= weekEnd)
-                .OrderBy(x => x.DueDate)
-                .Select(x => new HomeworkItemDto
-                {
-                    Id = x.Id,
-                    ModuleName = x.Module.Name,
-                    ModuleDescription = x.Module.Description,
-                    DueDate = x.DueDate,
-                    IsCompleted = x.IsCompleted,
-                    IsOverdue = x.DueDate < today && !x.IsCompleted
-                })
+                         && x.DueDate <= weekEnd
+                         && (x.DueDate >= weekStart || !x.IsCompleted))
                 .ToList();
+
+            var directDtos = directAssignments.Select(x => new HomeworkItemDto
+            {
+                Id = x.Id, // Zwykłe dodatnie ID
+                ModuleName = x.Module.Name,
+                ModuleDescription = x.Module.Description,
+                DueDate = x.DueDate,
+                IsCompleted = x.IsCompleted,
+                IsOverdue = x.DueDate < today && !x.IsCompleted
+            });
+            result.AddRange(directDtos);
+
+            // 2. MODUŁY Z MATRYC
+            var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
+                .Where(x => x.UserId == studentUserId)
+                .Select(x => x.MatrixModuleId)
+                .ToHashSet();
+
+            var matrixAssignments = _dbContext.UserMatrixAssignments
+                .Include(x => x.Matrix)
+                    .ThenInclude(m => m.MatrixModules)
+                        .ThenInclude(mm => mm.Module)
+                .Where(x => x.UserId == studentUserId)
+                .ToList();
+
+            foreach (var ma in matrixAssignments)
+            {
+                foreach (var mm in ma.Matrix.MatrixModules)
+                {
+                    var unlockDate = ma.StartDate
+                        .AddDays((mm.WeekNumber - 1) * ma.Matrix.RefreshIntervalDays)
+                        .AddDays(mm.DayOfWeek - 1);
+
+                    if (unlockDate > weekEnd) continue;
+
+                    var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
+
+                    if (unlockDate < weekStart && isCompleted) continue;
+                    if (directAssignments.Any(d => d.ModuleId == mm.ModuleId)) continue;
+
+                    result.Add(new HomeworkItemDto
+                    {
+                        Id = -mm.Id,
+                        ModuleName = $"{mm.Module.Name} (Matrix: {ma.Matrix.Name})",
+                        ModuleDescription = mm.Module.Description ?? string.Empty,
+                        DueDate = unlockDate,
+                        IsCompleted = isCompleted,
+                        IsOverdue = unlockDate < today && !isCompleted
+                    });
+                }
+            }
+
+            return result.OrderByDescending(x => x.IsOverdue).ThenBy(x => x.DueDate).ToList();
         }
 
         public void checkHomework(int assignmentId)
         {
-            var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
-            if (a is null) return;
-            a.IsCompleted = true;
-            _dbContext.SaveChanges();
+            // Jeśli ID jest ujemne, to znaczy, że to MatrixModuleId
+            if (assignmentId < 0)
+            {
+                int realMatrixModuleId = Math.Abs(assignmentId); // zamiana np. -15 na 15
+
+                // Szukamy przypisania matrycy, aby dowiedzieć się, do jakiego studenta należy
+                var matrixAssignment = _dbContext.UserMatrixAssignments
+                    .FirstOrDefault(x => x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
+
+                if (matrixAssignment is null) return;
+
+                var exists = _dbContext.UserMatrixModuleCompletions
+                    .Any(x => x.UserId == matrixAssignment.UserId && x.MatrixModuleId == realMatrixModuleId);
+
+                if (!exists)
+                {
+                    _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
+                    {
+                        UserId = matrixAssignment.UserId,
+                        MatrixModuleId = realMatrixModuleId
+                    });
+                    _dbContext.SaveChanges();
+                }
+            }
+            else
+            {
+                // Tradycyjna logika dla zadań indywidualnych
+                var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
+                if (a is null) return;
+                a.IsCompleted = true;
+                _dbContext.SaveChanges();
+            }
         }
 
         public void uncheckHomework(int assignmentId)
         {
-            var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
-            if (a is null) return;
-            a.IsCompleted = false;
-            _dbContext.SaveChanges();
+            if (assignmentId < 0)
+            {
+                int realMatrixModuleId = Math.Abs(assignmentId);
+
+                var matrixAssignment = _dbContext.UserMatrixAssignments
+                    .FirstOrDefault(x => x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
+
+                if (matrixAssignment is null) return;
+
+                var completion = _dbContext.UserMatrixModuleCompletions
+                    .FirstOrDefault(x => x.UserId == matrixAssignment.UserId && x.MatrixModuleId == realMatrixModuleId);
+
+                if (completion != null)
+                {
+                    _dbContext.UserMatrixModuleCompletions.Remove(completion);
+                    _dbContext.SaveChanges();
+                }
+            }
+            else
+            {
+                var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
+                if (a is null) return;
+                a.IsCompleted = false;
+                _dbContext.SaveChanges();
+            }
         }
 
         public List<PronunciationTestItemDto> getPronunciationList(int studentUserId)
