@@ -184,11 +184,55 @@ namespace inzBackend
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<GmitrzakEnglishAcademyDbContext>();
+                var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUser>>();
 
-                if (dbContext.Database.GetPendingMigrations().Any())
-                    dbContext.Database.Migrate();
+                dbContext.Database.Migrate();
+
+                SeedUsersForBrother(dbContext, hasher);
             }
             app.Run();
+        }
+        private static void SeedUsersForBrother(GmitrzakEnglishAcademyDbContext context, IPasswordHasher<AppUser> hasher)
+        {
+            if (!context.Users.Any())
+            {
+                var now = DateTimeOffset.UtcNow;
+
+                var admin = new AppUser
+                {
+                    Id = 1,
+                    Username = "testadmin",
+                    Email = "admin@example.com",
+                    PasswordHash = hasher.HashPassword(null, "Barbara1"),
+                    Role = Enums.UserRole.Admin,
+                    IsActive = true,
+                    IsDeleted = false,
+                    CreatedAt = now,
+                    CreatedBy = "System",
+                    LastModifiedAt = now,
+                    LastModifiedBy = "System"
+                };
+
+                var user = new AppUser
+                {
+                    Id = 2,
+                    Username = "testuser",
+                    Email = "user@example.com",
+                    PasswordHash = hasher.HashPassword(null, "Barbara1"),
+                    Role = Enums.UserRole.User,
+                    IsActive = true,
+                    IsDeleted = false,
+                    CreatedAt = now,
+                    CreatedBy = "System",
+                    LastModifiedAt = now,
+                    LastModifiedBy = "System"
+                };
+
+                context.Users.AddRange(admin, user);
+                context.SaveChanges();
+
+                Console.WriteLine("Seed: testadmin + testuser dodani.");
+            }
         }
     }
 }
