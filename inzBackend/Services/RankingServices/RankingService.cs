@@ -44,11 +44,11 @@ namespace inzBackend.Services.RankingServices
             var dow = ((int)today.DayOfWeek + 6) % 7;
             var thisWeekStart = today.AddDays(-dow);
 
-            var scoreWeekStart = period switch
+            var (scoreWeekStart, scoreWeekEnd) = period switch
             {
-                "weekly" => thisWeekStart,
-                "monthly" => new DateOnly(today.Year, today.Month, 1),
-                _ => today.AddYears(-20)
+                "weekly" => (thisWeekStart, today),
+                "monthly" => (new DateOnly(today.Year, today.Month, 1), today),
+                _ => (today.AddYears(-20), today)
             };
 
             var users = _dbContext.Users
@@ -76,7 +76,7 @@ namespace inzBackend.Services.RankingServices
             var entries = users.Select(u =>
             {
                 var activityScore = _lessonPanelService
-                    .calculateActivityScore(u.Id, scoreWeekStart);
+                    .calculateActivityScore(u.Id, scoreWeekStart, scoreWeekEnd);
 
                 var avg = (decimal)(grades.FirstOrDefault(x => x.UserId == u.Id)?.Average ?? 0);
 

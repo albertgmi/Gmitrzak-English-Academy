@@ -458,10 +458,8 @@ public class LessonPanelService : ILessonPanelService
         _dbContext.SaveChanges();
     }
 
-    public ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart)
+    public ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd)
     {
-        var weekEnd = weekStart.AddDays(6);
-
         var dueModules = _dbContext.UserModuleAssignments
             .Where(x => x.UserId == studentUserId
                      && x.DueDate >= weekStart

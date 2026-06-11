@@ -22,6 +22,6 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         List<AttendanceDto> getAttendanceHistory(int studentId);
         List<FlashcardDto> getAllFlashcardsForUser(int userId);
         void updateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
-        ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart);
+        ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
     }
 }
