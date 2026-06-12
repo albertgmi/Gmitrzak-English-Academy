@@ -100,7 +100,7 @@ namespace inzBackend.Services.UserServices
                 {
                     UserId = user.Id,
                     LoginDate = today,
-                    LoginAt = PolandTime.Now
+                    LoginAt = PolandTime.DateTimeNow
                 });
                 _dbContext.SaveChanges();
 
