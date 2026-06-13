@@ -5,13 +5,13 @@ services:
     restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: ***REMOVED***
+      POSTGRES_PASSWORD: MY_DOCKER_POSTGRES_PASSWORD
       POSTGRES_DB: inz_database
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      
+
   inz_backend:
     image: inz_backend_image
     build:
@@ -21,7 +21,7 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=inz_database;Username=admin;Password=***REMOVED***
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=inz_database;Username=admin;Password=MY_DOCKER_POSTGRES_PASSWORD
     depends_on:
       - db
 
