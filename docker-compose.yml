@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: ***REMOVED***
+      POSTGRES_PASSWORD: SECURITY_BAN
       POSTGRES_DB: inz_database
     ports:
       - "5432:5432"
