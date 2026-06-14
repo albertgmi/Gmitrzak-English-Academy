@@ -20,7 +20,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("agenda/{studentUserId}")]
-        public AgendaDto getAgenda([FromRoute] int studentUserId)
+        public ActionResult<AgendaDto> getAgenda([FromRoute] int studentUserId)
         {
             return _service.getAgenda(studentUserId);
         }
@@ -33,13 +33,13 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("grades/{studentUserId}")]
-        public List<LessonGradeDto> getGrades([FromRoute] int studentUserId)
+        public ActionResult<List<LessonGradeDto>> getGrades([FromRoute] int studentUserId)
         {
             return _service.getGrades(studentUserId);
         }
             
         [HttpGet("activity-points/{studentUserId}")]
-        public ActivityPointsLessonSummaryDto getActivityPoints([FromRoute] int studentUserId)
+        public ActionResult<ActivityPointsLessonSummaryDto> getActivityPoints([FromRoute] int studentUserId)
         {
             return _service.getActivityPoints(studentUserId);
         }
@@ -64,19 +64,19 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("study-time/{studentUserId}")]
-        public StudentStudyTimeDto getStudyTime([FromRoute] int studentUserId)
+        public ActionResult<StudentStudyTimeDto> getStudyTime([FromRoute] int studentUserId)
         {
             return _service.getStudyTime(studentUserId);
         }
             
         [HttpGet("last-week/{studentUserId}")]
-        public LessonLastWeekDto getLastWeek([FromRoute] int studentUserId)
+        public ActionResult<LessonLastWeekDto> getLastWeek([FromRoute] int studentUserId)
         {
             return _service.getLastWeek(studentUserId);
         }
 
         [HttpGet("stats/{studentUserId}")]
-        public LessonStatsDto getStats([FromRoute] int studentUserId)
+        public ActionResult<LessonStatsDto> getStats([FromRoute] int studentUserId)
         {
             return _service.getStats(studentUserId);
         }

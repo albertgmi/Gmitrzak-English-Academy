@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+﻿using inzBackend.Entities.LearningMaterials;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
@@ -41,9 +41,9 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("search")]
-        public ActionResult<SearchVocabularyResult> searchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
+        public async Task<ActionResult<SearchVocabularyResult>> searchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
         {
-            var result = _globalVocabularyService.searchVocabulary(query, studentUserId);
+            var result = await _globalVocabularyService.searchVocabulary(query, studentUserId);
             return Ok(result);
         }
 

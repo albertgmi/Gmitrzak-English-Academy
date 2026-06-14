@@ -21,7 +21,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("stock")]
-        public List<SentenceStockDto> getStock()
+        public ActionResult<List<SentenceStockDto>> getStock()
         {
             return _sentenceService.getAllStock();
         }
@@ -54,19 +54,19 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("sets")]
-        public List<SentenceSetGroupDto> getSets()
+        public ActionResult<List<SentenceSetGroupDto>> getSets()
         {
             return _sentenceService.getAllSetsGrouped();
         }
 
         [HttpGet("sets/{id}")]
-        public SentenceSetDto getSet([FromRoute] int id)
+        public ActionResult<SentenceSetDto> getSet([FromRoute] int id)
         {
             return _sentenceService.getSet(id);
         }
 
         [HttpPost("sets")]
-        public SentenceSetDto createSet([FromBody] CreateSentenceSetRequest request)
+        public ActionResult<SentenceSetDto> createSet([FromBody] CreateSentenceSetRequest request)
         {
             return _sentenceService.createSet(request);
         }
@@ -86,7 +86,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("module/{moduleId}/sets")]
-        public List<SentenceSetDto> getSetsForModule([FromRoute] int moduleId)
+        public ActionResult<List<SentenceSetDto>> getSetsForModule([FromRoute] int moduleId)
         {
             return _sentenceService.getSetsForModule(moduleId);
         }

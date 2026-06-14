@@ -1,22 +1,28 @@
 ﻿using AutoMapper;
-using inzBackend.Entities;
 using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Helpers;
+using inzBackend.Entities.SpacedRepetition;
+using inzBackend.Entities.LearningMaterials;
+using inzBackend.Services.AiIntegrationServices;
+using System.Threading.Tasks;
 
 namespace inzBackend.Services.GlobalVocabularyServices
 {
     public class GlobalVocabularyService : IGlobalVocabularyService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
+        private readonly IAiTranslationService _aiTranslationService;
         private readonly IMapper _mapper;
 
-        public GlobalVocabularyService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper)
+        public GlobalVocabularyService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper,
+            IAiTranslationService aiTranslationService)
         {
             _dbContext = dbContext;
             _mapper = mapper;
+            _aiTranslationService = aiTranslationService;
         }
 
         public List<GlobalVocabularyDto> getAllVocabulary()
@@ -59,19 +65,25 @@ namespace inzBackend.Services.GlobalVocabularyServices
             _dbContext.SaveChanges();
         }
 
-        public SearchVocabularyResult searchVocabulary(string query, int studentUserId)
+        public async Task<SearchVocabularyResult> searchVocabulary(string query, int studentUserId)
         {
             var q = query.ToLower().Trim();
 
             var vocab = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower().Contains(q) || x.Back.ToLower().Contains(q));
 
+            List<string> toTranslate = new List<string>();
+            toTranslate.Add(query);
+            var translatedList = _aiTranslationService
+                .TranslateBatchAsync(toTranslate);
+            var translatedBack = (await translatedList).FirstOrDefault();
+
             if (vocab is null)
             {
                 return new SearchVocabularyResult
                 {
                     Front = query,
-                    Back = string.Empty,
+                    Back = translatedBack ?? string.Empty,
                     Category = string.Empty,
                     ExistsInGlobal = false,
                     AlreadyAssignedToStudent = false

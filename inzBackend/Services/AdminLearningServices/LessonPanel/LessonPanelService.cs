@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+﻿using inzBackend.Entities.LearningMaterials;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
@@ -12,6 +12,9 @@ using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using AutoMapper;
 using inzBackend.Services.UserServices;
 using inzBackend.Models.CreditModels;
+using inzBackend.Entities.SpacedRepetition;
+using inzBackend.Entities.Administration;
+using inzBackend.Entities.Gamification;
 
 public class LessonPanelService : ILessonPanelService
 {

@@ -38,7 +38,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Models.Program> createProgram([FromBody] CreateProgramRequest request)
+        public ActionResult<Entities.Curriculum.Program> createProgram([FromBody] CreateProgramRequest request)
         {
             var createdProgram = _programService.createProgram(request);
             return Ok(createdProgram);

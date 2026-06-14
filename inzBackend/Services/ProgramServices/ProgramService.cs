@@ -55,9 +55,9 @@ namespace inzBackend.Services.ProgramServices
             _dbContext.SaveChanges();
         }
 
-        public Models.Program createProgram(CreateProgramRequest request)
+        public Entities.Curriculum.Program createProgram(CreateProgramRequest request)
         {
-            var newProgram = new Models.Program
+            var newProgram = new Entities.Curriculum.Program
             {
                 Name = request.Name,
                 Description = request.Description,

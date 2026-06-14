@@ -1,4 +1,12 @@
-﻿using inzBackend.Entities;
+﻿using inzBackend.Entities.Administration;
+using inzBackend.Entities.Assignments;
+using inzBackend.Entities.Base;
+using inzBackend.Entities.Curriculum;
+using inzBackend.Entities.Gamification;
+using inzBackend.Entities.Identity;
+using inzBackend.Entities.LearningMaterials;
+using inzBackend.Entities.Resources;
+using inzBackend.Entities.SpacedRepetition;
 using inzBackend.Helpers;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +22,7 @@ namespace inzBackend.Models
             _userContextService = userContextService;
         }
         public DbSet<AppUser> Users { get; set; }
-        public DbSet<Program> Programs { get; set; }
+        public DbSet<Entities.Curriculum.Program> Programs { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Matrix> Matrices { get; set; }
         public DbSet<Module> Modules { get; set; }
@@ -32,7 +40,7 @@ namespace inzBackend.Models
         public DbSet<ActivityPoint> ActivityPoints { get; set; }
         public DbSet<Catalogue> Catalogues { get; set; }
         public DbSet<CatalogueEntry> CatalogueEntries { get; set; }
-        public DbSet<Entities.Profile> Profiles { get; set; }
+        public DbSet<Profile> Profiles { get; set; }
         public DbSet<UserModuleAssignment> UserModuleAssignments { get; set; }
         public DbSet<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; }
         public DbSet<TeacherNote> TeacherNotes { get; set; }

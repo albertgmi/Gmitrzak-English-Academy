@@ -12,6 +12,8 @@ using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 using OpenXmlDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
+using inzBackend.Entities.Curriculum;
+using inzBackend.Entities.Assignments;
 
 namespace inzBackend.Services.EssayServices
 {

@@ -1,6 +1,5 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using inzBackend.Jwt;
 using inzBackend.Middlewares;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
@@ -8,15 +7,24 @@ using inzBackend.Models.Validators;
 using inzBackend.Profiles;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
+using inzBackend.Services.AiIntegrationServices;
+using inzBackend.Services.AnnouncementsServices;
 using inzBackend.Services.AssignmentServices;
 using inzBackend.Services.CatalogueServices;
 using inzBackend.Services.CourseServices;
+using inzBackend.Services.CreditServices;
 using inzBackend.Services.DashboardServices;
+using inzBackend.Services.EssayServices;
+using inzBackend.Services.ExaminationServices;
 using inzBackend.Services.GlobalVocabularyServices;
 using inzBackend.Services.MatrixServices;
 using inzBackend.Services.ModuleServices;
 using inzBackend.Services.ProfileServices;
 using inzBackend.Services.ProgramServices;
+using inzBackend.Services.RankingServices;
+using inzBackend.Services.ReportServices;
+using inzBackend.Services.SectionActivityServices;
+using inzBackend.Services.SentenceServices;
 using inzBackend.Services.StudentCourseServices;
 using inzBackend.Services.StudentCourseServices.ActivityPoint;
 using inzBackend.Services.StudentCourseServices.Grade;
@@ -29,26 +37,19 @@ using inzBackend.Services.StudentLearningServices.Pronunciation;
 using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
 using inzBackend.Services.TheaterItemServices;
+using inzBackend.Services.UserAnswerServices;
 using inzBackend.Services.UserServices;
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using OpenAI.Chat;
 using OpenAI;
+using OpenAI.Chat;
 using System.Text;
 using System.Text.Json.Serialization;
-using inzBackend.Services.AiIntegrationServices;
-using inzBackend.Services.AnnouncementsServices;
-using inzBackend.Services.SentenceServices;
-using inzBackend.Services.UserAnswerServices;
-using inzBackend.Services.ReportServices;
-using inzBackend.Services.RankingServices;
-using inzBackend.Services.SectionActivityServices;
-using inzBackend.Services.ExaminationServices;
-using inzBackend.Services.CreditServices;
-using inzBackend.Services.EssayServices;
-using CloudinaryDotNet;
+using inzBackend.Entities.Identity;
+using inzBackend.Helpers;
 
 namespace inzBackend
 {
@@ -57,23 +58,57 @@ namespace inzBackend
         public static void Main(string[] args)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddSwaggerGen();
+
+            // Configuration & DbContext
             var connectionString = builder.Configuration.GetConnectionString("GmitrzakEnglishAppConnectionString");
 
             builder.Services.AddDbContext<GmitrzakEnglishAcademyDbContext>(options =>
-                    options.UseNpgsql(connectionString));
+                options.UseNpgsql(connectionString));
+
+            // Controllers, JSON & Validation
+            builder.Services.AddSwaggerGen();
 
             builder.Services.Configure<JsonOptions>(options =>
             {
                 options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
+
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                });
+                })
+                .AddFluentValidation();
 
+            builder.Services.AddAutoMapper(typeof(GmitrzakEnglishAppMappingProfile).Assembly);
+
+            // Authentication (JWT)
+            var authenticationSettings = new AuthenticationSettings();
+            builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = "Bearer";
+                options.DefaultScheme = "Bearer";
+                options.DefaultChallengeScheme = "Bearer";
+            })
+            .AddJwtBearer(cfg =>
+            {
+                cfg.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+                cfg.SaveToken = true;
+                cfg.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = authenticationSettings.JwtIssuer,
+                    ValidAudience = authenticationSettings.JwtIssuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
+                };
+            });
+
+            builder.Services.AddSingleton(authenticationSettings);
+
+            // External integrations: Groq (OpenAI-compatible) & Cloudinary
             builder.Services.AddScoped<ChatClient>(sp =>
             {
                 var apiKey = builder.Configuration["GroqSettings:ApiKey"] ?? "";
@@ -90,38 +125,15 @@ namespace inzBackend
                 return openAiClient.GetChatClient(modelId);
             });
 
-            builder.Services.AddControllers().AddFluentValidation();
-            builder.Services.AddAutoMapper(typeof(GmitrzakEnglishAppMappingProfile).Assembly);
-
-            var authenticationSettings = new AuthenticationSettings();
-            builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
-
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = "Bearer";
-                options.DefaultScheme = "Bearer";
-                options.DefaultChallengeScheme = "Bearer";
-
-            }).AddJwtBearer(cfg =>
-            {
-                cfg.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
-                cfg.SaveToken = true;
-                cfg.TokenValidationParameters = new TokenValidationParameters()
-                {
-                    ValidIssuer = authenticationSettings.JwtIssuer,
-                    ValidAudience = authenticationSettings.JwtIssuer,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
-                };
-            });
-
             var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
-            var account = new Account(
+            var cloudinaryAccount = new Account(
                 cloudinarySettings["CloudName"],
                 cloudinarySettings["ApiKey"],
                 cloudinarySettings["ApiSecret"]
             );
-            var cloudinary = new Cloudinary(account);
+            builder.Services.AddSingleton(new Cloudinary(cloudinaryAccount));
 
+            // Application services
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IProgramService, ProgramService>();
@@ -157,14 +169,16 @@ namespace inzBackend
             builder.Services.AddScoped<IExaminationService, ExaminationService>();
             builder.Services.AddScoped<ICreditService, CreditService>();
             builder.Services.AddScoped<IEssayService, EssayService>();
+
+            // Infrastructure / cross-cutting services
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
             builder.Services.AddScoped<IUserContextService, UserContextService>();
-            builder.Services.AddSingleton(authenticationSettings);
-            builder.Services.AddSingleton(cloudinary);
 
             builder.Services.AddHttpContextAccessor();
+
+            // CORS
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AngularCorsPolicy", policy =>
@@ -175,7 +189,10 @@ namespace inzBackend
                           .AllowAnyHeader();
                 });
             });
+
+            // Build app & middleware pipeline
             var app = builder.Build();
+
             app.UseCors("AngularCorsPolicy");
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
@@ -191,6 +208,7 @@ namespace inzBackend
             app.UseAuthorization();
             app.MapControllers();
 
+            // Apply pending EF Core migrations
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<GmitrzakEnglishAcademyDbContext>();
@@ -198,6 +216,7 @@ namespace inzBackend
                 if (dbContext.Database.GetPendingMigrations().Any())
                     dbContext.Database.Migrate();
             }
+
             app.Run();
         }
     }

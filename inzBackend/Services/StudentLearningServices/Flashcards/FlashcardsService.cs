@@ -7,6 +7,7 @@ using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Services.CreditServices;
+using inzBackend.Entities.SpacedRepetition;
 
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {

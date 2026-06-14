@@ -4,6 +4,7 @@ using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
+using inzBackend.Entities.Gamification;
 
 namespace inzBackend.Services.RankingServices
 {

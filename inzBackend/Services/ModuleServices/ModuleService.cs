@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using inzBackend.Entities;
+using inzBackend.Entities.Assignments;
+using inzBackend.Entities.Curriculum;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;

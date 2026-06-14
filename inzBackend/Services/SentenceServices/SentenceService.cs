@@ -9,6 +9,8 @@ using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Helpers;
 using inzBackend.Models.AdminLearningModels;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Entities.LearningMaterials;
+using inzBackend.Entities.Assignments;
 
 namespace inzBackend.Services.SentenceServices
 {

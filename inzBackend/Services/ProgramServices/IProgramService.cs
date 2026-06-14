@@ -7,6 +7,6 @@ namespace inzBackend.Services.ProgramServices
         List<ProgramDto> getAllPrograms();
         void updateProgram(int programId, UpdateProgramRequest request);
         void deleteProgram(int programId);
-        Models.Program createProgram(CreateProgramRequest request);
+        Entities.Curriculum.Program createProgram(CreateProgramRequest request);
     }
 }

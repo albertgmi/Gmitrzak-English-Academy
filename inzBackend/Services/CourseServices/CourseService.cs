@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using inzBackend.Entities.Curriculum;
 using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.CourseModels;

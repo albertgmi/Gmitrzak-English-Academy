@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Entities;
+using inzBackend.Entities.Identity;
 using inzBackend.Enums;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
-using inzBackend.Jwt;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
@@ -50,7 +50,7 @@ namespace inzBackend.Services.UserServices
             newUser.PasswordHash = passwordHashed;
             _dbContext.Users.Add(newUser);
             _dbContext.SaveChanges();
-            var profile = new Entities.Profile { UserId = newUser.Id, CurrentSemester = 1, EnglishLevel = Enums.EnglishLevel.Communicative };
+            var profile = new Entities.Identity.Profile { UserId = newUser.Id, CurrentSemester = 1, EnglishLevel = Enums.EnglishLevel.Communicative };
             _dbContext.Profiles.Add(profile);
             _dbContext.SaveChanges();
             return _mapper.Map<AppUserDto>(newUser);

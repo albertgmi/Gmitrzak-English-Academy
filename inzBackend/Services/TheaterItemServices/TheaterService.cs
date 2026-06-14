@@ -1,8 +1,8 @@
-﻿using inzBackend.Entities;
-using inzBackend.Exceptions;
+﻿using inzBackend.Exceptions;
 using inzBackend.Models.TheaterItemsModels;
 using inzBackend.Models;
 using inzBackend.Enums;
+using inzBackend.Entities.Resources;
 
 namespace inzBackend.Services.TheaterItemServices
 {
