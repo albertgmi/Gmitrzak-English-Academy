@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+﻿using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models;
@@ -9,6 +9,10 @@ using AutoMapper;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Helpers;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
+using inzBackend.Entities.SpacedRepetition;
+using inzBackend.Entities.Administration;
+using inzBackend.Entities.Assignments;
+using inzBackend.Entities.Gamification;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {

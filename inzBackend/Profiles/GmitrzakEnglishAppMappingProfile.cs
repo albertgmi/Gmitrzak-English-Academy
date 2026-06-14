@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using inzBackend.Entities;
-using inzBackend.Models;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixModels;
 using inzBackend.Models.ModuleModels;
@@ -16,6 +14,13 @@ using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Models.CatalogueModels;
+using inzBackend.Entities.Identity;
+using inzBackend.Entities.Curriculum;
+using inzBackend.Entities.LearningMaterials;
+using inzBackend.Entities.SpacedRepetition;
+using inzBackend.Entities.Assignments;
+using inzBackend.Entities.Resources;
+using inzBackend.Entities.Gamification;
 
 namespace inzBackend.Profiles
 {
@@ -26,18 +31,18 @@ namespace inzBackend.Profiles
             CreateMap<AppUser, AppUserDto>()
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Profile != null ? src.Profile.AvatarUrl : null));
 
-            CreateMap<Entities.Profile, ProfileDto>()
+            CreateMap<Entities.Identity.Profile, ProfileDto>()
                 .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.Username))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.User.Role.ToString()))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.User.IsActive))
                 .ForMember(dest => dest.EnglishLevel, opt => opt.MapFrom(src => src.EnglishLevel.ToString()));
 
-            CreateMap<Models.Program, ProgramDto>()
+            CreateMap<Entities.Curriculum.Program, ProgramDto>()
                 .ForMember(dest => dest.CourseDtos, opt => opt.MapFrom(src =>
                     src.ProgramCourses.Select(pc => pc.Course)));
 
-            CreateMap<Models.Program, ProgramSimpleDto>();
+            CreateMap<Entities.Curriculum.Program, ProgramSimpleDto>();
             CreateMap<Module, ModuleSimpleDto>();
             CreateMap<Course, CourseSimpleDto>();
             CreateMap<Matrix, MatrixSimpleDto>();

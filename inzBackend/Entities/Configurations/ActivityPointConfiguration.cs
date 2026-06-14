@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Entities.Identity;
+using inzBackend.Entities.Gamification;
 
 namespace inzBackend.Models.Configurations
 {

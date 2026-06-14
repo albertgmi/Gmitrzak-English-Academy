@@ -6,6 +6,7 @@ using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Helpers;
 using inzBackend.Enums;
+using inzBackend.Entities.Administration;
 
 namespace inzBackend.Services.AnnouncementsServices
 {

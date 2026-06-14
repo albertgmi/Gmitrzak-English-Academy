@@ -6,8 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using inzBackend.Services.AiIntegrationServices;
 using AutoMapper;
-using inzBackend.Entities;
 using inzBackend.Helpers;
+using inzBackend.Entities.Resources;
+using inzBackend.Entities.LearningMaterials;
 
 namespace inzBackend.Services.CatalogueServices
 {

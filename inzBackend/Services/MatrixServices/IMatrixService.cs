@@ -1,4 +1,4 @@
-﻿using inzBackend.Models;
+﻿using inzBackend.Entities.Curriculum;
 using inzBackend.Models.MatrixModels;
 
 namespace inzBackend.Services.MatrixServices

@@ -18,16 +18,17 @@ namespace inzBackend.Controllers
 
         [HttpGet("{userId}")]
         [Authorize(Roles ="Admin,User")]
-        public ProfileDto getProfile([FromRoute] int userId)
+        public ActionResult<ProfileDto> getProfile([FromRoute] int userId)
         {
             return _profileService.getProfile(userId);
         }
 
         [HttpPut("{userId}")]
         [Authorize(Roles = "Admin")]
-        public void updateProfile([FromRoute] int userId, [FromBody] UpdateProfileRequest request)
+        public ActionResult updateProfile([FromRoute] int userId, [FromBody] UpdateProfileRequest request)
         {
             _profileService.updateProfile(userId, request);
+            return NoContent();
         }
 
         [HttpPost("{userId}/avatar")]

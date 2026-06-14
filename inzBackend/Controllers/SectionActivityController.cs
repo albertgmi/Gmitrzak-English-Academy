@@ -1,10 +1,6 @@
-﻿using inzBackend.Entities;
-using inzBackend.Models.ModuleModels;
-using inzBackend.Models;
-using inzBackend.Services.UserServices;
+﻿using inzBackend.Models.ModuleModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using inzBackend.Helpers;
 using inzBackend.Services.SectionActivityServices;
 
 namespace inzBackend.Controllers

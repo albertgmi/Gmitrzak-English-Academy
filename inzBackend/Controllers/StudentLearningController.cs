@@ -1,6 +1,4 @@
-﻿using inzBackend.Enums;
-using inzBackend.Helpers;
-using inzBackend.Models.AdminLearningModels;
+﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
@@ -16,7 +14,6 @@ using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Controllers
 {
@@ -105,13 +102,13 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("assignments")]
-        public List<AssignmentStudentDto> getActiveAssignments()
+        public ActionResult<List<AssignmentStudentDto>> getActiveAssignments()
         {
             return _studentAssignmentService.getActiveAssignments();
         }
 
         [HttpGet("assignments/history")]
-        public List<AssignmentStudentDto> getAssignmentHistory()
+        public ActionResult<List<AssignmentStudentDto>> getAssignmentHistory()
         {
             return _studentAssignmentService.getAssignmentHistory();
         }

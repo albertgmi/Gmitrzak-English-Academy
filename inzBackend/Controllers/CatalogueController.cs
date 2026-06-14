@@ -18,7 +18,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        public List<CatalogueDto> getAll()
+        public ActionResult<List<CatalogueDto>> getAll()
         {
             return _catalogueService.getAllCatalogues();
         }
@@ -30,7 +30,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("entries")]
-        public List<CatalogueEntryDto> getEntries([FromQuery] CatalogueEntryFilterRequest filter)
+        public ActionResult<List<CatalogueEntryDto>> getEntries([FromQuery] CatalogueEntryFilterRequest filter)
         {
             return _catalogueService.getEntries(filter);
         }

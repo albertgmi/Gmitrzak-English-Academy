@@ -20,63 +20,69 @@ namespace inzBackend.Controllers
 
 
         [HttpGet("matrix")]
-        public List<MatrixAssignmentDto> getAllMatrixAssignments()
+        public ActionResult<List<MatrixAssignmentDto>> getAllMatrixAssignments()
         {
             return _assignmentService.getAllMatrixAssignments();
         }
 
         [HttpGet("matrix/user/{userId}")]
-        public List<MatrixAssignmentDto> getMatrixAssignmentsByUser([FromRoute] int userId)
+        public ActionResult<List<MatrixAssignmentDto>> getMatrixAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getMatrixAssignmentsByUser(userId);
         }
 
         [HttpPost("matrix")]
-        public void createMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
+        public ActionResult createMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
         {
             _assignmentService.createMatrixAssignment(request);
+            return Created();
         }
 
         [HttpDelete("matrix/{id}")]
-        public void deleteMatrixAssignment([FromRoute] int id)
+        public ActionResult deleteMatrixAssignment([FromRoute] int id)
         {
             _assignmentService.deleteMatrixAssignment(id);
+            return NoContent();
         }
 
         [HttpGet("module")]
-        public List<ModuleAssignmentDto> getAllModuleAssignments()
+        public ActionResult<List<ModuleAssignmentDto>> getAllModuleAssignments()
         {
             return _assignmentService.getAllModuleAssignments();
         }
 
         [HttpGet("module/user/{userId}")]
-        public List<ModuleAssignmentDto> getModuleAssignmentsByUser([FromRoute] int userId)
+        public ActionResult<List<ModuleAssignmentDto>> getModuleAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getModuleAssignmentsByUser(userId);
         }
 
         [HttpPost("module")]
-        public void createModuleAssignment([FromBody] CreateModuleAssignmentRequest request)
+        public ActionResult createModuleAssignment([FromBody] CreateModuleAssignmentRequest request)
         {
             _assignmentService.createModuleAssignment(request);
+            return Created();
         }
 
         [HttpDelete("module/{id}")]
-        public void deleteModuleAssignment([FromRoute] int id)
+        public ActionResult deleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.deleteModuleAssignment(id);
+            return NoContent();
         }
 
         [HttpPatch("module/{id}/complete")]
-        public void completeModuleAssignment([FromRoute] int id)
+        public ActionResult completeModuleAssignment([FromRoute] int id)
         {
             _assignmentService.completeModuleAssignment(id);
+            return Ok();
         }
 
         [HttpPatch("module/{id}/uncomplete")]
-        public void uncompleteModuleAssignment([FromRoute] int id)
+        public ActionResult uncompleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.uncompleteModuleAssignment(id);
+            return Ok();
         }
     }
 }

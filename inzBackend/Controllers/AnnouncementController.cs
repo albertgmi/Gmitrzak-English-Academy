@@ -18,19 +18,19 @@ namespace inzBackend.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public List<AnnouncementDto> getAll()
+        public ActionResult<List<AnnouncementDto>> getAll()
         {
             return _announcementService.getAll();
         }
 
         [HttpGet("inbox")]
-        public List<AnnouncementInboxDto> getInbox()
+        public ActionResult<List<AnnouncementInboxDto>> getInbox()
         {
             return _announcementService.getInbox();
         }
 
         [HttpGet("unread-count")]
-        public UnreadCountDto getUnreadCount()
+        public ActionResult<UnreadCountDto> getUnreadCount()
         {
             return _announcementService.getUnreadCount();
         }
@@ -81,7 +81,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("{id}/details")]
         [Authorize(Roles = "Admin")]
-        public AnnouncementDetailsDto getDetails([FromRoute] int id)
+        public ActionResult<AnnouncementDetailsDto> getDetails([FromRoute] int id)
         {
             return _announcementService.getDetails(id);
         }

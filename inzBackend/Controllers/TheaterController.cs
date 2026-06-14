@@ -18,25 +18,25 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        public List<TheaterItemDto> getAll()
+        public ActionResult<List<TheaterItemDto>> getAll()
         {
             return _theaterService.getAll();
         }
             
         [HttpGet("repertoire")]
-        public List<RepertoireItemDto> getRepertoire()
+        public ActionResult<List<RepertoireItemDto>> getRepertoire()
         {
             return _theaterService.getRepertoire();
         } 
 
         [HttpGet("{id}")]
-        public TheaterItemDto getById([FromRoute] int id)
+        public ActionResult<TheaterItemDto> getById([FromRoute] int id)
         {
             return _theaterService.getById(id);
         }
             
         [HttpPost]
-        public TheaterItemDto create([FromBody] CreateTheaterItemRequest request)
+        public ActionResult<TheaterItemDto> create([FromBody] CreateTheaterItemRequest request)
         {
             return _theaterService.create(request);
         }

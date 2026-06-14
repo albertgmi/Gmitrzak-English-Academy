@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using inzBackend.Entities.LearningMaterials;
 
 namespace inzBackend.Models.Configurations
 {

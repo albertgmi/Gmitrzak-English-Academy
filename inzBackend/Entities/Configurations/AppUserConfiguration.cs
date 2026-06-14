@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using inzBackend.Helpers;
+using inzBackend.Entities.Identity;
 
 namespace inzBackend.Models.Configurations
 {

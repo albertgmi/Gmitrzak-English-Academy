@@ -14,9 +14,7 @@ namespace inzBackend.Controllers
         private readonly ICreditService _creditService;
         private readonly IUserContextService _userContextService;
 
-        public CreditsController(
-            ICreditService creditService,
-            IUserContextService userContextService)
+        public CreditsController(ICreditService creditService, IUserContextService userContextService)
         {
             _creditService = creditService;
             _userContextService = userContextService;

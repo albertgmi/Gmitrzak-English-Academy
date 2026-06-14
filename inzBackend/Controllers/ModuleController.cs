@@ -1,4 +1,4 @@
-﻿using inzBackend.Models;
+﻿using inzBackend.Entities.Curriculum;
 using inzBackend.Models.ModuleModels;
 using inzBackend.Services.ModuleServices;
 using Microsoft.AspNetCore.Authorization;

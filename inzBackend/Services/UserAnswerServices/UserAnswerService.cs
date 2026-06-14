@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Excel;
-using inzBackend.Entities;
+using inzBackend.Entities.Assignments;
+using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;

@@ -1,6 +1,5 @@
 ﻿using inzBackend.Models.RankingModels;
 using inzBackend.Services.RankingServices;
-using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,16 +11,14 @@ namespace inzBackend.Controllers
     public class RankingController : ControllerBase
     {
         private readonly IRankingService _rankingService;
-        private readonly IUserContextService _userContextService;
 
-        public RankingController(IRankingService rankingService, IUserContextService userContextService)
+        public RankingController(IRankingService rankingService)
         {
             _rankingService = rankingService;
-            _userContextService = userContextService;
         }
 
         [HttpGet("{period}")]
-        public RankingDto getRanking(string period)
+        public ActionResult<RankingDto> getRanking(string period)
         {
             return _rankingService.getRanking(period);
         }

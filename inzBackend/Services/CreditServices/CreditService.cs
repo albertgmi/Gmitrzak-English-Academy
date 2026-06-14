@@ -1,4 +1,5 @@
 ﻿using inzBackend.Entities;
+using inzBackend.Entities.Gamification;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
