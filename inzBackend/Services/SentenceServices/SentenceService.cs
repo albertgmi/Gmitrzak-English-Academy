@@ -11,6 +11,7 @@ using inzBackend.Models.AdminLearningModels;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.LearningMaterials;
 using inzBackend.Entities.Assignments;
+using System.Threading.Tasks;
 
 namespace inzBackend.Services.SentenceServices
 {
@@ -328,7 +329,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public List<SearchSentenceResultDto> searchSentence(string query, int studentId)
+        public async Task<List<SearchSentenceResultDto>> searchSentence(string query, int studentId)
         {
             var normalizedQuery = query.Trim().ToLower();
 
@@ -368,11 +369,17 @@ namespace inzBackend.Services.SentenceServices
             {
                 bool isAssigned = studentSentences.Any(s => s.Content.Contains(normalizedQuery) || s.Translation.Contains(normalizedQuery));
 
+                List<string> queryList = new List<string>();
+                queryList.Add(query);
+
+                var autoTranslation = _aiTranslationService
+                    .TranslateBatchAsync(queryList);
+
                 results.Add(new SearchSentenceResultDto
                 {
                     Id = null,
                     EnglishTranslation = query,
-                    Polish = string.Empty,
+                    Polish = (await autoTranslation).FirstOrDefault() ?? string.Empty,
                     Category = "Vocabulary",
                     ExistsInGlobal = false,
                     AlreadyAssignedToStudent = isAssigned
