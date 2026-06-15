@@ -113,7 +113,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("search")]
-        public ActionResult<SearchSentenceResultDto> SearchSentence([FromQuery] string query, [FromQuery] int studentId)
+        public ActionResult<SearchSentenceResultDto> searchSentence([FromQuery] string query, [FromQuery] int studentId)
         {
             var result = _sentenceService.searchSentence(query, studentId);
             return Ok(result);
