@@ -1,6 +1,8 @@
 ﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AiSpellCheckingModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Services.AdminLearningServices.Lesson;
+using inzBackend.Services.AiIntegrationServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +14,12 @@ namespace inzBackend.Controllers
     public class LessonController : ControllerBase
     {
         private readonly ILessonService _lessonService;
+        private readonly IAiSpellCheckService _aiSpellCheckService;
 
-        public LessonController(ILessonService lessonService)
+        public LessonController(ILessonService lessonService, IAiSpellCheckService aiSpellCheckService)
         {
             _lessonService = lessonService;
+            _aiSpellCheckService = aiSpellCheckService;
         }
 
         [HttpPost("sentence")]
@@ -157,6 +161,13 @@ namespace inzBackend.Controllers
         {
             _lessonService.markPronunciationResult(request);
             return Ok();
+        }
+
+        [HttpPost("spellcheck")]
+        public async Task<ActionResult<SpellCheckResult>> spellCheck([FromBody] SpellCheckRequest request)
+        {
+            var result = await _aiSpellCheckService.checkTextAsync(request.Text, request.Language ?? "English");
+            return Ok(result);
         }
     }
 }

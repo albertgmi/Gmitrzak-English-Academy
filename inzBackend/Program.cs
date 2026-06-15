@@ -169,6 +169,7 @@ namespace inzBackend
             builder.Services.AddScoped<IExaminationService, ExaminationService>();
             builder.Services.AddScoped<ICreditService, CreditService>();
             builder.Services.AddScoped<IEssayService, EssayService>();
+            builder.Services.AddScoped<IAiSpellCheckService, AiSpellCheckService>();
 
             // Infrastructure / cross-cutting services
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
