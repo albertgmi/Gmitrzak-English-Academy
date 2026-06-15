@@ -113,9 +113,9 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("search")]
-        public ActionResult<SearchSentenceResultDto> searchSentence([FromQuery] string query, [FromQuery] int studentId)
+        public async Task<ActionResult<SearchSentenceResultDto>> searchSentence([FromQuery] string query, [FromQuery] int studentId)
         {
-            var result = _sentenceService.searchSentence(query, studentId);
+            var result = await _sentenceService.searchSentence(query, studentId);
             return Ok(result);
         }
     }
