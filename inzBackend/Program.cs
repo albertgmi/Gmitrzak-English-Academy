@@ -130,7 +130,7 @@ namespace inzBackend
             builder.Services.AddSingleton<GenerativeModel>(sp =>
             {
                 var apiKey = builder.Configuration["GeminiSettings:ApiKey"];
-                return new GenerativeModel(apiKey, "gemini-1.5-flash-001");
+                return new GenerativeModel(apiKey, "gemini-1.5-pro");
             });
 
             var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
