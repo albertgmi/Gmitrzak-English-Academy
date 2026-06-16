@@ -41,20 +41,20 @@ namespace inzBackend.Services.AiIntegrationServices
             byte[] audioBytes = memoryStream.ToArray();
 
             string prompt = $@"
-                You are a strict English pronunciation coach.
-                Analyze the provided audio and compare it to the target word: '{entry.Word}'.
-                Evaluate:
-                1. Phonetic accuracy.
-                2. Stress.
-                3. Natural rhythm.
-                 
-                Feedback must be around 15 words long.
+                You are an elite expert in English phonetics and linguistics.
+                Your task is to perform an ultra-precise audit of the user's audio against the target word: '{entry.Word}'.
 
-                Return ONLY raw JSON:
+                STRICT ANALYSIS PROTOCOL:
+                1. Phoneme Precision: Even a single mispronounced consonant, vowel, or missing suffix counts as a major error.
+                2. Detailed Audit: Evaluate if every individual sound matches native pronunciation.
+                3. Penalty System: If the user misses even one letter/sound (e.g., 's' at the end, wrong vowel), the score must be below 60%.
+                4. Feedback Focus: Point out the exact sound/letter that caused the failure.
+
+                Return ONLY raw JSON. Do not include any conversational filler.
                 {{
-                    ""score"": 0,
-                    ""result"": ""Great"" | ""Not yet"",
-                    ""feedback"": ""short explanation""
+                    ""score"": 0-100,
+                    ""result"": ""Great"" (if 75-100), ""Not yet"" (if < 75),
+                    ""feedback"": ""Identify the specific missing/wrong letter or sound. Max 15 words.""
                 }}";
 
             var response = await _client.Models.GenerateContentAsync(
