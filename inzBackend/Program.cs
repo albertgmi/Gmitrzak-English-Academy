@@ -1,5 +1,9 @@
+using CloudinaryDotNet;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using GenerativeAI;
+using inzBackend.Entities.Identity;
+using inzBackend.Helpers;
 using inzBackend.Middlewares;
 using inzBackend.Models;
 using inzBackend.Models.UserModels;
@@ -39,18 +43,15 @@ using inzBackend.Services.StudentLearningServices.Vocabulary;
 using inzBackend.Services.TheaterItemServices;
 using inzBackend.Services.UserAnswerServices;
 using inzBackend.Services.UserServices;
-using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OpenAI;
+using OpenAI.Audio;
 using OpenAI.Chat;
 using System.Text;
 using System.Text.Json.Serialization;
-using inzBackend.Entities.Identity;
-using inzBackend.Helpers;
-using OpenAI.Audio;
 
 namespace inzBackend
 {
@@ -124,6 +125,12 @@ namespace inzBackend
                     new System.ClientModel.ApiKeyCredential(apiKey), clientOptions);
 
                 return openAiClient.GetChatClient(modelId);
+            });
+
+            builder.Services.AddSingleton<GenerativeModel>(sp =>
+            {
+                var apiKey = builder.Configuration["GeminiSettings:ApiKey"];
+                return new GenerativeModel(apiKey, "gemini-1.5-flash");
             });
 
             var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
