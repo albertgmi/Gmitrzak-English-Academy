@@ -49,7 +49,6 @@ namespace inzBackend.Services.AiIntegrationServices
                 3. Natural rhythm.
                  
                 Feedback must be around 15 words long.
-                CRUCIAL: Be rigorous.
 
                 Return ONLY raw JSON:
                 {{
@@ -59,7 +58,7 @@ namespace inzBackend.Services.AiIntegrationServices
                 }}";
 
             var response = await _client.Models.GenerateContentAsync(
-                model: "gemini-3.5-flash",
+                model: "gemini-3.1-flash-lite",
                 contents: new List<Content>
                 {
                     new Content
