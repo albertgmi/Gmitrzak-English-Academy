@@ -2,6 +2,8 @@
 {
     public class PronunciationEvaluationJson
     {
-        public string Result { get; set; } = "Not yet";
+        public int Score { get; set; }
+        public string Result { get; set; } = "";
+        public string Feedback { get; set; } = "";
     }
 }

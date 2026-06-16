@@ -4,5 +4,6 @@
     {
         public string Result { get; set; }
         public string TranscribedText { get; set; }
+        public int Score { get; set; }
     }
 }
