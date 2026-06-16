@@ -11,6 +11,5 @@ namespace inzBackend.Entities.LearningMaterials
         public PronunciationEntry PronunciationEntry { get; set; } = null!;
         public string TranscribedText { get; set; } = string.Empty;
         public string Result { get; set; } = string.Empty;
-        public string Explanation { get; set; } = string.Empty;
     }
 }

@@ -27,7 +27,8 @@ namespace inzBackend.Services.AiIntegrationServices
             _dbContext = dbContext;
         }
 
-        public async Task<PronunciationResult> processUserAttemptAsync(Stream audioStream, string fileName, int pronunciationEntryId)
+        public async Task<PronunciationResult> processUserAttemptAsync(Stream audioStream, string fileName, 
+            int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
 
@@ -49,33 +50,73 @@ namespace inzBackend.Services.AiIntegrationServices
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateSystemMessage(
-                    "You are an expert pronunciation evaluator for a language-learning app. " +
-                    "Compare the 'Expected text' (what the student was supposed to say) with the 'Transcribed text' (what the speech-to-text system actually heard). " +
-                    "Evaluate if the student's pronunciation was close enough to be considered correct. " +
-                    "CRITICAL: Return ONLY a JSON object: { \"result\": \"Great\" | \"Not yet\" }. " +
-                    "Result rules: 'Great' if the texts match or are phonetically near-identical. 'Not yet' if the word was mispronounced heavily, skipped, or misheard as a different word."
+                    """
+                    You are a strict English pronunciation evaluator.
+
+                    You are judging spoken pronunciation, not spelling.
+
+                    Important:
+                    The speech recognition result is NOT proof of correct pronunciation.
+                    Speech recognition may automatically fix pronunciation mistakes.
+
+                    Compare:
+                    - target English word
+                    - how the student likely pronounced it
+                    - natural English rhythm and stress
+
+                    Rules:
+                    - Do not mark Great only because transcription matches the target word.
+                    - Accept small accent differences.
+                    - Reject unnatural syllable-by-syllable pronunciation.
+                    - Reject wrong stress or clearly incorrect sounds.
+                    - If pronunciation is understandable and very close to the expected English pronunciation -> Great.
+                    - Otherwise -> Not yet.
+
+                    Only return Great and high score when the pronunciation is likely natural.
+                    When uncertain, return Not yet.
+
+                    Scoring:
+                    90-100 = natural pronunciation
+                    70-89 = acceptable learner pronunciation
+                    below 70 = incorrect pronunciation
+
+                    Return ONLY JSON:
+                    {
+                    "score": number,
+                    "result": "Great" | "Not yet",
+                    "feedback": "short explanation"
+                    }
+                    """
                 ),
                 ChatMessage.CreateUserMessage(
-                    $"Expected text: \"{entry.Word}\"\n" +
-                    $"Transcribed text: \"{transcribedText}\""
-                )
+                    $"""
+                    Target word:
+                    "{entry.Word}"
+                    Speech recognition heard:
+                    "{transcribedText}"
+                    The expected pronunciation should be inferred from the target word itself.
+                    Evaluate if the spoken pronunciation was natural and close enough.
+                    """)
             };
 
             var chatOptions = new ChatCompletionOptions
             {
                 ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
-                Temperature = 0.1f
+                Temperature = 0.0f
             };
 
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatOptions);
             string responseText = completion.Content[0].Text;
 
-            var evaluation = JsonSerializer.Deserialize<PronunciationEvaluationJson>(responseText, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var evaluation =
+                JsonSerializer.Deserialize<PronunciationEvaluationJson>(
+                    responseText,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-            var aiResultStatus = evaluation?.Result ?? "Not yet";
+            string aiResultStatus = evaluation != null && evaluation.Score >= 70 ? "Great" : "Not yet";
 
             var attempt = new PronunciationAttempt
             {
@@ -92,7 +133,8 @@ namespace inzBackend.Services.AiIntegrationServices
             return new PronunciationResult
             {
                 Result = aiResultStatus,
-                TranscribedText = transcribedText
+                TranscribedText = transcribedText,
+                Score = evaluation?.Score ?? 0
             };
         }
     }
