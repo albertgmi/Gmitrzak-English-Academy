@@ -49,6 +49,7 @@ namespace inzBackend.Services.AiIntegrationServices
                 3. Natural rhythm.
                  
                 Feedback must be around 15 words long.
+                CRUCIAL: Be extremally rigorous.
 
                 Return ONLY raw JSON:
                 {{
