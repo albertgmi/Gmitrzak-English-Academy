@@ -5,7 +5,6 @@ using inzBackend.Models;
 using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
-using OpenAI.Audio;
 using OpenAI.Chat;
 using System.Text.Json;
 
@@ -13,21 +12,19 @@ namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiPronunciationService : IAiPronunciationService
     {
-        private readonly AudioClient _audioClient;
         private readonly ChatClient _chatClient;
         private readonly IUserContextService _userContextService;
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
 
-        public AiPronunciationService(AudioClient audioClient, ChatClient chatClient,
+        public AiPronunciationService(ChatClient chatClient,
             IUserContextService userContextService, GmitrzakEnglishAcademyDbContext dbContext)
         {
-            _audioClient = audioClient;
             _chatClient = chatClient;
             _userContextService = userContextService;
             _dbContext = dbContext;
         }
 
-        public async Task<PronunciationResult> processUserAttemptAsync(Stream audioStream, string fileName, 
+        public async Task<PronunciationResult> processUserAttemptAsync(Stream audioStream, string fileName,
             int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
@@ -38,66 +35,38 @@ namespace inzBackend.Services.AiIntegrationServices
             if (entry == null)
                 throw new NotFoundException("Pronunciation entry not found");
 
-            var transcriptionOptions = new AudioTranscriptionOptions
-            {
-                Language = "en",
-                Temperature = 0.0f
-            };
+            using var memoryStream = new MemoryStream();
+            await audioStream.CopyToAsync(memoryStream);
+            byte[] audioBytes = memoryStream.ToArray();
 
-            AudioTranscription transcription = await _audioClient.TranscribeAudioAsync(audioStream, fileName, transcriptionOptions);
-            string transcribedText = transcription.Text?.Trim() ?? string.Empty;
-
+#pragma warning disable OPENAI001
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateSystemMessage(
                     """
-                    You are a strict English pronunciation evaluator.
-
-                    You are judging spoken pronunciation, not spelling.
-
-                    Important:
-                    The speech recognition result is NOT proof of correct pronunciation.
-                    Speech recognition may automatically fix pronunciation mistakes.
-
-                    Compare:
-                    - target English word
-                    - how the student likely pronounced it
-                    - natural English rhythm and stress
-
-                    Rules:
-                    - Do not mark Great only because transcription matches the target word.
-                    - Accept small accent differences.
-                    - Reject unnatural syllable-by-syllable pronunciation.
-                    - Reject wrong stress or clearly incorrect sounds.
-                    - If pronunciation is understandable and very close to the expected English pronunciation -> Great.
-                    - Otherwise -> Not yet.
-
-                    Only return Great and high score when the pronunciation is likely natural.
-                    When uncertain, return Not yet.
-
-                    Scoring:
-                    90-100 = natural pronunciation
-                    70-89 = acceptable learner pronunciation
-                    below 70 = incorrect pronunciation
+                    You are a strict English pronunciation coach. 
+                    You are analyzing the provided raw audio file. 
+                    Do NOT rely on auto-transcription. Listen to the audio and compare it to the target word.
+                    
+                    Evaluate:
+                    1. Phonetic accuracy.
+                    2. Stress (e.g., 'com-for-ta-ble' vs 'comfortable').
+                    3. Natural rhythm.
 
                     Return ONLY JSON:
                     {
-                    "score": number,
-                    "result": "Great" | "Not yet",
-                    "feedback": "short explanation"
+                        "score": number (0-100),
+                        "result": "Great" | "Not yet",
+                        "feedback": "short explanation focusing on why it sounds natural or unnatural"
                     }
                     """
                 ),
                 ChatMessage.CreateUserMessage(
-                    $"""
-                    Target word:
-                    "{entry.Word}"
-                    Speech recognition heard:
-                    "{transcribedText}"
-                    The expected pronunciation should be inferred from the target word itself.
-                    Evaluate if the spoken pronunciation was natural and close enough.
-                    """)
+                    ChatMessageContentPart.CreateTextPart($"Target word: {entry.Word}. Analyze the pronunciation of the following audio:"),
+                    ChatMessageContentPart.CreateInputAudioPart(BinaryData.FromBytes(audioBytes), "audio/wav")
+                )
             };
+#pragma warning restore OPENAI001
 
             var chatOptions = new ChatCompletionOptions
             {
@@ -108,22 +77,17 @@ namespace inzBackend.Services.AiIntegrationServices
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatOptions);
             string responseText = completion.Content[0].Text;
 
-            var evaluation =
-                JsonSerializer.Deserialize<PronunciationEvaluationJson>(
-                    responseText,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-            string aiResultStatus = evaluation != null && evaluation.Score >= 70 ? "Great" : "Not yet";
+            var evaluation = JsonSerializer.Deserialize<PronunciationEvaluationJson>(responseText, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
 
             var attempt = new PronunciationAttempt
             {
                 UserId = userId,
                 PronunciationEntryId = pronunciationEntryId,
-                TranscribedText = transcribedText,
-                Result = aiResultStatus,
+                Feedback = evaluation?.Feedback ?? "No feedback",
+                Result = evaluation?.Result ?? "Not yet",
                 CreatedAt = PolandTime.DateTimeNow
             };
 
@@ -132,8 +96,8 @@ namespace inzBackend.Services.AiIntegrationServices
 
             return new PronunciationResult
             {
-                Result = aiResultStatus,
-                TranscribedText = transcribedText,
+                Result = evaluation?.Result ?? "Not yet",
+                Feedback = evaluation?.Feedback ?? "No feedback",
                 Score = evaluation?.Score ?? 0
             };
         }

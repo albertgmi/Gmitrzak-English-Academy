@@ -82,7 +82,7 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
                 .Select(a => new PronunciationAttemptDto
                 {
                     Id = a.Id,
-                    TranscribedText = a.TranscribedText,
+                    Feedback = a.Feedback,
                     Result = a.Result,
                     CreatedAt = a.CreatedAt.DateTime
                 })

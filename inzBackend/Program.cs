@@ -126,22 +126,6 @@ namespace inzBackend
                 return openAiClient.GetChatClient(modelId);
             });
 
-            builder.Services.AddScoped<AudioClient>(sp =>
-            {
-                var apiKey = builder.Configuration["GroqSettings:ApiKey"] ?? "";
-                var modelId = builder.Configuration["GroqSettings:AudioModelId"] ?? "whisper-large-v3";
-
-                var clientOptions = new OpenAIClientOptions
-                {
-                    Endpoint = new Uri("https://api.groq.com/openai/v1")
-                };
-
-                var openAiClient = new OpenAIClient(
-                    new System.ClientModel.ApiKeyCredential(apiKey), clientOptions);
-
-                return openAiClient.GetAudioClient(modelId);
-            });
-
             var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
             var cloudinaryAccount = new Account(
                 cloudinarySettings["CloudName"],
