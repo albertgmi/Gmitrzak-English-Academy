@@ -1,4 +1,6 @@
-﻿using inzBackend.Models.AdminLearningModels;
+﻿using inzBackend.Exceptions;
+using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
@@ -6,6 +8,7 @@ using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
+using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.StudentLearningServices.Assignment;
 using inzBackend.Services.StudentLearningServices.Flashcards;
 using inzBackend.Services.StudentLearningServices.Memories;
@@ -28,10 +31,11 @@ namespace inzBackend.Controllers
         private readonly IFlashcardsService _flashcardsService;
         private readonly IVocabularyService _vocabularyService;
         private readonly IStudentAssignmentService _studentAssignmentService;
+        private readonly IAiPronunciationService _aiPronunciationService;
 
         public StudentLearningController(ISentencesService sentencesService, IMemoriesService memoriesService,
             IPronunciationService pronunciationService, IFlashcardsService flashcardsService, IVocabularyService vocabularyService,
-            IStudentAssignmentService studentAssignmentService)
+            IStudentAssignmentService studentAssignmentService, IAiPronunciationService aiPronunciationService)
         {
             _sentencesService = sentencesService;
             _memoriesService = memoriesService;
@@ -39,6 +43,7 @@ namespace inzBackend.Controllers
             _flashcardsService = flashcardsService;
             _vocabularyService = vocabularyService;
             _studentAssignmentService = studentAssignmentService;
+            _aiPronunciationService = aiPronunciationService;
         }
 
         [HttpGet("sentences")]
@@ -63,6 +68,31 @@ namespace inzBackend.Controllers
         public ActionResult<List<PronunciationTestItemDto>> getCorrectPronunciation()
         {
             return _pronunciationService.getCorrectPronunciation();
+        }
+
+        [HttpGet("pronunciation/{entryId}/attempts")]
+        public ActionResult<List<PronunciationAttemptDto>> getAttempts([FromRoute] int entryId)
+        {
+            var attempts = _pronunciationService.getAttemptsAsync(entryId);
+            return Ok(attempts);
+        }
+
+        [HttpPost("pronunciation/{entryId}/attempt")]
+        public async Task<ActionResult> checkPronunciation([FromRoute] int entryId, [FromForm] IFormFile audioFile)
+        {
+            if (audioFile == null || audioFile.Length == 0)
+                return BadRequest(new { message = "Audio file is missing or empty." });
+
+            try
+            {
+                using var stream = audioFile.OpenReadStream();
+                var result = await _aiPronunciationService.processUserAttemptAsync(stream, audioFile.FileName, entryId);
+                return Ok(result);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
         [HttpGet("flashcards")]

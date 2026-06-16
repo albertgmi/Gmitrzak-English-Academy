@@ -50,6 +50,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using inzBackend.Entities.Identity;
 using inzBackend.Helpers;
+using OpenAI.Audio;
 
 namespace inzBackend
 {
@@ -125,6 +126,22 @@ namespace inzBackend
                 return openAiClient.GetChatClient(modelId);
             });
 
+            builder.Services.AddScoped<AudioClient>(sp =>
+            {
+                var apiKey = builder.Configuration["GroqSettings:ApiKey"] ?? "";
+                var modelId = builder.Configuration["GroqSettings:AudioModelId"] ?? "whisper-large-v3";
+
+                var clientOptions = new OpenAIClientOptions
+                {
+                    Endpoint = new Uri("https://api.groq.com/openai/v1")
+                };
+
+                var openAiClient = new OpenAIClient(
+                    new System.ClientModel.ApiKeyCredential(apiKey), clientOptions);
+
+                return openAiClient.GetAudioClient(modelId);
+            });
+
             var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
             var cloudinaryAccount = new Account(
                 cloudinarySettings["CloudName"],
@@ -170,6 +187,7 @@ namespace inzBackend
             builder.Services.AddScoped<ICreditService, CreditService>();
             builder.Services.AddScoped<IEssayService, EssayService>();
             builder.Services.AddScoped<IAiSpellCheckService, AiSpellCheckService>();
+            builder.Services.AddScoped<IAiPronunciationService, AiPronunciationService>();
 
             // Infrastructure / cross-cutting services
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();

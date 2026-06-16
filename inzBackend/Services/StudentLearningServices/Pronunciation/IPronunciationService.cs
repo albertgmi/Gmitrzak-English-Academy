@@ -1,4 +1,5 @@
 ﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 
 namespace inzBackend.Services.StudentLearningServices.Pronunciation
@@ -7,5 +8,6 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
     {
         List<PronunciationEntryDto> getAllEntries();
         List<PronunciationTestItemDto> getCorrectPronunciation();
+        List<PronunciationAttemptDto> getAttemptsAsync(int pronunciationEntryId);
     }
 }

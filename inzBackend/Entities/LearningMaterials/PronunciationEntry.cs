@@ -13,5 +13,6 @@ namespace inzBackend.Entities.LearningMaterials
         public int SortOrder { get; set; }
         public DateOnly? MarkedCorrectAt { get; set; }
         public bool IsInCurrentSession { get; set; } = false;
+        public ICollection<PronunciationAttempt> Attempts { get; set; } = new List<PronunciationAttempt>();
     }
 }
