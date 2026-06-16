@@ -58,7 +58,7 @@ namespace inzBackend.Services.AiIntegrationServices
                 }}";
 
             var response = await _client.Models.GenerateContentAsync(
-                model: "gemini-2.5-flash-lite",
+                model: "gemini-2.5-flash",
                 contents: new List<Content>
                 {
                     new Content
