@@ -1,5 +1,5 @@
-﻿using GenerativeAI;
-using GenerativeAI.Types;
+﻿using Google.GenAI;
+using Google.GenAI.Types;
 using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
@@ -13,14 +13,14 @@ namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiPronunciationService : IAiPronunciationService
     {
-        private readonly GenerativeModel _model;
+        private readonly Client _client;
         private readonly IUserContextService _userContextService;
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
 
-        public AiPronunciationService(GenerativeModel model,
-            IUserContextService userContextService, GmitrzakEnglishAcademyDbContext dbContext)
+        public AiPronunciationService(Client client, IUserContextService userContextService,
+            GmitrzakEnglishAcademyDbContext dbContext)
         {
-            _model = model;
+            _client = client;
             _userContextService = userContextService;
             _dbContext = dbContext;
         }
@@ -41,35 +41,40 @@ namespace inzBackend.Services.AiIntegrationServices
             byte[] audioBytes = memoryStream.ToArray();
 
             string prompt = $@"
-                You are a strict English pronunciation coach. 
+                You are a strict English pronunciation coach.
                 Analyze the provided audio and compare it to the target word: '{entry.Word}'.
                 Evaluate:
                 1. Phonetic accuracy.
                 2. Stress.
                 3. Natural rhythm.
-                Return ONLY raw JSON (no markdown formatting):
+
+                Return ONLY raw JSON:
                 {{
                     ""score"": 0,
                     ""result"": ""Great"" | ""Not yet"",
                     ""feedback"": ""short explanation""
                 }}";
 
-            var content = new Content();
-            content.Parts.Add(new Part { Text = prompt });
-
-            content.Parts.Add(new Part
-            {
-                InlineData = new Blob
+            var response = await _client.Models.GenerateContentAsync(
+                model: "gemini-1.5-flash",
+                contents: new List<Content>
                 {
-                    MimeType = "audio/wav",
-                    Data = Convert.ToBase64String(audioBytes)
-                }
-            });
-            var request = new GenerateContentRequest
-            {
-                Contents = new List<Content> { content }
-            };
-            var response = await _model.GenerateContentAsync(request);
+                    new Content
+                    {
+                        Parts =
+                        [
+                            new Part { Text = prompt },
+                            new Part
+                            {
+                                InlineData = new Blob
+                                {
+                                    MimeType = "audio/wav",
+                                    Data = audioBytes
+                                }
+                            }
+                        ]
+                    }
+                });
 
             string responseText = response.Text.Replace("```json", "").Replace("```", "").Trim();
 
