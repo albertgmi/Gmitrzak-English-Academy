@@ -47,6 +47,8 @@ namespace inzBackend.Services.AiIntegrationServices
                 1. Phonetic accuracy.
                 2. Stress.
                 3. Natural rhythm.
+                 
+                Feedback must be around 15 words long.
 
                 Return ONLY raw JSON:
                 {{
@@ -56,7 +58,7 @@ namespace inzBackend.Services.AiIntegrationServices
                 }}";
 
             var response = await _client.Models.GenerateContentAsync(
-                model: "gemini-2.5-flash",
+                model: "gemini-2.5-flash-lite",
                 contents: new List<Content>
                 {
                     new Content
