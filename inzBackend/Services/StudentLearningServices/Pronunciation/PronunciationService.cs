@@ -1,10 +1,11 @@
 ﻿using inzBackend.Enums;
+using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 using inzBackend.Services.UserServices;
-using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.StudentLearningServices.Pronunciation
 {
@@ -63,6 +64,29 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
                 })
                 .ToList();
             return entries;
+        }
+
+        public List<PronunciationAttemptDto> getAttemptsAsync(int pronunciationEntryId)
+        {
+            int userId = _userContextService.GetUserId!.Value;
+
+            var entryExists = _dbContext.PronunciationEntries
+                .Any(x => x.Id == pronunciationEntryId && x.UserId == userId);
+
+            if (!entryExists)
+                throw new NotFoundException("Pronunciation entry not found");
+
+            return _dbContext.PronunciationAttempts
+                .Where(a => a.PronunciationEntryId == pronunciationEntryId && a.UserId == userId)
+                .OrderByDescending(a => a.CreatedAt)
+                .Select(a => new PronunciationAttemptDto
+                {
+                    Id = a.Id,
+                    TranscribedText = a.TranscribedText,
+                    Result = a.Result,
+                    CreatedAt = a.CreatedAt.DateTime
+                })
+                .ToList();
         }
     }
 }
