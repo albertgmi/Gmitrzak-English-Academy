@@ -1,25 +1,26 @@
-﻿using inzBackend.Entities.LearningMaterials;
+﻿using GenerativeAI;
+using GenerativeAI.Types;
+using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
-using OpenAI.Chat;
 using System.Text.Json;
 
 namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiPronunciationService : IAiPronunciationService
     {
-        private readonly ChatClient _chatClient;
+        private readonly GenerativeModel _model;
         private readonly IUserContextService _userContextService;
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
 
-        public AiPronunciationService(ChatClient chatClient,
+        public AiPronunciationService(GenerativeModel model,
             IUserContextService userContextService, GmitrzakEnglishAcademyDbContext dbContext)
         {
-            _chatClient = chatClient;
+            _model = model;
             _userContextService = userContextService;
             _dbContext = dbContext;
         }
@@ -39,43 +40,38 @@ namespace inzBackend.Services.AiIntegrationServices
             await audioStream.CopyToAsync(memoryStream);
             byte[] audioBytes = memoryStream.ToArray();
 
-#pragma warning disable OPENAI001
-            var messages = new List<ChatMessage>
+            string prompt = $@"
+                You are a strict English pronunciation coach. 
+                Analyze the provided audio and compare it to the target word: '{entry.Word}'.
+                Evaluate:
+                1. Phonetic accuracy.
+                2. Stress.
+                3. Natural rhythm.
+                Return ONLY raw JSON (no markdown formatting):
+                {{
+                    ""score"": 0,
+                    ""result"": ""Great"" | ""Not yet"",
+                    ""feedback"": ""short explanation""
+                }}";
+
+            var content = new Content();
+            content.Parts.Add(new Part { Text = prompt });
+
+            content.Parts.Add(new Part
             {
-                ChatMessage.CreateSystemMessage(
-                    """
-                    You are a strict English pronunciation coach. 
-                    You are analyzing the provided raw audio file. 
-                    Do NOT rely on auto-transcription. Listen to the audio and compare it to the target word.
-                    
-                    Evaluate:
-                    1. Phonetic accuracy.
-                    2. Stress (e.g., 'com-for-ta-ble' vs 'comfortable').
-                    3. Natural rhythm.
-
-                    Return ONLY JSON:
-                    {
-                        "score": number (0-100),
-                        "result": "Great" | "Not yet",
-                        "feedback": "short explanation focusing on why it sounds natural or unnatural"
-                    }
-                    """
-                ),
-                ChatMessage.CreateUserMessage(
-                    ChatMessageContentPart.CreateTextPart($"Target word: {entry.Word}. Analyze the pronunciation of the following audio:"),
-                    ChatMessageContentPart.CreateInputAudioPart(BinaryData.FromBytes(audioBytes), "audio/wav")
-                )
-            };
-#pragma warning restore OPENAI001
-
-            var chatOptions = new ChatCompletionOptions
+                InlineData = new Blob
+                {
+                    MimeType = "audio/wav",
+                    Data = Convert.ToBase64String(audioBytes)
+                }
+            });
+            var request = new GenerateContentRequest
             {
-                ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
-                Temperature = 0.0f
+                Contents = new List<Content> { content }
             };
+            var response = await _model.GenerateContentAsync(request);
 
-            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatOptions);
-            string responseText = completion.Content[0].Text;
+            string responseText = response.Text.Replace("```json", "").Replace("```", "").Trim();
 
             var evaluation = JsonSerializer.Deserialize<PronunciationEvaluationJson>(responseText, new JsonSerializerOptions
             {
