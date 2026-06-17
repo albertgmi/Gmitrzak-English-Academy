@@ -8,6 +8,6 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
     {
         List<PronunciationEntryDto> getAllEntries();
         List<PronunciationTestItemDto> getCorrectPronunciation();
-        List<PronunciationAttemptDto> getAttemptsAsync(int pronunciationEntryId);
+        List<PronunciationAttemptDto> getAttempts(int pronunciationEntryId);
     }
 }

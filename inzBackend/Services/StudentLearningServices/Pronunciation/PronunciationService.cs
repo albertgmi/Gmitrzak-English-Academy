@@ -66,7 +66,7 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
             return entries;
         }
 
-        public List<PronunciationAttemptDto> getAttemptsAsync(int pronunciationEntryId)
+        public List<PronunciationAttemptDto> getAttempts(int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
 
@@ -84,6 +84,7 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
                     Id = a.Id,
                     Feedback = a.Feedback,
                     Result = a.Result,
+                    Score = a.Score,
                     CreatedAt = a.CreatedAt.DateTime
                 })
                 .ToList();
