@@ -73,7 +73,7 @@ namespace inzBackend.Controllers
         [HttpGet("pronunciation/{entryId}/attempts")]
         public ActionResult<List<PronunciationAttemptDto>> getAttempts([FromRoute] int entryId)
         {
-            var attempts = _pronunciationService.getAttemptsAsync(entryId);
+            var attempts = _pronunciationService.getAttempts(entryId);
             return Ok(attempts);
         }
 

@@ -10,6 +10,7 @@ namespace inzBackend.Entities.LearningMaterials
         public int PronunciationEntryId { get; set; }
         public PronunciationEntry PronunciationEntry { get; set; } = null!;
         public string Feedback { get; set; } = string.Empty;
+        public int Score { get; set; } = 0;
         public string Result { get; set; } = string.Empty;
     }
 }

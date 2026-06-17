@@ -91,6 +91,7 @@ namespace inzBackend.Services.AiIntegrationServices
                 PronunciationEntryId = pronunciationEntryId,
                 Feedback = evaluation?.Feedback ?? "No feedback",
                 Result = evaluation?.Result ?? "Not yet",
+                Score = evaluation?.Score ?? 0,
                 CreatedAt = PolandTime.DateTimeNow
             };
 
