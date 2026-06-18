@@ -19,14 +19,14 @@ namespace inzBackend.Controllers
 
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<AdminDashboardDto> getAdminDashboard()
+        public ActionResult<AdminDashboardDto> GetAdminDashboard()
         {
             return _dashboardService.getAdminDashboard();
         }
 
         [HttpGet("student")]
         [Authorize(Roles = "User")]
-        public ActionResult<StudentDashboardDto> getStudentDashboard()
+        public ActionResult<StudentDashboardDto> GetStudentDashboard()
         {
             return _dashboardService.getStudentDashboard();
         }  

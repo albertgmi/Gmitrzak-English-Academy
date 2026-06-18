@@ -24,7 +24,7 @@ namespace inzBackend.Controllers
 
         [HttpPost]
         [Authorize(Roles = "User")]
-        public async Task<ActionResult<AnswerResultDto>> submitAnswer([FromBody] SubmitAnswerRequest request)
+        public async Task<ActionResult<AnswerResultDto>> SubmitAnswer([FromBody] SubmitAnswerRequest request)
         {
             var result = await _service.submitAnswerAsync(request);
             return Ok(result);
@@ -32,21 +32,21 @@ namespace inzBackend.Controllers
 
         [HttpGet("module/{moduleId}")]
         [Authorize(Roles = "User")]
-        public ActionResult<List<AnswerResultDto>> getAnswersForModule([FromRoute] int moduleId)
+        public ActionResult<List<AnswerResultDto>> GetAnswersForModule([FromRoute] int moduleId)
         {
             return Ok(_service.getAnswersForModule(moduleId));
         }
 
         [HttpGet("module/{moduleId}/student/{studentId}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<AnswerResultDto>> getAnswersForStudent([FromRoute] int moduleId, [FromRoute] int studentId)
+        public ActionResult<List<AnswerResultDto>> GetAnswersForStudent([FromRoute] int moduleId, [FromRoute] int studentId)
         {
             return Ok(_service.getAnswersForModuleByStudent(moduleId, studentId));
         }
 
         [HttpPatch("{answerId}/override")]
         [Authorize(Roles = "Admin")]
-        public ActionResult overrideAnswer([FromRoute] int answerId, [FromBody] TeacherOverrideRequest request)
+        public ActionResult OverrideAnswer([FromRoute] int answerId, [FromBody] TeacherOverrideRequest request)
         {
             _service.overrideAnswer(answerId, request);
             return Ok();
@@ -54,7 +54,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("modules/completed")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<CompletedSentenceModuleDto>> getCompletedModules([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
+        public ActionResult<List<CompletedSentenceModuleDto>> GetCompletedModules([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
@@ -63,7 +63,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("report/range")]
         [Authorize(Roles = "Admin")]
-        public ActionResult generateRangeReportPdf([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
+        public ActionResult GenerateRangeReportPdf([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
@@ -76,7 +76,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("report/range/docx")]
         [Authorize(Roles = "Admin")]
-        public ActionResult generateRangeReportDocx([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
+        public ActionResult GenerateRangeReportDocx([FromQuery] int studentId, [FromQuery] string dateFrom, [FromQuery] string dateTo)
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
@@ -90,7 +90,7 @@ namespace inzBackend.Controllers
         }
         [HttpGet("report/all")]
         [Authorize(Roles = "Admin")]
-        public ActionResult getActiveStudentsReportsZip([FromQuery] string dateFrom, [FromQuery] string dateTo)
+        public ActionResult GetActiveStudentsReportsZip([FromQuery] string dateFrom, [FromQuery] string dateTo)
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);

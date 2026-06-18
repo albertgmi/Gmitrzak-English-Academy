@@ -18,7 +18,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPost("log")]
-        public ActionResult logActivity([FromBody] LogActivityRequest request)
+        public ActionResult LogActivity([FromBody] LogActivityRequest request)
         {
             _sectionActivityService.logActivity(request);
             return Ok();

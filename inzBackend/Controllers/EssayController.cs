@@ -18,41 +18,41 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("module/{moduleId}")]
-        public ActionResult<EssayModuleDto> getModule(int moduleId)
+        public ActionResult<EssayModuleDto> GetModule(int moduleId)
         {
             return Ok(_essayService.getEssayModule(moduleId));
         }
         
         [HttpPost("submit")]
-        public ActionResult<UserEssayDto> submit([FromBody] SubmitEssayRequest request)
+        public ActionResult<UserEssayDto> Submit([FromBody] SubmitEssayRequest request)
         {
             return Ok(_essayService.submitEssay(request));
         }
 
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<UserEssayDto>> getAll()
+        public ActionResult<List<UserEssayDto>> GetAll()
         {
             return Ok(_essayService.getAllEssaysForAdmin());
         }
 
         [HttpGet("admin/student/{studentId}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<UserEssayDto>> getForStudent(int studentId)
+        public ActionResult<List<UserEssayDto>> GetForStudent(int studentId)
         {
             return Ok(_essayService.getEssaysForStudent(studentId));
         }
 
         [HttpPut("admin/review/{essayId}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<UserEssayDto> review(int essayId, [FromBody] ReviewEssayRequest request)
+        public ActionResult<UserEssayDto> Review(int essayId, [FromBody] ReviewEssayRequest request)
         {
             return Ok(_essayService.reviewEssay(essayId, request));
         }
 
         [HttpGet("admin/export/{essayId}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult export(int essayId)
+        public ActionResult Export(int essayId)
         {
             var bytes = _essayService.exportEssayToDocx(essayId);
             return File(bytes,
