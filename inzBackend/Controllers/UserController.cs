@@ -17,39 +17,39 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("users")]
-        public ActionResult<List<AppUserDto>> getAllUsers()
+        public ActionResult<List<AppUserDto>> GetAllUsers()
         {
             return Ok(_userService.getAllUsers());
         }
 
         [HttpGet("users/inactive")]
-        public ActionResult<List<AppUserDto>> getAllInactiveUsers()
+        public ActionResult<List<AppUserDto>> GetAllInactiveUsers()
         {
             return Ok(_userService.getAllInactiveUsers());
         }
         [HttpGet]
         [Authorize(Roles = "User")]
-        public ActionResult<AppUserDto> getUserById()
+        public ActionResult<AppUserDto> GetUserById()
         {
             return Ok(_userService.getUserById());
         }
 
         [HttpPut("update/{userId}")]
-        public ActionResult updateUser([FromBody] UpdateUserRequest request, [FromRoute] int userId)
+        public ActionResult UpdateUser([FromBody] UpdateUserRequest request, [FromRoute] int userId)
         {
             _userService.updateUser(request, userId);
             return Ok();
         }
 
         [HttpDelete("delete/{userId}")]
-        public ActionResult deleteUser([FromRoute] int userId)
+        public ActionResult DeleteUser([FromRoute] int userId)
         {
             _userService.deleteUser(userId);
             return Ok();
         }
 
         [HttpDelete("delete")]
-        public ActionResult deleteManyUsers([FromQuery] List<int> userIds)
+        public ActionResult DeleteManyUsers([FromQuery] List<int> userIds)
         {
             _userService.deleteManyUsers(userIds);
             return Ok();

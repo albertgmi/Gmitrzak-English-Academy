@@ -21,21 +21,21 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("summary")]
-        public ActionResult<CreditSummaryDto> getSummary()
+        public ActionResult<CreditSummaryDto> GetSummary()
         {
             var userId = _userContextService.GetUserId!.Value;
             return Ok(_creditService.getCreditSummary(userId));
         }
 
         [HttpGet("shop")]
-        public ActionResult<List<ShopItemDto>> getShop()
+        public ActionResult<List<ShopItemDto>> GetShop()
         {
             var userId = _userContextService.GetUserId!.Value;
             return Ok(_creditService.getShopItems(userId));
         }
 
         [HttpPost("shop/purchase/{itemId}")]
-        public ActionResult<ShopPurchaseResultDto> purchase(int itemId)
+        public ActionResult<ShopPurchaseResultDto> Purchase(int itemId)
         {
             var userId = _userContextService.GetUserId!.Value;
             var result = _creditService.purchaseItem(userId, itemId);

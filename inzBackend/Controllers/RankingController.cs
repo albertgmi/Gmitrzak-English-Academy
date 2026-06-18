@@ -18,20 +18,20 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("{period}")]
-        public ActionResult<RankingDto> getRanking(string period)
+        public ActionResult<RankingDto> GetRanking(string period)
         {
             return _rankingService.getRanking(period);
         }
 
         [HttpPost("reaction")]
-        public ActionResult addReaction([FromBody] AddReactionRequest request)
+        public ActionResult AddReaction([FromBody] AddReactionRequest request)
         {
             _rankingService.addReaction(request);
             return Ok();
         }
 
         [HttpDelete("reaction")]
-        public ActionResult removeReaction([FromQuery] int toUserId, [FromQuery] string emoji, [FromQuery] string period)
+        public ActionResult RemoveReaction([FromQuery] int toUserId, [FromQuery] string emoji, [FromQuery] string period)
         {
             _rankingService.removeReaction(toUserId, emoji, period);
             return Ok();

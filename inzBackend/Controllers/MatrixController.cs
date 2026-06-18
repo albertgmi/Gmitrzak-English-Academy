@@ -17,41 +17,41 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<MatrixDto>> getAllMatrices()
+        public ActionResult<List<MatrixDto>> GetAllMatrices()
         {
             return Ok(_matrixService.getAllMatrices());
         }
 
         [HttpPost]
-        public ActionResult createMatrix([FromBody] CreateMatrixRequest request)
+        public ActionResult CreateMatrix([FromBody] CreateMatrixRequest request)
         {
             var newMatrix = _matrixService.createMatrix(request);
             return Created();
         }
 
         [HttpPut("{matrixId}")]
-        public ActionResult updateMatrix([FromRoute] int matrixId, [FromBody] UpdateMatrixRequest request)
+        public ActionResult UpdateMatrix([FromRoute] int matrixId, [FromBody] UpdateMatrixRequest request)
         {
             _matrixService.updateMatrix(matrixId, request);
             return Ok();
         }
 
         [HttpDelete("{matrixId}")]
-        public ActionResult deleteMatrix([FromRoute] int matrixId)
+        public ActionResult DeleteMatrix([FromRoute] int matrixId)
         {
             _matrixService.deleteMatrix(matrixId);
             return NoContent();
         }
 
         [HttpPost("{matrixId}/courses/{courseId}")]
-        public ActionResult assignCourse([FromRoute] int matrixId, [FromRoute] int courseId)
+        public ActionResult AssignCourse([FromRoute] int matrixId, [FromRoute] int courseId)
         {
             _matrixService.assignCourse(matrixId, courseId);
             return Ok();
         }
 
         [HttpDelete("{matrixId}/courses/{courseId}")]
-        public ActionResult detachCourse([FromRoute] int matrixId, [FromRoute] int courseId)
+        public ActionResult DetachCourse([FromRoute] int matrixId, [FromRoute] int courseId)
         {
             _matrixService.detachCourse(matrixId, courseId);
             return Ok();

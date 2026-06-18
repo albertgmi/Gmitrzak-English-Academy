@@ -21,41 +21,41 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<GlobalVocabularyDto>> getAllVocabulary()
+        public ActionResult<List<GlobalVocabularyDto>> GetAllVocabulary()
         {
             return Ok(_globalVocabularyService.getAllVocabulary());
         }
 
         [HttpPost]
-        public ActionResult<Vocabulary> createVocabulary([FromBody] VocabularyAddingRequest request)
+        public ActionResult<Vocabulary> CreateVocabulary([FromBody] VocabularyAddingRequest request)
         {
             var newVocabulary = _globalVocabularyService.createNewVocabulary(request);
             return Created();
         }
 
         [HttpPut("update/{vocabularyId}")]
-        public ActionResult updateVocabulary([FromBody] VocabularyUpdateRequest request, [FromRoute] int vocabularyId)
+        public ActionResult UpdateVocabulary([FromBody] VocabularyUpdateRequest request, [FromRoute] int vocabularyId)
         {
             _globalVocabularyService.updateVocabulary(request, vocabularyId);
             return Ok();
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<SearchVocabularyResult>> searchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
+        public async Task<ActionResult<SearchVocabularyResult>> SearchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
         {
             var result = await _globalVocabularyService.searchVocabulary(query, studentUserId);
             return Ok(result);
         }
 
         [HttpPost("translation")]
-        public ActionResult<VocabularyDto> addTranslation([FromBody] AddTranslationRequest request)
+        public ActionResult<VocabularyDto> AddTranslation([FromBody] AddTranslationRequest request)
         {
             var result = _globalVocabularyService.addTranslation(request);
             return Ok(result);
         }
 
         [HttpPost("assign")]
-        public ActionResult assignVocabularyToStudent([FromBody] AssignVocabularyToStudentRequest request)
+        public ActionResult AssignVocabularyToStudent([FromBody] AssignVocabularyToStudentRequest request)
         {
             _globalVocabularyService.assignVocabularyToStudent(request);
             return Ok();

@@ -47,38 +47,38 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("sentences")]
-        public ActionResult<List<SentenceDto>> getAllSentences()
+        public ActionResult<List<SentenceDto>> GetAllSentences()
         {
             return _sentencesService.getAllSentences();
         }
 
         [HttpGet("memories")]
-        public ActionResult<List<MemoryDto>> getAllMemories()
+        public ActionResult<List<MemoryDto>> GetAllMemories()
         {
             return _memoriesService.getAllMemories();
         }
 
         [HttpGet("pronunciation")]
-        public ActionResult<List<PronunciationEntryDto>> getAllPronunciation()
+        public ActionResult<List<PronunciationEntryDto>> GetAllPronunciation()
         {
             return _pronunciationService.getAllEntries();
         }
 
         [HttpGet("pronunciation/correct")]
-        public ActionResult<List<PronunciationTestItemDto>> getCorrectPronunciation()
+        public ActionResult<List<PronunciationTestItemDto>> GetCorrectPronunciation()
         {
             return _pronunciationService.getCorrectPronunciation();
         }
 
         [HttpGet("pronunciation/{entryId}/attempts")]
-        public ActionResult<List<PronunciationAttemptDto>> getAttempts([FromRoute] int entryId)
+        public ActionResult<List<PronunciationAttemptDto>> GetAttempts([FromRoute] int entryId)
         {
             var attempts = _pronunciationService.getAttempts(entryId);
             return Ok(attempts);
         }
 
         [HttpPost("pronunciation/{entryId}/attempt")]
-        public async Task<ActionResult> checkPronunciation([FromRoute] int entryId, [FromForm] IFormFile audioFile)
+        public async Task<ActionResult> CheckPronunciation([FromRoute] int entryId, [FromForm] IFormFile audioFile)
         {
             if (audioFile == null || audioFile.Length == 0)
                 return BadRequest(new { message = "Audio file is missing or empty." });
@@ -96,68 +96,68 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("flashcards")]
-        public ActionResult<List<FlashcardDto>> getAllFlashcards()
+        public ActionResult<List<FlashcardDto>> GetAllFlashcards()
         {
             return _flashcardsService.getAllFlashcards();
         }
 
         [HttpGet("flashcards/leeches")]
-        public ActionResult<List<FlashcardDto>> getLeeches()
+        public ActionResult<List<FlashcardDto>> GetLeeches()
         {
             return _flashcardsService.getLeeches();
         }
 
         [HttpGet("flashcards/studied-today")]
-        public ActionResult<List<FlashcardDto>> getStudiedToday()
+        public ActionResult<List<FlashcardDto>> GetStudiedToday()
         {
             return _flashcardsService.getStudiedToday();
         }
 
         [HttpGet("flashcards/logs")]
-        public ActionResult<List<FlashcardStudyLogDto>> getStudyLogs()
+        public ActionResult<List<FlashcardStudyLogDto>> GetStudyLogs()
         {
             return _flashcardsService.getStudyLogs();
         }
 
         [HttpGet("flashcards/search")]
-        public ActionResult<List<FlashcardDto>> searchFlashcards([FromQuery] string query)
+        public ActionResult<List<FlashcardDto>> SearchFlashcards([FromQuery] string query)
         {
             return _flashcardsService.searchFlashcards(query);
         }
 
         [HttpGet("vocabulary")]
-        public ActionResult<List<VocabularyDto>> getAllVocabulary()
+        public ActionResult<List<VocabularyDto>> GetAllVocabulary()
         {
             return _vocabularyService.getAllVocabulary();
         }
 
         [HttpGet("assignments")]
-        public ActionResult<List<AssignmentStudentDto>> getActiveAssignments()
+        public ActionResult<List<AssignmentStudentDto>> GetActiveAssignments()
         {
             return _studentAssignmentService.getActiveAssignments();
         }
 
         [HttpGet("assignments/history")]
-        public ActionResult<List<AssignmentStudentDto>> getAssignmentHistory()
+        public ActionResult<List<AssignmentStudentDto>> GetAssignmentHistory()
         {
             return _studentAssignmentService.getAssignmentHistory();
         }
 
         [HttpPatch("flashcards/{id}/review")]
-        public ActionResult reviewCard([FromRoute] int id, [FromBody] ReviewCardRequest request)
+        public ActionResult ReviewCard([FromRoute] int id, [FromBody] ReviewCardRequest request)
         {
             _flashcardsService.reviewCard(id, request);
             return Ok();
         }
 
         [HttpGet("module/{moduleId}/sentences")]
-        public ActionResult<ModuleSentenceSessionDto> getModuleSentences([FromRoute] int moduleId)
+        public ActionResult<ModuleSentenceSessionDto> GetModuleSentences([FromRoute] int moduleId)
         {
             return _sentencesService.getModuleSentences(moduleId);
         }
 
         [HttpPatch("sentences/{id}/review")]
-        public ActionResult reviewSentence([FromRoute] int id, [FromBody] ReviewSentenceRequest request)
+        public ActionResult ReviewSentence([FromRoute] int id, [FromBody] ReviewSentenceRequest request)
         {
             _sentencesService.reviewSentence(id, request);
             return Ok();

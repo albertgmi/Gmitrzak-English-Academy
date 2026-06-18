@@ -18,54 +18,54 @@ namespace inzBackend.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<AnnouncementDto>> getAll()
+        public ActionResult<List<AnnouncementDto>> GetAll()
         {
             return _announcementService.getAll();
         }
 
         [HttpGet("inbox")]
-        public ActionResult<List<AnnouncementInboxDto>> getInbox()
+        public ActionResult<List<AnnouncementInboxDto>> GetInbox()
         {
             return _announcementService.getInbox();
         }
 
         [HttpGet("unread-count")]
-        public ActionResult<UnreadCountDto> getUnreadCount()
+        public ActionResult<UnreadCountDto> GetUnreadCount()
         {
             return _announcementService.getUnreadCount();
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public ActionResult create([FromBody] CreateAnnouncementRequest request)
+        public ActionResult Create([FromBody] CreateAnnouncementRequest request)
         {
             _announcementService.create(request);
             return Ok();
         }
 
         [HttpPatch("{recipientId}/read")]
-        public ActionResult markRead([FromRoute] int recipientId)
+        public ActionResult MarkRead([FromRoute] int recipientId)
         {
             _announcementService.markRead(recipientId);
             return Ok();
         }
 
         [HttpPatch("{recipientId}/signup")]
-        public ActionResult signUp([FromRoute] int recipientId)
+        public ActionResult SignUp([FromRoute] int recipientId)
         {
             _announcementService.signUp(recipientId);
             return Ok();
         }
 
         [HttpPatch("{recipientId}/vote")]
-        public ActionResult vote([FromRoute] int recipientId, [FromQuery] bool value)
+        public ActionResult Vote([FromRoute] int recipientId, [FromQuery] bool value)
         {
             _announcementService.vote(recipientId, value);
             return Ok();
         }
 
         [HttpPatch("read-all")]
-        public ActionResult markAllRead()
+        public ActionResult MarkAllRead()
         {
             _announcementService.markAllRead();
             return Ok();
@@ -73,7 +73,7 @@ namespace inzBackend.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult delete([FromRoute] int id)
+        public ActionResult Delete([FromRoute] int id)
         {
             _announcementService.delete(id);
             return NoContent();
@@ -81,7 +81,7 @@ namespace inzBackend.Controllers
 
         [HttpGet("{id}/details")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<AnnouncementDetailsDto> getDetails([FromRoute] int id)
+        public ActionResult<AnnouncementDetailsDto> GetDetails([FromRoute] int id)
         {
             return _announcementService.getDetails(id);
         }

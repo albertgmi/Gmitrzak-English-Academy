@@ -19,40 +19,40 @@ namespace inzBackend.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public ActionResult<List<CourseDto>> getAllCourses()
+        public ActionResult<List<CourseDto>> GetAllCourses()
         {
             return _courseService.getAllCourses();
         }
 
         [HttpPost]
-        public ActionResult<Course> createCourse(CreateCourseRequest request)
+        public ActionResult<Course> CreateCourse(CreateCourseRequest request)
         {
             return _courseService.createCourse(request);
         }
 
         [HttpPut("{courseId}")]
-        public ActionResult updateCourse([FromRoute] int courseId, [FromBody] UpdateCourseRequest request)
+        public ActionResult UpdateCourse([FromRoute] int courseId, [FromBody] UpdateCourseRequest request)
         {
             _courseService.updateCourse(courseId, request);
             return Ok();
         }
 
         [HttpDelete("{courseId}")]
-        public ActionResult deleteCourse([FromRoute] int courseId)
+        public ActionResult DeleteCourse([FromRoute] int courseId)
         {
             _courseService.deleteCourse(courseId);
             return NoContent();
         }
 
         [HttpPost("{courseId}/programs/{programId}")]
-        public ActionResult assignProgram([FromRoute] int courseId, [FromRoute] int programId)
+        public ActionResult AssignProgram([FromRoute] int courseId, [FromRoute] int programId)
         {
             _courseService.assignProgram(courseId, programId);
             return Ok();
         }
 
         [HttpDelete("{courseId}/programs/{programId}")]
-        public ActionResult removeProgram([FromRoute] int courseId, [FromRoute] int programId)
+        public ActionResult RemoveProgram([FromRoute] int courseId, [FromRoute] int programId)
         {
             _courseService.removeProgram(courseId, programId);
             return Ok();

@@ -17,7 +17,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("{studentId}")]
-        public ActionResult<ExaminationDto> getExamination(int studentId)
+        public ActionResult<ExaminationDto> GetExamination(int studentId)
         {
             return _examinationService.getExamination(studentId);
         }

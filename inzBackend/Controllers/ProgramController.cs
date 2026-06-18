@@ -17,28 +17,28 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet]
-        public ActionResult<ProgramDto> getAllPrograms()
+        public ActionResult<ProgramDto> GetAllPrograms()
         {
             var programs = _programService.getAllPrograms();
             return Ok(programs);
         }
 
         [HttpPut("{programId}")]
-        public ActionResult updateProgram([FromRoute] int programId, [FromBody] UpdateProgramRequest request)
+        public ActionResult UpdateProgram([FromRoute] int programId, [FromBody] UpdateProgramRequest request)
         {
             _programService.updateProgram(programId, request);
             return Ok();
         }
 
         [HttpDelete("{programId}")]
-        public ActionResult deleteProgram([FromRoute] int programId)
+        public ActionResult DeleteProgram([FromRoute] int programId)
         {
             _programService.deleteProgram(programId);
             return NoContent();
         }
 
         [HttpPost]
-        public ActionResult<Entities.Curriculum.Program> createProgram([FromBody] CreateProgramRequest request)
+        public ActionResult<Entities.Curriculum.Program> CreateProgram([FromBody] CreateProgramRequest request)
         {
             var createdProgram = _programService.createProgram(request);
             return Ok(createdProgram);
