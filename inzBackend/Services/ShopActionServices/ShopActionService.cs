@@ -86,7 +86,7 @@ namespace inzBackend.Services.ShopActionServices
                 var currentDeadline = existingOverride?.NewDeadline ?? originalDeadline;
 
                 var minDate = currentDeadline.AddDays(1) > today ? currentDeadline.AddDays(1) : today;
-                var maxDate = originalDeadline.AddDays(7);
+                var maxDate = currentDeadline.AddDays(7);
 
                 if (maxDate < minDate)
                     return new ShopPurchaseResultDto { Success = false, Message = "This homework is too overdue to extend." };
