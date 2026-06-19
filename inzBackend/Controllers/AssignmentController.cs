@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace inzBackend.Controllers
 {
     [Route("api/assignment")]
-    [Authorize(Roles = "Admin")]
     [ApiController]
     public class AssignmentController : ControllerBase
     {
@@ -20,18 +19,21 @@ namespace inzBackend.Controllers
 
 
         [HttpGet("matrix")]
+        [Authorize(Roles = "Admin, User")]
         public ActionResult<List<MatrixAssignmentDto>> GetAllMatrixAssignments()
         {
             return _assignmentService.getAllMatrixAssignments();
         }
 
         [HttpGet("matrix/user/{userId}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult<List<MatrixAssignmentDto>> GetMatrixAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getMatrixAssignmentsByUser(userId);
         }
 
         [HttpPost("matrix")]
+        [Authorize(Roles = "Admin")]
         public ActionResult CreateMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
         {
             _assignmentService.createMatrixAssignment(request);
@@ -39,6 +41,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("matrix/{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult DeleteMatrixAssignment([FromRoute] int id)
         {
             _assignmentService.deleteMatrixAssignment(id);
@@ -46,18 +49,21 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("module")]
+        [Authorize(Roles = "Admin, User")]
         public ActionResult<List<ModuleAssignmentDto>> GetAllModuleAssignments()
         {
             return _assignmentService.getAllModuleAssignments();
         }
 
         [HttpGet("module/user/{userId}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult<List<ModuleAssignmentDto>> GetModuleAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getModuleAssignmentsByUser(userId);
         }
 
         [HttpPost("module")]
+        [Authorize(Roles = "Admin")]
         public ActionResult CreateModuleAssignment([FromBody] CreateModuleAssignmentRequest request)
         {
             _assignmentService.createModuleAssignment(request);
@@ -65,6 +71,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpDelete("module/{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult DeleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.deleteModuleAssignment(id);
@@ -72,6 +79,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("module/{id}/complete")]
+        [Authorize(Roles = "Admin")]
         public ActionResult CompleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.completeModuleAssignment(id);
@@ -79,6 +87,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPatch("module/{id}/uncomplete")]
+        [Authorize(Roles = "Admin")]
         public ActionResult UncompleteModuleAssignment([FromRoute] int id)
         {
             _assignmentService.uncompleteModuleAssignment(id);
