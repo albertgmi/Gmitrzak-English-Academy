@@ -1,5 +1,6 @@
 ﻿using inzBackend.Models.CreditModels;
 using inzBackend.Services.CreditServices;
+using inzBackend.Services.ShopActionServices;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,13 @@ namespace inzBackend.Controllers
     {
         private readonly ICreditService _creditService;
         private readonly IUserContextService _userContextService;
+        private readonly IShopActionService _shopActionService;
 
-        public CreditsController(ICreditService creditService, IUserContextService userContextService)
+        public CreditsController(ICreditService creditService, IUserContextService userContextService, IShopActionService shopActionService)
         {
             _creditService = creditService;
             _userContextService = userContextService;
+            _shopActionService = shopActionService;
         }
 
         [HttpGet("summary")]
@@ -39,7 +42,14 @@ namespace inzBackend.Controllers
         {
             var userId = _userContextService.GetUserId!.Value;
             var result = _creditService.purchaseItem(userId, itemId);
-            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpPost("shop/action/skip-homework")]
+        public ActionResult<ShopPurchaseResultDto> PurchaseHomeworkSkip([FromBody] SkipHomeworkRequestDto request)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            var result = _shopActionService.SkipHomework(userId, request.ModuleId);
             return Ok(result);
         }
     }

@@ -93,7 +93,7 @@ namespace inzBackend.Services.CreditServices
 
             var purchases = _dbContext.ShopPurchases
                 .Include(x => x.ShopItem)
-                .Where(x => x.UserId == userId)
+                .Where(x => x.UserId == userId && x.Status != "Cancelled")
                 .OrderByDescending(x => x.PurchaseDate)
                 .ToList();
 
@@ -198,21 +198,24 @@ namespace inzBackend.Services.CreditServices
                     CreditsRemaining = available
                 };
 
-            _dbContext.ShopPurchases.Add(new ShopPurchase
+            var purchase = new ShopPurchase
             {
                 UserId = userId,
                 ShopItemId = shopItemId,
                 CreditCost = item.CreditCost,
                 PurchaseDate = PolandTime.Today,
                 Status = "Pending"
-            });
+            };
+
+            _dbContext.ShopPurchases.Add(purchase);
             _dbContext.SaveChanges();
 
             return new ShopPurchaseResultDto
             {
                 Success = true,
                 Message = $"Successfully purchased {item.Name}!",
-                CreditsRemaining = available - item.CreditCost
+                CreditsRemaining = available - item.CreditCost,
+                PurchaseId = purchase.Id
             };
         }
 
