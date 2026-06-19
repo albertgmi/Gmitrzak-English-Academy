@@ -29,6 +29,7 @@ using inzBackend.Services.RankingServices;
 using inzBackend.Services.ReportServices;
 using inzBackend.Services.SectionActivityServices;
 using inzBackend.Services.SentenceServices;
+using inzBackend.Services.ShopActionServices;
 using inzBackend.Services.StudentCourseServices;
 using inzBackend.Services.StudentCourseServices.ActivityPoint;
 using inzBackend.Services.StudentCourseServices.Grade;
@@ -178,6 +179,7 @@ namespace inzBackend
             builder.Services.AddScoped<IEssayService, EssayService>();
             builder.Services.AddScoped<IAiSpellCheckService, AiSpellCheckService>();
             builder.Services.AddScoped<IAiPronunciationService, AiPronunciationService>();
+            builder.Services.AddScoped<IShopActionService, ShopActionService>();
 
             // Infrastructure / cross-cutting services
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
