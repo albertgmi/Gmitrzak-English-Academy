@@ -191,7 +191,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             var result = new List<HomeworkItemDto>();
 
-            // 1. MODUŁY INDYWIDUALNE
             var directAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == studentUserId
@@ -201,7 +200,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             var directDtos = directAssignments.Select(x => new HomeworkItemDto
             {
-                Id = x.Id, // Zwykłe dodatnie ID
+                Id = x.Id,
                 ModuleName = x.Module.Name,
                 ModuleDescription = x.Module.Description,
                 DueDate = x.DueDate,
@@ -210,7 +209,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             result.AddRange(directDtos);
 
-            // 2. MODUŁY Z MATRYC
             var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
                 .Where(x => x.UserId == studentUserId)
                 .Select(x => x.MatrixModuleId)
@@ -236,7 +234,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
 
                     if (unlockDate < weekStart && isCompleted) continue;
-                    if (directAssignments.Any(d => d.ModuleId == mm.ModuleId)) continue;
 
                     result.Add(new HomeworkItemDto
                     {
@@ -245,7 +242,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                         ModuleDescription = mm.Module.Description ?? string.Empty,
                         DueDate = unlockDate,
                         IsCompleted = isCompleted,
-                        IsOverdue = unlockDate < today && !isCompleted
+                        IsOverdue = unlockDate < today && !isCompleted,
+                        IsFromMatrix = true
                     });
                 }
             }
@@ -255,12 +253,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public void checkHomework(int assignmentId)
         {
-            // Jeśli ID jest ujemne, to znaczy, że to MatrixModuleId
             if (assignmentId < 0)
             {
-                int realMatrixModuleId = Math.Abs(assignmentId); // zamiana np. -15 na 15
+                int realMatrixModuleId = Math.Abs(assignmentId);
 
-                // Szukamy przypisania matrycy, aby dowiedzieć się, do jakiego studenta należy
                 var matrixAssignment = _dbContext.UserMatrixAssignments
                     .FirstOrDefault(x => x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
 
@@ -281,7 +277,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             }
             else
             {
-                // Tradycyjna logika dla zadań indywidualnych
                 var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
                 if (a is null) return;
                 a.IsCompleted = true;

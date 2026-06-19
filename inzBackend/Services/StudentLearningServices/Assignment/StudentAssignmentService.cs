@@ -67,9 +67,6 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                         .AddDays((mm.WeekNumber - 1) * ma.Matrix.RefreshIntervalDays)
                         .AddDays(mm.DayOfWeek - 1);
 
-                    if (directAssignments.Any(d => d.ModuleId == mm.ModuleId))
-                        continue;
-
                     if (unlockDate > weekEnd)
                         continue;
 
