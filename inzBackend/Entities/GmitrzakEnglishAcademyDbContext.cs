@@ -65,6 +65,7 @@ namespace inzBackend.Models
         public DbSet<ShopPurchase> ShopPurchases { get; set; }
         public DbSet<UserEssay> UserEssays { get; set; }
         public DbSet<PronunciationAttempt> PronunciationAttempts { get; set; }
+        public DbSet<UserMatrixModuleDueDateOverride> UserMatrixModuleDueDateOverrides { get; set; }
 
         public override int SaveChanges()
         {

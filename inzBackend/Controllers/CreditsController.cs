@@ -52,5 +52,14 @@ namespace inzBackend.Controllers
             var result = _shopActionService.SkipHomework(userId, request.AssignmentId);
             return Ok(result);
         }
+
+        [HttpPost("shop/action/extend-homework")]
+        public ActionResult<ShopPurchaseResultDto> ExtendHomework([FromBody] ExtendHomeworkRequestDto request)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            var dateOnly = DateOnly.FromDateTime(request.NewDueDate);
+            var result = _shopActionService.ExtendHomework(userId, request.AssignmentId, dateOnly);
+            return Ok(result);
+        }
     }
 }

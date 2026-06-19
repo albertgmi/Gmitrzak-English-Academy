@@ -178,6 +178,10 @@ namespace inzBackend.Services.AssignmentServices
                 .Select(c => c.MatrixModuleId)
                 .ToHashSet();
 
+            var dueDateOverrides = _dbContext.UserMatrixModuleDueDateOverrides
+                .Where(o => o.UserId == x.UserId && matrixModuleIds.Contains(o.MatrixModuleId))
+                .ToDictionary(o => o.MatrixModuleId, o => o.NewDeadline);
+
             var modules = x.Matrix.MatrixModules
                 .OrderBy(mm => mm.WeekNumber)
                 .ThenBy(mm => mm.DayOfWeek)
@@ -185,7 +189,8 @@ namespace inzBackend.Services.AssignmentServices
                     mm,
                     x.StartDate,
                     x.Matrix.RefreshIntervalDays,
-                    completedMatrixModuleIds.Contains(mm.Id)
+                    completedMatrixModuleIds.Contains(mm.Id),
+                    dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : (DateOnly?)null
                 ))
                 .ToList();
 
@@ -202,13 +207,11 @@ namespace inzBackend.Services.AssignmentServices
             };
         }
 
-        private static ModuleUnlockDto mapToModuleUnlockDto(MatrixModule mm, DateOnly startDate,
-            int refreshIntervalDays, bool isCompleted)
+        private static ModuleUnlockDto mapToModuleUnlockDto(MatrixModule mm, DateOnly startDate, int refreshIntervalDays,
+            bool isCompleted, DateOnly? deadlineOverride)
         {
-            var unlockDate = startDate
-                .AddDays((mm.WeekNumber - 1) * refreshIntervalDays)
-                .AddDays(mm.DayOfWeek - 1);
-
+            var unlockDate = MatrixModuleDateHelper.ComputeDeadline(startDate, mm.WeekNumber, mm.DayOfWeek, refreshIntervalDays);
+            var deadline = deadlineOverride ?? unlockDate;
             var today = PolandTime.Today;
 
             return new ModuleUnlockDto
@@ -220,6 +223,7 @@ namespace inzBackend.Services.AssignmentServices
                 WeekNumber = mm.WeekNumber,
                 DayOfWeek = mm.DayOfWeek,
                 UnlockDate = unlockDate,
+                Deadline = deadline,
                 IsUnlocked = unlockDate <= today,
                 IsCompleted = isCompleted
             };
