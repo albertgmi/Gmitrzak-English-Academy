@@ -17,8 +17,7 @@ namespace inzBackend.Services.ShopActionServices
             _dbContext = dbContext;
             _creditService = creditService;
         }
-
-        public ShopPurchaseResultDto SkipHomework(int userId, int moduleId)
+        public ShopPurchaseResultDto SkipHomework(int userId, int assignmentId)
         {
             var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "Homework Skip" && x.IsActive);
             if (shopItem is null)
@@ -28,8 +27,7 @@ namespace inzBackend.Services.ShopActionServices
             if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
                 return purchaseResult;
 
-            var actionResult = CompleteModuleForUser(userId, moduleId);
-
+            var actionResult = CompleteModuleForUser(userId, assignmentId);
             if (actionResult == ActionTargetResult.Success)
             {
                 _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
@@ -38,7 +36,6 @@ namespace inzBackend.Services.ShopActionServices
             }
 
             _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Cancelled");
-
             string errorMessage = actionResult == ActionTargetResult.AlreadyCompleted
                 ? "This homework is already completed or skipped!"
                 : "Could not find this homework assigned to you.";
@@ -51,43 +48,41 @@ namespace inzBackend.Services.ShopActionServices
             };
         }
 
-        private ActionTargetResult CompleteModuleForUser(int userId, int moduleId)
+        private ActionTargetResult CompleteModuleForUser(int userId, int assignmentId)
         {
-            var direct = _dbContext.UserModuleAssignments
-                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
-
-            if (direct is not null)
+            if (assignmentId < 0)
             {
-                if (direct.IsCompleted) return ActionTargetResult.AlreadyCompleted;
+                int matrixModuleId = Math.Abs(assignmentId);
 
-                direct.IsCompleted = true;
+                var matrixAssignment = _dbContext.UserMatrixAssignments
+                    .FirstOrDefault(x => x.UserId == userId
+                                      && x.Matrix.MatrixModules.Any(mm => mm.Id == matrixModuleId));
+
+                if (matrixAssignment is null) return ActionTargetResult.NotFound;
+
+                var alreadyDone = _dbContext.UserMatrixModuleCompletions
+                    .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModuleId);
+
+                if (alreadyDone) return ActionTargetResult.AlreadyCompleted;
+
+                _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
+                {
+                    UserId = userId,
+                    MatrixModuleId = matrixModuleId,
+                    CompletedDate = PolandTime.Today
+                });
                 _dbContext.SaveChanges();
                 return ActionTargetResult.Success;
             }
 
-            var userMatrixIds = _dbContext.UserMatrixAssignments
-                .Where(x => x.UserId == userId)
-                .Select(x => x.MatrixId)
-                .ToList();
+            var direct = _dbContext.UserModuleAssignments
+                .FirstOrDefault(x => x.Id == assignmentId && x.UserId == userId);
 
-            var mm = _dbContext.MatrixModules
-                .FirstOrDefault(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId));
+            if (direct is null) return ActionTargetResult.NotFound;
+            if (direct.IsCompleted) return ActionTargetResult.AlreadyCompleted;
 
-            if (mm is null) return ActionTargetResult.NotFound;
-
-            var alreadyDone = _dbContext.UserMatrixModuleCompletions
-                .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
-
-            if (alreadyDone) return ActionTargetResult.AlreadyCompleted;
-
-            _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
-            {
-                UserId = userId,
-                MatrixModuleId = mm.Id,
-                CompletedDate = PolandTime.Today
-            });
+            direct.IsCompleted = true;
             _dbContext.SaveChanges();
-
             return ActionTargetResult.Success;
         }
     }

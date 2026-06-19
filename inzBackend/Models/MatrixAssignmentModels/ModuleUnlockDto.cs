@@ -10,5 +10,6 @@
         public DateOnly UnlockDate { get; set; }
         public bool IsUnlocked { get; set; }
         public bool IsCompleted { get; set; }
+        public int MatrixModuleId { get; set; }
     }
 }

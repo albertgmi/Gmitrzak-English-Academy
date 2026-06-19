@@ -49,7 +49,7 @@ namespace inzBackend.Controllers
         public ActionResult<ShopPurchaseResultDto> PurchaseHomeworkSkip([FromBody] SkipHomeworkRequestDto request)
         {
             var userId = _userContextService.GetUserId!.Value;
-            var result = _shopActionService.SkipHomework(userId, request.ModuleId);
+            var result = _shopActionService.SkipHomework(userId, request.AssignmentId);
             return Ok(result);
         }
     }
