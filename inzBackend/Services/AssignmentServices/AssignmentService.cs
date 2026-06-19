@@ -211,6 +211,7 @@ namespace inzBackend.Services.AssignmentServices
 
             return new ModuleUnlockDto
             {
+                MatrixModuleId = mm.Id,
                 ModuleId = mm.ModuleId,
                 ModuleName = mm.Module.Name,
                 ModuleDescription = mm.Module.Description,

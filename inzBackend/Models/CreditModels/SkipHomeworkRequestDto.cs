@@ -3,6 +3,6 @@
     public class SkipHomeworkRequestDto
     {
         public int ShopItemId { get; set; }
-        public int ModuleId { get; set; }
+        public int AssignmentId { get; set; }
     }
 }
