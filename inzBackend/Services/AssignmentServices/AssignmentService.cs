@@ -171,10 +171,12 @@ namespace inzBackend.Services.AssignmentServices
 
         private MatrixAssignmentDto mapToMatrixAssignmentDto(UserMatrixAssignment x)
         {
-            var completedModuleIds = _dbContext.UserModuleAssignments
-                .Where(uma => uma.UserId == x.UserId && uma.IsCompleted)
-                .Select(uma => uma.ModuleId)
-                .ToList();
+            var matrixModuleIds = x.Matrix.MatrixModules.Select(mm => mm.Id).ToList();
+
+            var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
+                .Where(c => c.UserId == x.UserId && matrixModuleIds.Contains(c.MatrixModuleId))
+                .Select(c => c.MatrixModuleId)
+                .ToHashSet();
 
             var modules = x.Matrix.MatrixModules
                 .OrderBy(mm => mm.WeekNumber)
@@ -183,7 +185,7 @@ namespace inzBackend.Services.AssignmentServices
                     mm,
                     x.StartDate,
                     x.Matrix.RefreshIntervalDays,
-                    completedModuleIds.Contains(mm.ModuleId)
+                    completedMatrixModuleIds.Contains(mm.Id)
                 ))
                 .ToList();
 
