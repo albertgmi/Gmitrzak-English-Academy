@@ -19,14 +19,14 @@ namespace inzBackend.Controllers
 
 
         [HttpGet("matrix")]
-        [Authorize(Roles = "Admin, User")]
+        [Authorize(Roles = "Admin")]
         public ActionResult<List<MatrixAssignmentDto>> GetAllMatrixAssignments()
         {
             return _assignmentService.getAllMatrixAssignments();
         }
 
         [HttpGet("matrix/user/{userId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, User")]
         public ActionResult<List<MatrixAssignmentDto>> GetMatrixAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getMatrixAssignmentsByUser(userId);
@@ -49,14 +49,14 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("module")]
-        [Authorize(Roles = "Admin, User")]
+        [Authorize(Roles = "Admin")]
         public ActionResult<List<ModuleAssignmentDto>> GetAllModuleAssignments()
         {
             return _assignmentService.getAllModuleAssignments();
         }
 
         [HttpGet("module/user/{userId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, User")]
         public ActionResult<List<ModuleAssignmentDto>> GetModuleAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.getModuleAssignmentsByUser(userId);
