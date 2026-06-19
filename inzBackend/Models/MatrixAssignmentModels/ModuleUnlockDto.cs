@@ -11,5 +11,6 @@
         public bool IsUnlocked { get; set; }
         public bool IsCompleted { get; set; }
         public int MatrixModuleId { get; set; }
+        public DateOnly Deadline { get; set; }
     }
 }

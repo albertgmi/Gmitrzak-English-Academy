@@ -29,7 +29,6 @@ namespace inzBackend.Services.StudentCourseServices
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;
-
             var currentWeekMonday = getWeekMonday(today);
 
             var assignments = _dbContext.UserMatrixAssignments
@@ -44,9 +43,13 @@ namespace inzBackend.Services.StudentCourseServices
                 .Select(x => x.MatrixModuleId)
                 .ToList();
 
+            var dueDateOverrides = _dbContext.UserMatrixModuleDueDateOverrides
+                .Where(x => x.UserId == userId)
+                .ToDictionary(x => x.MatrixModuleId, x => x.NewDeadline);
+
             return assignments
                 .Select(a => mapToStudentAssignmentDto(
-                    a, completedMatrixModuleIds, today, currentWeekMonday))
+                    a, completedMatrixModuleIds, dueDateOverrides, today, currentWeekMonday))
                 .ToList();
         }
 
@@ -67,14 +70,14 @@ namespace inzBackend.Services.StudentCourseServices
                 ?? throw new NotFoundException("Matrix module not found");
 
             var matrixAssignment = _dbContext.UserMatrixAssignments
-                .FirstOrDefault(x => x.UserId == userId
-                                  && x.MatrixId == matrixModule.MatrixId);
+                .FirstOrDefault(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
+
+            var deadlineOverride = getDueDateOverride(userId, matrixModuleId);
 
             var deadline = matrixAssignment is not null
-                ? calculateDeadline(
-                    matrixAssignment.StartDate,
-                    matrixModule.WeekNumber,
-                    matrixModule.DayOfWeek)
+                ? MatrixModuleDateHelper.GetEffectiveDeadline(
+                    matrixAssignment.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek,
+                    matrixAssignment.Matrix.RefreshIntervalDays, deadlineOverride)
                 : today;
 
             var (_, _, canComplete, blockReason) =
@@ -269,13 +272,18 @@ namespace inzBackend.Services.StudentCourseServices
             if (matrixModule is null) return null;
 
             var matrixAssignment = _dbContext.UserMatrixAssignments
-                .FirstOrDefault(x => x.UserId == userId
-                                  && x.MatrixId == matrixModule.MatrixId);
+                .FirstOrDefault(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
 
             if (matrixAssignment is null) return null;
 
-            var deadline = calculateDeadline(matrixAssignment.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek);
-            var unlockDate = getWeekMonday(deadline);
+            var originalDeadline = MatrixModuleDateHelper.ComputeDeadline(
+                matrixAssignment.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek,
+                matrixAssignment.Matrix.RefreshIntervalDays);
+
+            var deadlineOverride = getDueDateOverride(userId, matrixModule.Id);
+            var effectiveDeadline = deadlineOverride ?? originalDeadline;
+
+            var unlockDate = getWeekMonday(originalDeadline);
             var isCompleted = _dbContext.UserMatrixModuleCompletions
                 .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
 
@@ -287,10 +295,10 @@ namespace inzBackend.Services.StudentCourseServices
                 weekNumber: matrixModule.WeekNumber,
                 dayOfWeek: matrixModule.DayOfWeek,
                 unlockDate: unlockDate,
-                deadline: deadline,
+                deadline: effectiveDeadline,
                 isUnlocked: today >= unlockDate,
                 isCompleted: isCompleted,
-                isOverdue: today > deadline && !isCompleted,
+                isOverdue: today > effectiveDeadline && !isCompleted,
                 userId: userId,
                 today: today,
                 url: matrixModule.Module?.TheaterItem?.Url,
@@ -332,8 +340,7 @@ namespace inzBackend.Services.StudentCourseServices
             var matrixModule = _dbContext.MatrixModules
                 .Include(x => x.Module)
                 .Include(x => x.Matrix)
-                .FirstOrDefault(x => x.ModuleId == moduleId
-                                  && userMatrixIds.Contains(x.MatrixId))
+                .FirstOrDefault(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId))
                 ?? throw new NotFoundException("Module assignment not found");
 
             var alreadyCompleted = _dbContext.UserMatrixModuleCompletions
@@ -344,10 +351,10 @@ namespace inzBackend.Services.StudentCourseServices
             var ma = _dbContext.UserMatrixAssignments
                 .First(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
 
-            var deadline2 = calculateDeadline(
-                ma.StartDate,
-                matrixModule.WeekNumber,
-                matrixModule.DayOfWeek);
+            var deadlineOverride2 = getDueDateOverride(userId, matrixModule.Id);
+            var deadline2 = MatrixModuleDateHelper.GetEffectiveDeadline(
+                ma.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek,
+                ma.Matrix.RefreshIntervalDays, deadlineOverride2);
 
             var (_, _, mCan, mReason) =
                 getActivityStatus(userId, moduleId, matrixModule.Module.Category, today, deadline2);
@@ -368,7 +375,8 @@ namespace inzBackend.Services.StudentCourseServices
         }
 
         private StudentAssignmentDto mapToStudentAssignmentDto(UserMatrixAssignment assignment,
-            List<int> completedMatrixModuleIds,DateOnly today, DateOnly currentWeekMonday)
+            List<int> completedMatrixModuleIds, Dictionary<int, DateOnly> dueDateOverrides,
+            DateOnly today, DateOnly currentWeekMonday)
         {
             return new StudentAssignmentDto
             {
@@ -380,7 +388,7 @@ namespace inzBackend.Services.StudentCourseServices
                     .OrderBy(mm => mm.WeekNumber)
                     .ThenBy(mm => mm.DayOfWeek)
                     .Select((mm, index) => mapToStudentModuleDto(
-                        mm, assignment, completedMatrixModuleIds,
+                        mm, assignment, completedMatrixModuleIds, dueDateOverrides,
                         today, currentWeekMonday, index + 1))
                     .Where(dto => dto != null)
                     .ToList()!
@@ -388,15 +396,18 @@ namespace inzBackend.Services.StudentCourseServices
         }
 
         private StudentModuleDto? mapToStudentModuleDto(MatrixModule mm, UserMatrixAssignment assignment,
-            List<int> completedMatrixModuleIds, DateOnly today, DateOnly currentWeekMonday, int order)
+            List<int> completedMatrixModuleIds, Dictionary<int, DateOnly> dueDateOverrides,
+            DateOnly today, DateOnly currentWeekMonday, int order)
         {
-            var deadline = calculateDeadline(assignment.StartDate, mm.WeekNumber, mm.DayOfWeek);
-            var unlockDate = getWeekMonday(deadline);
+            var originalDeadline = MatrixModuleDateHelper.ComputeDeadline(
+                assignment.StartDate, mm.WeekNumber, mm.DayOfWeek, assignment.Matrix.RefreshIntervalDays);
+
+            var effectiveDeadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : originalDeadline;
+            var unlockDate = getWeekMonday(originalDeadline);
 
             var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
-            var isOverdue = today > deadline && !isCompleted;
-            var deadlineWeekMonday = unlockDate;
-            var isFutureWeek = deadlineWeekMonday > currentWeekMonday;
+            var isOverdue = today > effectiveDeadline && !isCompleted;
+            var isFutureWeek = unlockDate > currentWeekMonday;
 
             var userId = _userContextService.GetUserId!.Value;
             var module = _dbContext.Modules
@@ -412,7 +423,7 @@ namespace inzBackend.Services.StudentCourseServices
                 weekNumber: mm.WeekNumber,
                 dayOfWeek: mm.DayOfWeek,
                 unlockDate: unlockDate,
-                deadline: deadline,
+                deadline: effectiveDeadline,
                 isUnlocked: !isFutureWeek || isOverdue,
                 isCompleted: isCompleted,
                 isOverdue: isOverdue,
@@ -423,10 +434,12 @@ namespace inzBackend.Services.StudentCourseServices
             );
         }
 
-        private static DateOnly calculateDeadline(DateOnly startDate, int weekNumber, int dayOfWeek)
+        private DateOnly? getDueDateOverride(int userId, int matrixModuleId)
         {
-            var monday = getWeekMonday(startDate);
-            return monday.AddDays((weekNumber - 1) * 7 + (dayOfWeek - 1));
+            return _dbContext.UserMatrixModuleDueDateOverrides
+                .Where(x => x.UserId == userId && x.MatrixModuleId == matrixModuleId)
+                .Select(x => (DateOnly?)x.NewDeadline)
+                .FirstOrDefault();
         }
 
         private static DateOnly getWeekMonday(DateOnly date)

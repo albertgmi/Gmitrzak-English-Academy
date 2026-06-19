@@ -214,6 +214,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .Select(x => x.MatrixModuleId)
                 .ToHashSet();
 
+            var dueDateOverrides = _dbContext.UserMatrixModuleDueDateOverrides
+                .Where(x => x.UserId == studentUserId)
+                .ToDictionary(x => x.MatrixModuleId, x => x.NewDeadline);
+
             var matrixAssignments = _dbContext.UserMatrixAssignments
                 .Include(x => x.Matrix)
                     .ThenInclude(m => m.MatrixModules)
@@ -225,9 +229,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             {
                 foreach (var mm in ma.Matrix.MatrixModules)
                 {
-                    var unlockDate = ma.StartDate
-                        .AddDays((mm.WeekNumber - 1) * ma.Matrix.RefreshIntervalDays)
-                        .AddDays(mm.DayOfWeek - 1);
+                    var unlockDate = MatrixModuleDateHelper.ComputeDeadline(
+                        ma.StartDate, mm.WeekNumber, mm.DayOfWeek, ma.Matrix.RefreshIntervalDays);
 
                     if (unlockDate > weekEnd) continue;
 
@@ -235,14 +238,16 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
                     if (unlockDate < weekStart && isCompleted) continue;
 
+                    var deadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : unlockDate;
+
                     result.Add(new HomeworkItemDto
                     {
                         Id = -mm.Id,
                         ModuleName = $"{mm.Module.Name} (Matrix: {ma.Matrix.Name})",
                         ModuleDescription = mm.Module.Description ?? string.Empty,
-                        DueDate = unlockDate,
+                        DueDate = deadline,
                         IsCompleted = isCompleted,
-                        IsOverdue = unlockDate < today && !isCompleted,
+                        IsOverdue = deadline < today && !isCompleted,
                         IsFromMatrix = true
                     });
                 }
