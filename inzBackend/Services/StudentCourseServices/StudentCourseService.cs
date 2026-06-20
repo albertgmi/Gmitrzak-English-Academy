@@ -129,18 +129,10 @@ namespace inzBackend.Services.StudentCourseServices
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
 
-            var matrixModuleIds = _dbContext.UserMatrixAssignments
-                .Where(x => x.UserId == userId)
-                .SelectMany(x => x.Matrix.MatrixModules)
-                .Select(x => x.ModuleId)
-                .ToList();
-
             var assignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module).ThenInclude(m => m.Presentation)
                 .Include(x => x.Module).ThenInclude(x => x.TheaterItem)
-                .Where(x => x.UserId == userId
-                         && !matrixModuleIds.Contains(x.ModuleId)
-                         && !x.IsCompleted)
+                .Where(x => x.UserId == userId && !x.IsCompleted)
                 .ToList();
 
             return assignments.Select((x, index) => buildModuleDto(
