@@ -7,5 +7,6 @@ namespace inzBackend.Services.ShopActionServices
         ShopPurchaseResultDto SkipHomework(int moduleId);
         ShopPurchaseResultDto ExtendHomework(int assignmentId, DateOnly newDueDate);
         ShopPurchaseResultDto PurchasePointsBoost();
+        ShopPurchaseResultDto PurchaseStreakShield();
     }
 }

@@ -66,5 +66,12 @@ namespace inzBackend.Controllers
             var result = _shopActionService.PurchasePointsBoost();
             return Ok(result);
         }
+
+        [HttpPost("shop/action/streak-shield")]
+        public ActionResult<ShopPurchaseResultDto> PurchaseStreakShield()
+        {
+            var result = _shopActionService.PurchaseStreakShield();
+            return Ok(result);
+        }
     }
 }

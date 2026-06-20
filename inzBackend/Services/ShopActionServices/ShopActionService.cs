@@ -1,4 +1,5 @@
 ﻿using inzBackend.Entities.Assignments;
+using inzBackend.Entities.Gamification;
 using inzBackend.Enums;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
@@ -181,6 +182,32 @@ namespace inzBackend.Services.ShopActionServices
 
             _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
             purchaseResult.Message = $"Double points active until {user.DoublePointsExpiresAt:dd.MM.yyyy}!";
+            return purchaseResult;
+        }
+
+        public ShopPurchaseResultDto PurchaseStreakShield()
+        {
+            var userId = _userContextService.GetUserId!.Value;
+
+            var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "Streak Shield" && x.IsActive);
+            if (shopItem is null)
+                return new ShopPurchaseResultDto { Success = false, Message = "Item 'Streak Shield' is currently unavailable." };
+
+            var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
+            if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
+                return purchaseResult;
+
+            _dbContext.UserStreakShields.Add(new UserStreakShield
+            {
+                UserId = userId,
+                IsUsed = false
+            });
+            _dbContext.SaveChanges();
+
+            _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
+
+            var availableCount = _dbContext.UserStreakShields.Count(x => x.UserId == userId && !x.IsUsed);
+            purchaseResult.Message = $"Streak Shield purchased! You have {availableCount} available.";
             return purchaseResult;
         }
 
