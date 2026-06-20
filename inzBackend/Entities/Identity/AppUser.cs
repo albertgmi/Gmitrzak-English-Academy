@@ -13,6 +13,7 @@ namespace inzBackend.Entities.Identity
         public string PasswordHash { get; set; } = string.Empty;
         public UserRole Role { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateOnly? DoublePointsExpiresAt { get; set; }
         public IEnumerable<FlashcardStudyLog> FlashcardStudyLogs { get; set; } = new List<FlashcardStudyLog>();
         public Profile Profile { get; set; }
         public IEnumerable<Attendance> Attendances { get; set; } = new List<Attendance>();
