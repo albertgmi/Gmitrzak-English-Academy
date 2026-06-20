@@ -161,7 +161,7 @@ namespace inzBackend.Services.ShopActionServices
         {
             var userId = _userContextService.GetUserId!.Value;
 
-            var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "Points Boost" && x.IsActive);
+            var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "2× Points Boost" && x.IsActive);
 
             var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
             if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
