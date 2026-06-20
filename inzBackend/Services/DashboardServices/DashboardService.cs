@@ -19,7 +19,7 @@ namespace inzBackend.Services.DashboardServices
             _userContextService = userContextService;
         }
 
-        public AdminDashboardDto getAdminDashboard()
+        public AdminDashboardDto GetAdminDashboard()
         {
             var today = PolandTime.Today;
             var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
@@ -53,8 +53,6 @@ namespace inzBackend.Services.DashboardServices
                     AvatarUrl = x.User.Profile.AvatarUrl
                 })
                 .ToList();
-
-            //todo dodac filtr ktory wyswietla tylko upcomingi z kolejnego tygodnia nie wiecej
 
             var upcomingAssignmentsQuery = _dbContext.UserModuleAssignments
                 .Where(x => !x.IsCompleted && x.DueDate >= today);
@@ -111,7 +109,7 @@ namespace inzBackend.Services.DashboardServices
             };
         }
 
-        public StudentDashboardDto getStudentDashboard()
+        public StudentDashboardDto GetStudentDashboard()
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;

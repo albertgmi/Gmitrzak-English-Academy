@@ -19,39 +19,39 @@ namespace inzBackend.Controllers
         [HttpGet("users")]
         public ActionResult<List<AppUserDto>> GetAllUsers()
         {
-            return Ok(_userService.getAllUsers());
+            return Ok(_userService.GetAllUsers());
         }
 
         [HttpGet("users/inactive")]
         public ActionResult<List<AppUserDto>> GetAllInactiveUsers()
         {
-            return Ok(_userService.getAllInactiveUsers());
+            return Ok(_userService.GetAllInactiveUsers());
         }
         [HttpGet]
         [Authorize(Roles = "User")]
         public ActionResult<AppUserDto> GetUserById()
         {
-            return Ok(_userService.getUserById());
+            return Ok(_userService.GetUserById());
         }
 
         [HttpPut("update/{userId}")]
         public ActionResult UpdateUser([FromBody] UpdateUserRequest request, [FromRoute] int userId)
         {
-            _userService.updateUser(request, userId);
+            _userService.UpdateUser(request, userId);
             return Ok();
         }
 
         [HttpDelete("delete/{userId}")]
         public ActionResult DeleteUser([FromRoute] int userId)
         {
-            _userService.deleteUser(userId);
+            _userService.DeleteUser(userId);
             return Ok();
         }
 
         [HttpDelete("delete")]
         public ActionResult DeleteManyUsers([FromQuery] List<int> userIds)
         {
-            _userService.deleteManyUsers(userIds);
+            _userService.DeleteManyUsers(userIds);
             return Ok();
         }
     }

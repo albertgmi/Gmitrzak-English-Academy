@@ -4,6 +4,6 @@ namespace inzBackend.Services.SectionActivityServices
 {
     public interface ISectionActivityService
     {
-        void logActivity(LogActivityRequest request);
+        void LogActivity(LogActivityRequest request);
     }
 }

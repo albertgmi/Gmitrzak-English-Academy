@@ -24,7 +24,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             _lessonPanelService = lessonPanelService;
         }
 
-        public List<SentenceDto> getAllSentences()
+        public List<SentenceDto> GetAllSentences()
         {
             var userId = _userContextService.GetUserId!.Value;
 
@@ -49,7 +49,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             return allSentences;
         }
 
-        public ModuleSentenceSessionDto getModuleSentences(int moduleId)
+        public ModuleSentenceSessionDto GetModuleSentences(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
 
@@ -97,7 +97,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             };
         }
 
-        public void reviewSentence(int id, ReviewSentenceRequest request)
+        public void ReviewSentence(int id, ReviewSentenceRequest request)
         {
             var userId = _userContextService.GetUserId;
 
@@ -130,7 +130,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             }
 
             sentence.IsReviewed = true;
-            _lessonPanelService.addActivityPoints((int)userId, 2, "Sentence reviewed");
+            _lessonPanelService.AddActivityPoints((int)userId, 2, "Sentence reviewed");
             sentence.IsLeech = sentence.EaseFactor <= 150;
 
             _dbContext.SaveChanges();

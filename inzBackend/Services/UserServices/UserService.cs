@@ -37,7 +37,7 @@ namespace inzBackend.Services.UserServices
             _lessonPanelService = lessonPanelService;
         }
 
-        public AppUserDto registerUser(RegisterUserRequest request)
+        public AppUserDto RegisterUser(RegisterUserRequest request)
         {
             var newUser = new AppUser()
             {
@@ -56,7 +56,7 @@ namespace inzBackend.Services.UserServices
             return _mapper.Map<AppUserDto>(newUser);
         }
 
-        public string login(LoginUserRequest request)
+        public string Login(LoginUserRequest request)
         {
             var user = _dbContext
                 .Users
@@ -110,7 +110,7 @@ namespace inzBackend.Services.UserServices
                     .Distinct()
                     .ToHashSet();
 
-                tryConsumeStreakShield(user.Id, recentLoginDates, today);
+                TryConsumeStreakShield(user.Id, recentLoginDates, today);
 
                 var shieldedDates = _dbContext.UserStreakShields
                     .Where(x => x.UserId == user.Id && x.IsUsed && x.ProtectedDate.HasValue)
@@ -121,7 +121,7 @@ namespace inzBackend.Services.UserServices
 
                 var pointsToAward = Math.Ceiling((double)currentStreak / 2);
 
-                _lessonPanelService.addActivityPoints(user.Id, (int)pointsToAward, $"Logging streak - {currentStreak} days in a row!");
+                _lessonPanelService.AddActivityPoints(user.Id, (int)pointsToAward, $"Logging streak - {currentStreak} days in a row!");
 
                 _dbContext.SaveChanges();
             }
@@ -129,17 +129,17 @@ namespace inzBackend.Services.UserServices
             return tokenhandler.WriteToken(token);
         }
 
-        public List<AppUserDto> getAllUsers()
+        public List<AppUserDto> GetAllUsers()
         {
-            return getUsers(true);
+            return GetUsers(true);
         }
 
-        public List<AppUserDto> getAllInactiveUsers()
+        public List<AppUserDto> GetAllInactiveUsers()
         {
-            return getUsers(false);
+            return GetUsers(false);
         }
 
-        public AppUserDto getUserById()
+        public AppUserDto GetUserById()
         {
             var userId = _userContextService.GetUserId;
 
@@ -150,7 +150,7 @@ namespace inzBackend.Services.UserServices
             return _mapper.Map<AppUserDto>(user);
         }
 
-        public void updateUser(UpdateUserRequest request, int userId)
+        public void UpdateUser(UpdateUserRequest request, int userId)
         {
             var user = _dbContext
                 .Users
@@ -169,7 +169,7 @@ namespace inzBackend.Services.UserServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteUser(int userId)
+        public void DeleteUser(int userId)
         {
             var user = _dbContext
                 .Users
@@ -180,7 +180,7 @@ namespace inzBackend.Services.UserServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteManyUsers(List<int> userIds)
+        public void DeleteManyUsers(List<int> userIds)
         {
             var usersToDelete = _dbContext.Users
                 .Where(u => userIds.Contains(u.Id))
@@ -193,7 +193,7 @@ namespace inzBackend.Services.UserServices
             _dbContext.SaveChanges();
         }
 
-        private List<AppUserDto> getUsers(bool isActive)
+        private List<AppUserDto> GetUsers(bool isActive)
         {
             var users = _dbContext.Users
                 .Where(u => u.IsActive == isActive)
@@ -224,7 +224,7 @@ namespace inzBackend.Services.UserServices
             return streak;
         }
 
-        private void tryConsumeStreakShield(int userId, HashSet<DateOnly> loginDates, DateOnly today)
+        private void TryConsumeStreakShield(int userId, HashSet<DateOnly> loginDates, DateOnly today)
         {
             var yesterday = today.AddDays(-1);
             if (loginDates.Contains(yesterday)) return;

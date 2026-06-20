@@ -32,19 +32,19 @@ namespace inzBackend.Services.ShopActionServices
             if (shopItem is null)
                 return new ShopPurchaseResultDto { Success = false, Message = "Item 'Homework Skip' is currently unavailable." };
 
-            var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
+            var purchaseResult = _creditService.PurchaseItem(userId, shopItem.Id);
             if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
                 return purchaseResult;
 
             var actionResult = CompleteModuleForUser(userId, assignmentId);
             if (actionResult == ActionTargetResult.Success)
             {
-                _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
+                _creditService.UpdatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
                 purchaseResult.Message = "Homework skipped successfully!";
                 return purchaseResult;
             }
 
-            _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Cancelled");
+            _creditService.UpdatePurchaseStatus(purchaseResult.PurchaseId.Value, "Cancelled");
             string errorMessage = actionResult == ActionTargetResult.AlreadyCompleted
                 ? "This homework is already completed or skipped!"
                 : "Could not find this homework assigned to you.";
@@ -108,7 +108,7 @@ namespace inzBackend.Services.ShopActionServices
                         Message = $"New due date must be between {minDate:dd.MM.yyyy} and {maxDate:dd.MM.yyyy}."
                     };
 
-                var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
+                var purchaseResult = _creditService.PurchaseItem(userId, shopItem.Id);
                 if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
                     return purchaseResult;
 
@@ -123,7 +123,7 @@ namespace inzBackend.Services.ShopActionServices
                     });
 
                 _dbContext.SaveChanges();
-                _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
+                _creditService.UpdatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
                 purchaseResult.Message = $"Deadline extended to {newDueDate:dd.MM.yyyy}!";
                 return purchaseResult;
             }
@@ -148,12 +148,12 @@ namespace inzBackend.Services.ShopActionServices
                     Message = $"New due date must be between {minD:dd.MM.yyyy} and {maxD:dd.MM.yyyy}."
                 };
 
-            var result = _creditService.purchaseItem(userId, shopItem.Id);
+            var result = _creditService.PurchaseItem(userId, shopItem.Id);
             if (!result.Success || !result.PurchaseId.HasValue) return result;
 
             assignment.DueDate = newDueDate;
             _dbContext.SaveChanges();
-            _creditService.updatePurchaseStatus(result.PurchaseId.Value, "Fulfilled");
+            _creditService.UpdatePurchaseStatus(result.PurchaseId.Value, "Fulfilled");
             result.Message = $"Deadline extended to {newDueDate:dd.MM.yyyy}!";
             return result;
         }
@@ -164,7 +164,7 @@ namespace inzBackend.Services.ShopActionServices
 
             var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "2× Points Boost" && x.IsActive);
 
-            var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
+            var purchaseResult = _creditService.PurchaseItem(userId, shopItem.Id);
             if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
                 return purchaseResult;
 
@@ -180,7 +180,7 @@ namespace inzBackend.Services.ShopActionServices
 
             _dbContext.SaveChanges();
 
-            _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
+            _creditService.UpdatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
             purchaseResult.Message = $"Double points active until {user.DoublePointsExpiresAt:dd.MM.yyyy}!";
             return purchaseResult;
         }
@@ -193,7 +193,7 @@ namespace inzBackend.Services.ShopActionServices
             if (shopItem is null)
                 return new ShopPurchaseResultDto { Success = false, Message = "Item 'Streak Shield' is currently unavailable." };
 
-            var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
+            var purchaseResult = _creditService.PurchaseItem(userId, shopItem.Id);
             if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
                 return purchaseResult;
 
@@ -204,7 +204,7 @@ namespace inzBackend.Services.ShopActionServices
             });
             _dbContext.SaveChanges();
 
-            _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
+            _creditService.UpdatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
 
             var availableCount = _dbContext.UserStreakShields.Count(x => x.UserId == userId && !x.IsUsed);
             purchaseResult.Message = $"Streak Shield purchased! You have {availableCount} available.";

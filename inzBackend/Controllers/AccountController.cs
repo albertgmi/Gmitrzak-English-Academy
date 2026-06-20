@@ -19,7 +19,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<AppUserDto> Register([FromBody] RegisterUserRequest request)
         {
-            var user = _userService.registerUser(request);
+            var user = _userService.RegisterUser(request);
             return user;
         }
 
@@ -27,7 +27,7 @@ namespace inzBackend.Controllers
         [AllowAnonymous]
         public ActionResult<string> Login([FromBody] LoginUserRequest request)
         {
-            string jwtToken = _userService.login(request);
+            string jwtToken = _userService.Login(request);
             return jwtToken;
         }
     }

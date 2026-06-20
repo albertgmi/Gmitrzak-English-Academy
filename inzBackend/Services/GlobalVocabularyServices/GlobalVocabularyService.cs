@@ -25,7 +25,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             _aiTranslationService = aiTranslationService;
         }
 
-        public List<GlobalVocabularyDto> getAllVocabulary()
+        public List<GlobalVocabularyDto> GetAllVocabulary()
         {
             var vocabularies = _dbContext
                 .Vocabulary
@@ -34,7 +34,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             return _mapper.Map<List<GlobalVocabularyDto>>(vocabularies);
         }
 
-        public Vocabulary createNewVocabulary(VocabularyAddingRequest request)
+        public Vocabulary CreateNewVocabulary(VocabularyAddingRequest request)
         {
             var vocabulary = new Vocabulary
             {
@@ -49,7 +49,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             return vocabulary;
         }
 
-        public void updateVocabulary(VocabularyUpdateRequest request, int vocabularyId)
+        public void UpdateVocabulary(VocabularyUpdateRequest request, int vocabularyId)
         {
             var vocabulary = _dbContext
                 .Vocabulary
@@ -65,7 +65,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             _dbContext.SaveChanges();
         }
 
-        public async Task<SearchVocabularyResult> searchVocabulary(string query, int studentUserId)
+        public async Task<SearchVocabularyResult> SearchVocabulary(string query, int studentUserId)
         {
             var q = query.ToLower().Trim();
 
@@ -104,7 +104,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             };
         }
 
-        public GlobalVocabularyDto addTranslation(AddTranslationRequest request)
+        public GlobalVocabularyDto AddTranslation(AddTranslationRequest request)
         {
             var existing = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower() == request.Front.ToLower());
@@ -125,7 +125,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             return _mapper.Map<GlobalVocabularyDto>(vocab);
         }
 
-        public void assignVocabularyToStudent(AssignVocabularyToStudentRequest request)
+        public void AssignVocabularyToStudent(AssignVocabularyToStudentRequest request)
         {
             var vocab = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Id == request.VocabularyId);
@@ -154,7 +154,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
             _dbContext.SaveChanges();
         }
 
-        public void assignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request)
+        public void AssignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request)
         {
             if (request.VocabularyIds == null || !request.VocabularyIds.Any())
                 return;

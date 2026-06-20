@@ -7,21 +7,21 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
 {
     public interface ILessonPanelService
     {
-        AgendaDto getAgenda(int studentUserId);
-        void updateAgenda(int studentUserId, UpdateAgendaRequest request);
-        List<LessonGradeDto> getGrades(int studentUserId);
-        ActivityPointsLessonSummaryDto getActivityPoints(int studentUserId);
-        void addActivityPoints(int studentUserId, int points, string reason);
-        LessonFlashcardSummaryDto getFlashcardSummary(int studentUserId);
-        StudentStudyTimeDto getStudyTime(int studentUserId);
-        LessonLastWeekDto getLastWeek(int studentUserId);
-        LessonStatsDto getStats(int studentUserId);
-        List<AttendanceDto> getAttendance(int studentId);
-        AttendanceDto addAttendance(CreateAttendanceDto dto);
-        bool deleteAttendance(int id);
-        List<AttendanceDto> getAttendanceHistory(int studentId);
-        List<FlashcardDto> getAllFlashcardsForUser(int userId);
-        void updateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
-        ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
+        AgendaDto GetAgenda(int studentUserId);
+        void UpdateAgenda(int studentUserId, UpdateAgendaRequest request);
+        List<LessonGradeDto> GetGrades(int studentUserId);
+        ActivityPointsLessonSummaryDto GetActivityPoints(int studentUserId);
+        void AddActivityPoints(int studentUserId, int points, string reason);
+        LessonFlashcardSummaryDto GetFlashcardSummary(int studentUserId);
+        StudentStudyTimeDto GetStudyTime(int studentUserId);
+        LessonLastWeekDto GetLastWeek(int studentUserId);
+        LessonStatsDto GetStats(int studentUserId);
+        List<AttendanceDto> GetAttendance(int studentId);
+        AttendanceDto AddAttendance(CreateAttendanceDto dto);
+        bool DeleteAttendance(int id);
+        List<AttendanceDto> GetAttendanceHistory(int studentId);
+        List<FlashcardDto> GetAllFlashcardsForUser(int userId);
+        void UpdateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
+        ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
     }
 }

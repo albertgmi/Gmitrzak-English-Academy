@@ -1,18 +1,19 @@
-﻿using inzBackend.Entities.LearningMaterials;
-using inzBackend.Exceptions;
-using inzBackend.Models.AdminLearningModels;
-using inzBackend.Models;
-using inzBackend.Services.UserServices;
-using inzBackend.Enums;
-using Microsoft.EntityFrameworkCore;
-using AutoMapper;
-using inzBackend.Models.StudentLearningModels.VocabularyModels;
-using inzBackend.Helpers;
-using inzBackend.Models.StudentLearningModels.MemoryModels;
-using inzBackend.Entities.SpacedRepetition;
+﻿using AutoMapper;
 using inzBackend.Entities.Administration;
 using inzBackend.Entities.Assignments;
 using inzBackend.Entities.Gamification;
+using inzBackend.Entities.LearningMaterials;
+using inzBackend.Entities.SpacedRepetition;
+using inzBackend.Enums;
+using inzBackend.Exceptions;
+using inzBackend.Helpers;
+using inzBackend.Models;
+using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AiSpellCheckingModels;
+using inzBackend.Models.StudentLearningModels.MemoryModels;
+using inzBackend.Models.StudentLearningModels.VocabularyModels;
+using inzBackend.Services.UserServices;
+using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {
@@ -31,7 +32,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _mapper = mapper;
         }
 
-        public SearchGlobalFlashcardResult searchGlobalFlashcard(string query, int studentUserId)
+        public SearchGlobalFlashcardResult SearchGlobalFlashcard(string query, int studentUserId)
         {
             var q = query.ToLower().Trim();
 
@@ -64,7 +65,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             };
         }
 
-        public VocabularyDto addTranslation(AddTranslationRequest request)
+        public VocabularyDto AddTranslation(AddTranslationRequest request)
         {
             var existing = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower() == request.Front.ToLower());
@@ -91,7 +92,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             return _mapper.Map<VocabularyDto>(vocabulary);
         }
 
-        public void assignFlashcardToStudent(AssignFlashcardToStudentRequest request)
+        public void AssignFlashcardToStudent(AssignFlashcardToStudentRequest request)
         {
             var vocabulary = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Id == request.GlobalFlashcardId);
@@ -120,7 +121,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void addSentence(AddSentenceRequest request)
+        public void AddSentence(AddSentenceRequest request)
         {
             var normalizedContent = request.Content.Trim().ToLower();
 
@@ -141,9 +142,9 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void addMemory(AddMemoryRequest request)
+        public void AddMemory(AddMemoryRequest request)
         {
-            var generatedContent = generatePrompts(request.OptionA, request.OptionB, request.Category);
+            var generatedContent = GeneratePrompts(request.OptionA, request.OptionB, request.Category);
 
             _dbContext.Memories.Add(new Memory
             {
@@ -157,7 +158,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void addPronunciation(AddPronunciationRequest request)
+        public void AddPronunciation(AddPronunciationRequest request)
         {
             var alreadyExists = _dbContext.PronunciationEntries
                 .Any(x => x.UserId == request.StudentUserId
@@ -180,10 +181,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
 
-            refreshSession(request.StudentUserId);
+            RefreshSession(request.StudentUserId);
         }
 
-        public List<HomeworkItemDto> getHomeworkForWeek(int studentUserId)
+        public List<HomeworkItemDto> GetHomeworkForWeek(int studentUserId)
         {
             var today = PolandTime.Today;
             var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
@@ -256,7 +257,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             return result.OrderByDescending(x => x.IsOverdue).ThenBy(x => x.DueDate).ToList();
         }
 
-        public void checkHomework(int assignmentId)
+        public void CheckHomework(int assignmentId)
         {
             if (assignmentId < 0)
             {
@@ -289,7 +290,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             }
         }
 
-        public void uncheckHomework(int assignmentId)
+        public void UncheckHomework(int assignmentId)
         {
             if (assignmentId < 0)
             {
@@ -318,9 +319,9 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             }
         }
 
-        public List<PronunciationTestItemDto> getPronunciationList(int studentUserId)
+        public List<PronunciationTestItemDto> GetPronunciationList(int studentUserId)
         {
-            refreshSession(studentUserId);
+            RefreshSession(studentUserId);
 
             return _dbContext.PronunciationEntries
                 .Where(x => x.UserId == studentUserId
@@ -338,7 +339,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ToList();
         }
 
-        public List<PronunciationTestItemDto> getCorrectEntries(int studentUserId)
+        public List<PronunciationTestItemDto> GetCorrectEntries(int studentUserId)
         {
             var today = PolandTime.Today;
 
@@ -361,7 +362,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ToList();
         }
 
-        public void checkPronunciationWord(int entryId)
+        public void CheckPronunciationWord(int entryId)
         {
             var entry = _dbContext.PronunciationEntries
                 .FirstOrDefault(x => x.Id == entryId);
@@ -373,10 +374,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             _dbContext.SaveChanges();
 
-            refreshSession(entry.UserId);
+            RefreshSession(entry.UserId);
         }
 
-        public void uncheckPronunciationWord(int entryId)
+        public void UncheckPronunciationWord(int entryId)
         {
             var entry = _dbContext.PronunciationEntries
                 .FirstOrDefault(x => x.Id == entryId);
@@ -389,7 +390,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void markPronunciationResult(MarkPronunciationRequest request)
+        public void MarkPronunciationResult(MarkPronunciationRequest request)
         {
             var entry = _dbContext.PronunciationEntries
                 .FirstOrDefault(x => x.Id == request.EntryId)
@@ -409,10 +410,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             }
 
             _dbContext.SaveChanges();
-            refreshSession(entry.UserId);
+            RefreshSession(entry.UserId);
         }
 
-        private void refreshSession(int userId)
+        private void RefreshSession(int userId)
         {
             var today = PolandTime.Today;
 
@@ -462,7 +463,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void addGrade(AddGradeRequest request)
+        public void AddGrade(AddGradeRequest request)
         {
             _dbContext.Grades.Add(new Grade
             {
@@ -475,7 +476,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public List<GradeListDto> getGrades(int studentUserId)
+        public List<GradeListDto> GetGrades(int studentUserId)
         {
             return _dbContext.Grades
                 .Where(x => x.UserId == studentUserId)
@@ -491,7 +492,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ToList();
         }
 
-        public void removeGrade(int gradeId)
+        public void RemoveGrade(int gradeId)
         {
             var grade = _dbContext.Grades.FirstOrDefault(x => x.Id == gradeId);
             if (grade is null) return;
@@ -499,7 +500,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public List<TeacherNoteDto> getNotes(int studentUserId)
+        public List<TeacherNoteDto> GetNotes(int studentUserId)
         {
             var teacherId = _userContextService.GetUserId;
             return _dbContext.TeacherNotes
@@ -514,7 +515,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ToList();
         }
 
-        public void saveNote(SaveNoteRequest request)
+        public void SaveNote(SaveNoteRequest request)
         {
             var teacherId = _userContextService.GetUserId;
             _dbContext.TeacherNotes.Add(new TeacherNote
@@ -527,7 +528,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void deleteNote(int noteId)
+        public void DeleteNote(int noteId)
         {
             var note = _dbContext.TeacherNotes.FirstOrDefault(x => x.Id == noteId);
             if (note is null) return;
@@ -535,7 +536,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public void addListeningReport(AddListeningReportRequest request)
+        public void AddListeningReport(AddListeningReportRequest request)
         {
             if (!Enum.TryParse<MediaType>(request.MediaType, out var mediaType))
                 throw new BadRequestException($"Invalid media type: {request.MediaType}");
@@ -551,7 +552,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.SaveChanges();
         }
 
-        public List<ListeningReportDto> getListeningReports(int studentUserId)
+        public List<ListeningReportDto> GetListeningReports(int studentUserId)
         {
             var listeningReports = _dbContext.ListeningReports
                 .Where(x => x.UserId == studentUserId)
@@ -613,7 +614,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ToList();
         }
 
-        public AdminStudentStudySummaryDto getStudyLogsReport(int studentUserId)
+        public AdminStudentStudySummaryDto GetStudyLogsReport(int studentUserId)
         {
             var report = _dbContext
                 .Users
@@ -636,7 +637,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             return report;
         }
 
-        public List<MemoryDto> getMemories(int studentUserId)
+        public List<MemoryDto> GetMemories(int studentUserId)
         {
             return _dbContext.Memories
                 .Where(x => x.UserId == studentUserId)
@@ -653,22 +654,22 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ToList();
         }
 
-        private static readonly List<(string Key, string Template)> PromptTemplates = new()
+        private static readonly List<PromptTemplateItem> PromptTemplates = new()
         {
-            ("difference",   "What's the difference between {A} and {B}? Provide examples."),
-            ("comma_before", "Do you put a comma before {A}? Are there any exceptions? Back it up with examples."),
-            ("position",     "Where do you put the word {A} in a sentence? Is there only one option? Give examples."),
-            ("past",         "What are the past forms of the word {A}? Is it regular or irregular? Use all in sentences."),
-            ("change",       "How do you change a verb after the word {A}?"),
-            ("synonym",      "What are the synonyms of {A}? Show the difference between them in context."),
-            ("antonym",      "What are the antonyms of {A}? Provide example sentences."),
-            ("preposition",  "What prepositions are used with {A}? Give examples for each."),
-            ("collocations", "What are the most common collocations with {A}? Use them in sentences."),
-            ("formal",       "Is {A} formal or informal? What's the formal/informal alternative?"),
-            ("grammar",      "Explain the grammar rules for using {A}. What are the most common mistakes?")
+            new() { Key = "difference",   Template = "What's the difference between {A} and {B}? Provide examples." },
+            new() { Key = "comma_before",  Template = "Do you put a comma before {A}? Are there any exceptions? Back it up with examples." },
+            new() { Key = "position",      Template = "Where do you put the word {A} in a sentence? Is there only one option? Give examples." },
+            new() { Key = "past",          Template = "What are the past forms of the word {A}? Is it regular or irregular? Use all in sentences." },
+            new() { Key = "change",        Template = "How do you change a verb after the word {A}?" },
+            new() { Key = "synonym",       Template = "What are the synonyms of {A}? Show the difference between them in context." },
+            new() { Key = "antonym",       Template = "What are the antonyms of {A}? Provide example sentences." },
+            new() { Key = "preposition",   Template = "What prepositions are used with {A}? Give examples for each." },
+            new() { Key = "collocations",  Template = "What are the most common collocations with {A}? Use them in sentences." },
+            new() { Key = "formal",        Template = "Is {A} formal or informal? What's the formal/informal alternative?" },
+            new() { Key = "grammar",       Template = "Explain the grammar rules for using {A}. What are the most common mistakes?" }
         };
 
-        private string generatePrompts(string optionA, string? optionB, string? category)
+        private string GeneratePrompts(string optionA, string? optionB, string? category)
         {
             var templates = string.IsNullOrWhiteSpace(category)
                 ? PromptTemplates
@@ -676,12 +677,12 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
             var lines = new List<string>();
 
-            foreach (var (key, template) in templates)
+            foreach (var promptTemplateItem in templates)
             {
-                if (template.Contains("{B}") && string.IsNullOrWhiteSpace(optionB))
+                if (promptTemplateItem.Template.Contains("{B}") && string.IsNullOrWhiteSpace(optionB))
                     continue;
 
-                var prompt = template.Trim()
+                var prompt = promptTemplateItem.Template.Trim()
                     .Replace("{A}", optionA.Trim())
                     .Replace("{B}", optionB.Trim() ?? string.Empty);
 

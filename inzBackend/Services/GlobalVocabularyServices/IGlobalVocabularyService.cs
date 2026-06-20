@@ -7,12 +7,12 @@ namespace inzBackend.Services.GlobalVocabularyServices
 {
     public interface IGlobalVocabularyService
     {
-        List<GlobalVocabularyDto> getAllVocabulary();
-        Vocabulary createNewVocabulary(VocabularyAddingRequest request);
-        void updateVocabulary(VocabularyUpdateRequest request, int vocabularyId);
-        Task<SearchVocabularyResult> searchVocabulary(string query, int studentUserId);
-        GlobalVocabularyDto addTranslation(AddTranslationRequest request);
-        void assignVocabularyToStudent(AssignVocabularyToStudentRequest request);
-        void assignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request);
+        List<GlobalVocabularyDto> GetAllVocabulary();
+        Vocabulary CreateNewVocabulary(VocabularyAddingRequest request);
+        void UpdateVocabulary(VocabularyUpdateRequest request, int vocabularyId);
+        Task<SearchVocabularyResult> SearchVocabulary(string query, int studentUserId);
+        GlobalVocabularyDto AddTranslation(AddTranslationRequest request);
+        void AssignVocabularyToStudent(AssignVocabularyToStudentRequest request);
+        void AssignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request);
     }
 }

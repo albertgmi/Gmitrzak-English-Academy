@@ -25,7 +25,7 @@ namespace inzBackend.Services.AiIntegrationServices
             _dbContext = dbContext;
         }
 
-        public async Task<PronunciationResult> processUserAttemptAsync(Stream audioStream, string fileName,
+        public async Task<PronunciationResult> ProcessUserAttemptAsync(Stream audioStream, string fileName,
             int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;

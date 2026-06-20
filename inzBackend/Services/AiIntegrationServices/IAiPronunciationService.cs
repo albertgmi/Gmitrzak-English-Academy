@@ -4,6 +4,6 @@ namespace inzBackend.Services.AiIntegrationServices
 {
     public interface IAiPronunciationService
     {
-        Task<PronunciationResult> processUserAttemptAsync(Stream audioStream, string fileName, int pronunciationEntryId);
+        Task<PronunciationResult> ProcessUserAttemptAsync(Stream audioStream, string fileName, int pronunciationEntryId);
     }
 }

@@ -49,31 +49,31 @@ namespace inzBackend.Controllers
         [HttpGet("sentences")]
         public ActionResult<List<SentenceDto>> GetAllSentences()
         {
-            return _sentencesService.getAllSentences();
+            return _sentencesService.GetAllSentences();
         }
 
         [HttpGet("memories")]
         public ActionResult<List<MemoryDto>> GetAllMemories()
         {
-            return _memoriesService.getAllMemories();
+            return _memoriesService.GetAllMemories();
         }
 
         [HttpGet("pronunciation")]
         public ActionResult<List<PronunciationEntryDto>> GetAllPronunciation()
         {
-            return _pronunciationService.getAllEntries();
+            return _pronunciationService.GetAllEntries();
         }
 
         [HttpGet("pronunciation/correct")]
         public ActionResult<List<PronunciationTestItemDto>> GetCorrectPronunciation()
         {
-            return _pronunciationService.getCorrectPronunciation();
+            return _pronunciationService.GetCorrectPronunciation();
         }
 
         [HttpGet("pronunciation/{entryId}/attempts")]
         public ActionResult<List<PronunciationAttemptDto>> GetAttempts([FromRoute] int entryId)
         {
-            var attempts = _pronunciationService.getAttempts(entryId);
+            var attempts = _pronunciationService.GetAttempts(entryId);
             return Ok(attempts);
         }
 
@@ -86,7 +86,7 @@ namespace inzBackend.Controllers
             try
             {
                 using var stream = audioFile.OpenReadStream();
-                var result = await _aiPronunciationService.processUserAttemptAsync(stream, audioFile.FileName, entryId);
+                var result = await _aiPronunciationService.ProcessUserAttemptAsync(stream, audioFile.FileName, entryId);
                 return Ok(result);
             }
             catch (NotFoundException ex)
@@ -98,68 +98,68 @@ namespace inzBackend.Controllers
         [HttpGet("flashcards")]
         public ActionResult<List<FlashcardDto>> GetAllFlashcards()
         {
-            return _flashcardsService.getAllFlashcards();
+            return _flashcardsService.GetAllFlashcards();
         }
 
         [HttpGet("flashcards/leeches")]
         public ActionResult<List<FlashcardDto>> GetLeeches()
         {
-            return _flashcardsService.getLeeches();
+            return _flashcardsService.GetLeeches();
         }
 
         [HttpGet("flashcards/studied-today")]
         public ActionResult<List<FlashcardDto>> GetStudiedToday()
         {
-            return _flashcardsService.getStudiedToday();
+            return _flashcardsService.GetStudiedToday();
         }
 
         [HttpGet("flashcards/logs")]
         public ActionResult<List<FlashcardStudyLogDto>> GetStudyLogs()
         {
-            return _flashcardsService.getStudyLogs();
+            return _flashcardsService.GetStudyLogs();
         }
 
         [HttpGet("flashcards/search")]
         public ActionResult<List<FlashcardDto>> SearchFlashcards([FromQuery] string query)
         {
-            return _flashcardsService.searchFlashcards(query);
+            return _flashcardsService.SearchFlashcards(query);
         }
 
         [HttpGet("vocabulary")]
         public ActionResult<List<VocabularyDto>> GetAllVocabulary()
         {
-            return _vocabularyService.getAllVocabulary();
+            return _vocabularyService.GetAllVocabulary();
         }
 
         [HttpGet("assignments")]
         public ActionResult<List<AssignmentStudentDto>> GetActiveAssignments()
         {
-            return _studentAssignmentService.getActiveAssignments();
+            return _studentAssignmentService.GetActiveAssignments();
         }
 
         [HttpGet("assignments/history")]
         public ActionResult<List<AssignmentStudentDto>> GetAssignmentHistory()
         {
-            return _studentAssignmentService.getAssignmentHistory();
+            return _studentAssignmentService.GetAssignmentHistory();
         }
 
         [HttpPatch("flashcards/{id}/review")]
         public ActionResult ReviewCard([FromRoute] int id, [FromBody] ReviewCardRequest request)
         {
-            _flashcardsService.reviewCard(id, request);
+            _flashcardsService.ReviewCard(id, request);
             return Ok();
         }
 
         [HttpGet("module/{moduleId}/sentences")]
         public ActionResult<ModuleSentenceSessionDto> GetModuleSentences([FromRoute] int moduleId)
         {
-            return _sentencesService.getModuleSentences(moduleId);
+            return _sentencesService.GetModuleSentences(moduleId);
         }
 
         [HttpPatch("sentences/{id}/review")]
         public ActionResult ReviewSentence([FromRoute] int id, [FromBody] ReviewSentenceRequest request)
         {
-            _sentencesService.reviewSentence(id, request);
+            _sentencesService.ReviewSentence(id, request);
             return Ok();
         }
     }

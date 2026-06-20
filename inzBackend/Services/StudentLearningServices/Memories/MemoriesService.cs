@@ -19,7 +19,7 @@ namespace inzBackend.Services.StudentLearningServices.Memories
             _mapper = mapper;
         }
 
-        public List<MemoryDto> getAllMemories()
+        public List<MemoryDto> GetAllMemories()
         {
             var userId = _userContextService.GetUserId;
             var memories = _dbContext

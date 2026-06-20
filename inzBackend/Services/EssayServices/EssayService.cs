@@ -33,7 +33,7 @@ namespace inzBackend.Services.EssayServices
             _lessonPanelService = lessonPanelService;
         }
 
-        public EssayModuleDto getEssayModule(int moduleId)
+        public EssayModuleDto GetEssayModule(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
 
@@ -49,11 +49,11 @@ namespace inzBackend.Services.EssayServices
                 ModuleId = module.Id,
                 ModuleName = module.Name,
                 EssayPrompt = module.EssayPrompt ?? string.Empty,
-                ExistingEssay = existing is null ? null : mapToDto(existing, module)
+                ExistingEssay = existing is null ? null : MapToDto(existing, module)
             };
         }
 
-        public UserEssayDto submitEssay(SubmitEssayRequest request)
+        public UserEssayDto SubmitEssay(SubmitEssayRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
@@ -94,15 +94,15 @@ namespace inzBackend.Services.EssayServices
 
             _dbContext.SaveChanges();
 
-            completeModuleForUser(userId, request.ModuleId);
+            CompleteModuleForUser(userId, request.ModuleId);
 
-            _lessonPanelService.addActivityPoints(
+            _lessonPanelService.AddActivityPoints(
                 userId, 15, $"Essay submitted: {module.Name}");
 
-            return mapToDto(existing, module);
+            return MapToDto(existing, module);
         }
 
-        public List<UserEssayDto> getAllEssaysForAdmin()
+        public List<UserEssayDto> GetAllEssaysForAdmin()
         {
             return _dbContext.UserEssays
                 .Include(x => x.User)
@@ -126,7 +126,7 @@ namespace inzBackend.Services.EssayServices
                 .ToList();
         }
 
-        public List<UserEssayDto> getEssaysForStudent(int studentId)
+        public List<UserEssayDto> GetEssaysForStudent(int studentId)
         {
             return _dbContext.UserEssays
                 .Include(x => x.User)
@@ -150,7 +150,7 @@ namespace inzBackend.Services.EssayServices
                 .ToList();
         }
 
-        public UserEssayDto reviewEssay(int essayId, ReviewEssayRequest request)
+        public UserEssayDto ReviewEssay(int essayId, ReviewEssayRequest request)
         {
             var essay = _dbContext.UserEssays
                 .Include(x => x.User)
@@ -164,10 +164,10 @@ namespace inzBackend.Services.EssayServices
 
             _dbContext.SaveChanges();
 
-            return mapToDto(essay, essay.Module);
+            return MapToDto(essay, essay.Module);
         }
 
-        public byte[] exportEssayToDocx(int essayId)
+        public byte[] ExportEssayToDocx(int essayId)
         {
             var essay = _dbContext.UserEssays
                 .Include(x => x.User)
@@ -199,8 +199,8 @@ namespace inzBackend.Services.EssayServices
 
                 body.Append(CreateSectionHeader("STUDENT'S ESSAY", "2E74B5"));
 
-                var studentText = stripHtml(essay.Content);
-                foreach (var line in splitIntoLines(studentText))
+                var studentText = StripHtml(essay.Content);
+                foreach (var line in SplitIntoLines(studentText))
                     body.Append(CreateParagraph(line));
 
                 body.Append(CreateEmptyLine());
@@ -209,8 +209,8 @@ namespace inzBackend.Services.EssayServices
                 {
                     body.Append(CreateSectionHeader("TEACHER'S CORRECTIONS", "375623"));
 
-                    var adminText = stripHtml(essay.AdminContent);
-                    foreach (var line in splitIntoLines(adminText))
+                    var adminText = StripHtml(essay.AdminContent);
+                    foreach (var line in SplitIntoLines(adminText))
                         body.Append(CreateParagraph(line, color: "375623"));
                 }
                 else
@@ -278,7 +278,7 @@ namespace inzBackend.Services.EssayServices
 
         private static Paragraph CreateEmptyLine() => new Paragraph(new Run(new Text(string.Empty)));
 
-        private static IEnumerable<string> splitIntoLines(string text)
+        private static IEnumerable<string> SplitIntoLines(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return [""];
@@ -290,7 +290,7 @@ namespace inzBackend.Services.EssayServices
                 .DefaultIfEmpty("—");
         }
 
-        private void completeModuleForUser(int userId, int moduleId)
+        private void CompleteModuleForUser(int userId, int moduleId)
         {
             var direct = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
@@ -328,7 +328,7 @@ namespace inzBackend.Services.EssayServices
             }
         }
 
-        private static UserEssayDto mapToDto(UserEssay x, Module module) => new()
+        private static UserEssayDto MapToDto(UserEssay x, Module module) => new()
         {
             Id = x.Id,
             ModuleId = x.ModuleId,
@@ -343,7 +343,7 @@ namespace inzBackend.Services.EssayServices
             Username = string.Empty
         };
 
-        private static string stripHtml(string html)
+        private static string StripHtml(string html)
         {
             if (string.IsNullOrWhiteSpace(html)) return string.Empty;
             return Regex.Replace(html, "<.*?>", string.Empty)

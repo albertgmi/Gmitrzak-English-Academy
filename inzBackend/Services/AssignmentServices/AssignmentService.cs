@@ -20,7 +20,7 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext = dbContext;
         }
 
-        public List<MatrixAssignmentDto> getAllMatrixAssignments()
+        public List<MatrixAssignmentDto> GetAllMatrixAssignments()
         {
             return _dbContext.UserMatrixAssignments
                 .Include(x => x.User)
@@ -28,11 +28,11 @@ namespace inzBackend.Services.AssignmentServices
                     .ThenInclude(x => x.MatrixModules)
                         .ThenInclude(x => x.Module)
                 .ToList()
-                .Select(x => mapToMatrixAssignmentDto(x))
+                .Select(x => MapToMatrixAssignmentDto(x))
                 .ToList();
         }
 
-        public List<MatrixAssignmentDto> getMatrixAssignmentsByUser(int userId)
+        public List<MatrixAssignmentDto> GetMatrixAssignmentsByUser(int userId)
         {
             return _dbContext.UserMatrixAssignments
                 .Include(x => x.User)
@@ -41,11 +41,11 @@ namespace inzBackend.Services.AssignmentServices
                         .ThenInclude(x => x.Module)
                 .Where(x => x.UserId == userId)
                 .ToList()
-                .Select(x => mapToMatrixAssignmentDto(x))
+                .Select(x => MapToMatrixAssignmentDto(x))
                 .ToList();
         }
 
-        public void createMatrixAssignment(CreateMatrixAssignmentRequest request)
+        public void CreateMatrixAssignment(CreateMatrixAssignmentRequest request)
         {
             var user = _dbContext
                 .Users
@@ -76,7 +76,7 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteMatrixAssignment(int id)
+        public void DeleteMatrixAssignment(int id)
         {
             var assignment = _dbContext.UserMatrixAssignments
                 .FirstOrDefault(x => x.Id == id);
@@ -88,28 +88,28 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        public List<ModuleAssignmentDto> getAllModuleAssignments()
+        public List<ModuleAssignmentDto> GetAllModuleAssignments()
         {
             return _dbContext.UserModuleAssignments
                 .Include(x => x.User)
                 .Include(x => x.Module)
                 .ToList()
-                .Select(x => mapToModuleAssignmentDto(x))
+                .Select(x => MapToModuleAssignmentDto(x))
                 .ToList();
         }
 
-        public List<ModuleAssignmentDto> getModuleAssignmentsByUser(int userId)
+        public List<ModuleAssignmentDto> GetModuleAssignmentsByUser(int userId)
         {
             return _dbContext.UserModuleAssignments
                 .Include(x => x.User)
                 .Include(x => x.Module)
                 .Where(x => x.UserId == userId)
                 .ToList()
-                .Select(x => mapToModuleAssignmentDto(x))
+                .Select(x => MapToModuleAssignmentDto(x))
                 .ToList();
         }
 
-        public void createModuleAssignment(CreateModuleAssignmentRequest request)
+        public void CreateModuleAssignment(CreateModuleAssignmentRequest request)
         {
             var userExists = _dbContext.Users.Any(x => x.Id == request.UserId);
             if (!userExists)
@@ -133,7 +133,7 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteModuleAssignment(int id)
+        public void DeleteModuleAssignment(int id)
         {
             var assignment = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.Id == id);
@@ -145,7 +145,7 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        public void completeModuleAssignment(int id)
+        public void CompleteModuleAssignment(int id)
         {
             var assignment = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.Id == id);
@@ -157,7 +157,7 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        public void uncompleteModuleAssignment(int id)
+        public void UncompleteModuleAssignment(int id)
         {
             var assignment = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.Id == id);
@@ -169,7 +169,7 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.SaveChanges();
         }
 
-        private MatrixAssignmentDto mapToMatrixAssignmentDto(UserMatrixAssignment x)
+        private MatrixAssignmentDto MapToMatrixAssignmentDto(UserMatrixAssignment x)
         {
             var matrixModuleIds = x.Matrix.MatrixModules.Select(mm => mm.Id).ToList();
 
@@ -185,7 +185,7 @@ namespace inzBackend.Services.AssignmentServices
             var modules = x.Matrix.MatrixModules
                 .OrderBy(mm => mm.WeekNumber)
                 .ThenBy(mm => mm.DayOfWeek)
-                .Select(mm => mapToModuleUnlockDto(
+                .Select(mm => MapToModuleUnlockDto(
                     mm,
                     x.StartDate,
                     x.Matrix.RefreshIntervalDays,
@@ -207,7 +207,7 @@ namespace inzBackend.Services.AssignmentServices
             };
         }
 
-        private static ModuleUnlockDto mapToModuleUnlockDto(MatrixModule mm, DateOnly startDate, int refreshIntervalDays,
+        private static ModuleUnlockDto MapToModuleUnlockDto(MatrixModule mm, DateOnly startDate, int refreshIntervalDays,
             bool isCompleted, DateOnly? deadlineOverride)
         {
             var unlockDate = MatrixModuleDateHelper.ComputeDeadline(startDate, mm.WeekNumber, mm.DayOfWeek, refreshIntervalDays);
@@ -229,7 +229,7 @@ namespace inzBackend.Services.AssignmentServices
             };
         }
 
-        private static ModuleAssignmentDto mapToModuleAssignmentDto(UserModuleAssignment x)
+        private static ModuleAssignmentDto MapToModuleAssignmentDto(UserModuleAssignment x)
         {
             var today = PolandTime.Today;
 

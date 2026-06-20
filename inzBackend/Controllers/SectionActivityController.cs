@@ -20,7 +20,7 @@ namespace inzBackend.Controllers
         [HttpPost("log")]
         public ActionResult LogActivity([FromBody] LogActivityRequest request)
         {
-            _sectionActivityService.logActivity(request);
+            _sectionActivityService.LogActivity(request);
             return Ok();
         }
     }

@@ -4,6 +4,6 @@ namespace inzBackend.Services.StudentLearningServices.Memories
 {
     public interface IMemoriesService
     {
-        List<MemoryDto> getAllMemories();
+        List<MemoryDto> GetAllMemories();
     }
 }

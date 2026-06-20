@@ -4,6 +4,6 @@ namespace inzBackend.Services.StudentCourseServices.Stats
 {
     public interface IStatsService
     {
-        StatsDto getStats();
+        StatsDto GetStats();
     }
 }

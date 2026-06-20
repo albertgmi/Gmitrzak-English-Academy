@@ -4,7 +4,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
 {
     public interface IStudentAssignmentService
     {
-        List<AssignmentStudentDto> getActiveAssignments();
-        List<AssignmentStudentDto> getAssignmentHistory();
+        List<AssignmentStudentDto> GetActiveAssignments();
+        List<AssignmentStudentDto> GetAssignmentHistory();
     }
 }
