@@ -108,10 +108,16 @@ namespace inzBackend.Services.UserServices
                     .Where(x => x.UserId == user.Id)
                     .Select(x => x.LoginDate)
                     .Distinct()
-                    .OrderByDescending(d => d)
-                    .ToList();
+                    .ToHashSet();
 
-                int currentStreak = CalculateStreak(recentLoginDates, today);
+                tryConsumeStreakShield(user.Id, recentLoginDates, today);
+
+                var shieldedDates = _dbContext.UserStreakShields
+                    .Where(x => x.UserId == user.Id && x.IsUsed && x.ProtectedDate.HasValue)
+                    .Select(x => x.ProtectedDate!.Value)
+                    .ToHashSet();
+
+                int currentStreak = CalculateStreak(recentLoginDates, today, shieldedDates);
 
                 var pointsToAward = Math.Ceiling((double)currentStreak / 2);
 
@@ -204,28 +210,35 @@ namespace inzBackend.Services.UserServices
 
             return users;
         }
-        private int CalculateStreak(List<DateOnly> sortedDates, DateOnly today)
+        private int CalculateStreak(HashSet<DateOnly> loginDates, DateOnly today, HashSet<DateOnly> shieldedDates)
         {
-            if (sortedDates == null || !sortedDates.Any())
-                return 0;
+            var streak = 0;
+            var expectedDate = today;
 
-            int streak = 0;
-            DateOnly expectedDate = today;
-
-            foreach (var date in sortedDates)
+            while (loginDates.Contains(expectedDate) || shieldedDates.Contains(expectedDate))
             {
-                if (date == expectedDate)
-                {
-                    streak++;
-                    expectedDate = expectedDate.AddDays(-1);
-                }
-                else if (date < expectedDate)
-                {
-                    break;
-                }
+                streak++;
+                expectedDate = expectedDate.AddDays(-1);
             }
 
             return streak;
+        }
+
+        private void tryConsumeStreakShield(int userId, HashSet<DateOnly> loginDates, DateOnly today)
+        {
+            var yesterday = today.AddDays(-1);
+            if (loginDates.Contains(yesterday)) return;
+
+            var shield = _dbContext.UserStreakShields
+                .Where(x => x.UserId == userId && !x.IsUsed)
+                .OrderBy(x => x.CreatedAt)
+                .FirstOrDefault();
+
+            if (shield is null) return;
+
+            shield.IsUsed = true;
+            shield.ProtectedDate = yesterday;
+            _dbContext.SaveChanges();
         }
     }
 }
