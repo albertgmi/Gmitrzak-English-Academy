@@ -20,32 +20,32 @@ namespace inzBackend.Controllers
         [HttpGet]
         public ActionResult<List<CatalogueDto>> GetAll()
         {
-            return _catalogueService.getAllCatalogues();
+            return _catalogueService.GetAllCatalogues();
         }
             
         [HttpPost("upload")]
         public async Task<CatalogueDto> Upload(IFormFile file)
         {
-            return await _catalogueService.uploadCatalogue(file);
+            return await _catalogueService.UploadCatalogue(file);
         }
 
         [HttpGet("entries")]
         public ActionResult<List<CatalogueEntryDto>> GetEntries([FromQuery] CatalogueEntryFilterRequest filter)
         {
-            return _catalogueService.getEntries(filter);
+            return _catalogueService.GetEntries(filter);
         }
 
         [HttpDelete("{catalogueId}")]
         public ActionResult Delete(int catalogueId)
         {
-            _catalogueService.deleteCatalogue(catalogueId);
+            _catalogueService.DeleteCatalogue(catalogueId);
             return NoContent();
         }
 
         [HttpPut("entries/{entryId}")]
         public ActionResult UpdateTranslation([FromBody] UpdateTranslationRequest request, [FromRoute] int entryId)
         {
-            _catalogueService.updateTranslation(request, entryId);
+            _catalogueService.UpdateTranslation(request, entryId);
             return Ok();
         }
     }

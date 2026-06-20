@@ -16,7 +16,7 @@ namespace inzBackend.Services.StudentCourseServices.Stats
             _userContextService = userContextService;
         }
 
-        public StatsDto getStats()
+        public StatsDto GetStats()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;

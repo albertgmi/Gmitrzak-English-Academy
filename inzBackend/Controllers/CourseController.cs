@@ -21,40 +21,40 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<List<CourseDto>> GetAllCourses()
         {
-            return _courseService.getAllCourses();
+            return _courseService.GetAllCourses();
         }
 
         [HttpPost]
         public ActionResult<Course> CreateCourse(CreateCourseRequest request)
         {
-            return _courseService.createCourse(request);
+            return _courseService.CreateCourse(request);
         }
 
         [HttpPut("{courseId}")]
         public ActionResult UpdateCourse([FromRoute] int courseId, [FromBody] UpdateCourseRequest request)
         {
-            _courseService.updateCourse(courseId, request);
+            _courseService.UpdateCourse(courseId, request);
             return Ok();
         }
 
         [HttpDelete("{courseId}")]
         public ActionResult DeleteCourse([FromRoute] int courseId)
         {
-            _courseService.deleteCourse(courseId);
+            _courseService.DeleteCourse(courseId);
             return NoContent();
         }
 
         [HttpPost("{courseId}/programs/{programId}")]
         public ActionResult AssignProgram([FromRoute] int courseId, [FromRoute] int programId)
         {
-            _courseService.assignProgram(courseId, programId);
+            _courseService.AssignProgram(courseId, programId);
             return Ok();
         }
 
         [HttpDelete("{courseId}/programs/{programId}")]
         public ActionResult RemoveProgram([FromRoute] int courseId, [FromRoute] int programId)
         {
-            _courseService.removeProgram(courseId, programId);
+            _courseService.RemoveProgram(courseId, programId);
             return Ok();
         }
     }

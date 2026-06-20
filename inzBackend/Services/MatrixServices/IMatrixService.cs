@@ -5,11 +5,11 @@ namespace inzBackend.Services.MatrixServices
 {
     public interface IMatrixService
     {
-        List<MatrixDto> getAllMatrices();
-        Matrix createMatrix(CreateMatrixRequest request);
-        void updateMatrix(int matrixId, UpdateMatrixRequest request);
-        void deleteMatrix(int matrixId);
-        void assignCourse(int matrixId, int courseId);
-        void detachCourse(int matrixId, int courseId);
+        List<MatrixDto> GetAllMatrices();
+        Matrix CreateMatrix(CreateMatrixRequest request);
+        void UpdateMatrix(int matrixId, UpdateMatrixRequest request);
+        void DeleteMatrix(int matrixId);
+        void AssignCourse(int matrixId, int courseId);
+        void DetachCourse(int matrixId, int courseId);
     }
 }

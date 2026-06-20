@@ -21,7 +21,7 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
             _dbContext = dbContext;
             _userContextService = userContextService;
         }
-        public List<PronunciationEntryDto> getAllEntries()
+        public List<PronunciationEntryDto> GetAllEntries()
         {
             var userId = _userContextService.GetUserId!.Value;
 
@@ -42,7 +42,7 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
                 .ToList();
         }
 
-        public List<PronunciationTestItemDto> getCorrectPronunciation()
+        public List<PronunciationTestItemDto> GetCorrectPronunciation()
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
@@ -66,7 +66,7 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
             return entries;
         }
 
-        public List<PronunciationAttemptDto> getAttempts(int pronunciationEntryId)
+        public List<PronunciationAttemptDto> GetAttempts(int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
 

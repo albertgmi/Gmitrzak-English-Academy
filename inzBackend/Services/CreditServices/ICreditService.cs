@@ -4,15 +4,15 @@ namespace inzBackend.Services.CreditServices
 {
     public interface ICreditService
     {
-        void awardCredits(int userId, int amount, string reason);
-        void checkAndAwardDailyChallenge(int userId);
-        void checkAndAwardWeeklyChallenge(int userId);
-        CreditSummaryDto getCreditSummary(int userId);
-        List<ShopItemDto> getShopItems();
-        List<ShopItemDto> getShopItems(int userId);
-        ShopPurchaseResultDto purchaseItem(int userId, int shopItemId);
-        List<UserCreditSummaryDto> getAllUsersCreditSummary();
-        StudentCreditDetailDto getStudentCreditDetail(int studentId);
-        void updatePurchaseStatus(int purchaseId, string status);
+        void AwardCredits(int userId, int amount, string reason);
+        void CheckAndAwardDailyChallenge(int userId);
+        void CheckAndAwardWeeklyChallenge(int userId);
+        CreditSummaryDto GetCreditSummary(int userId);
+        List<ShopItemDto> GetShopItems();
+        List<ShopItemDto> GetShopItems(int userId);
+        ShopPurchaseResultDto PurchaseItem(int userId, int shopItemId);
+        List<UserCreditSummaryDto> GetAllUsersCreditSummary();
+        StudentCreditDetailDto GetStudentCreditDetail(int studentId);
+        void UpdatePurchaseStatus(int purchaseId, string status);
     }
 }

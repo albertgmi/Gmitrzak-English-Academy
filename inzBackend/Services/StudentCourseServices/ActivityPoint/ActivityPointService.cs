@@ -16,7 +16,7 @@ namespace inzBackend.Services.StudentCourseServices.ActivityPoint
             _userContextService = userContextService;
         }
 
-        public ActivityPointsHistoryDto getHistory()
+        public ActivityPointsHistoryDto GetHistory()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;

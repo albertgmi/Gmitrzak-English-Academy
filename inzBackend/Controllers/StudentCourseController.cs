@@ -33,84 +33,84 @@ namespace inzBackend.Controllers
         [HttpGet]
         public ActionResult<List<StudentAssignmentDto>> GetStudentsAssignments()
         {
-            var studentAssignments = _studentCourseService.getStudentsAssignments();
+            var studentAssignments = _studentCourseService.GetStudentsAssignments();
             return Ok(studentAssignments);
         }
 
         [HttpPost("complete/{matrixModuleId}")]
         public ActionResult CompleteModule([FromRoute] int matrixModuleId)
         {
-            _studentCourseService.completeModule(matrixModuleId);
+            _studentCourseService.CompleteModule(matrixModuleId);
             return Ok();
         }
 
         [HttpDelete("complete/{matrixModuleId}")]
         public ActionResult UncompleteModule([FromRoute] int matrixModuleId)
         {
-            _studentCourseService.uncompleteModule(matrixModuleId);
+            _studentCourseService.UncompleteModule(matrixModuleId);
             return Ok();
         }
 
         [HttpGet("courses")]
         public ActionResult<List<StudentAssignmentDto>> GetCourses()
         {
-            return _studentCourseService.getStudentsAssignments();
+            return _studentCourseService.GetStudentsAssignments();
         }
 
         [HttpGet("last-week")]
         public ActionResult<LastWeekDto> GetLastWeek()
         {
-            return _lastWeekService.getLastWeek();
+            return _lastWeekService.GetLastWeek();
         }
 
         [HttpGet("activity-points")]
         public ActionResult<ActivityPointsHistoryDto> GetActivityPoints()
         {
-            return _activityPointService.getHistory();
+            return _activityPointService.GetHistory();
         }
 
         [HttpGet("grades")]
         public ActionResult<List<GradeDto>> GetGrades()
         {
-            return _gradesService.getGrades();
+            return _gradesService.GetGrades();
         }
 
         [HttpGet("stats")]
         public ActionResult<StatsDto> GetStats()
         {
-            return _statsService.getStats();
+            return _statsService.GetStats();
         }
 
         [HttpGet("single-modules")]
         public ActionResult<List<StudentModuleDto>> GetSingleModules()
         {
-            return _studentCourseService.getSingleModules();
+            return _studentCourseService.GetSingleModules();
         }
 
         [HttpPost("single-modules/complete/{id}")]
         public ActionResult CompleteSingleModule([FromRoute] int id)
         {
-            _studentCourseService.completeSingleModule(id);
+            _studentCourseService.CompleteSingleModule(id);
             return Ok();
         }
 
         [HttpDelete("single-modules/complete/{id}")]
         public ActionResult UncompleteSingleModule([FromRoute] int id)
         {
-            _studentCourseService.uncompleteSingleModule(id);
+            _studentCourseService.UncompleteSingleModule(id);
             return Ok();
         }
 
         [HttpGet("completed-single-modules")]
         public ActionResult<List<StudentModuleDto>> GetCompletedSingleModules()
         {
-            return _studentCourseService.getCompletedSingleModules();
+            return _studentCourseService.GetCompletedSingleModules();
         }
 
         [HttpGet("module/{moduleId}")]
         public ActionResult<StudentModuleDto> GetStudentModule([FromRoute] int moduleId)
         {
-            var result = _studentCourseService.getStudentModule(moduleId);
+            var result = _studentCourseService.GetStudentModule(moduleId);
             if (result is null) return NotFound();
             return Ok(result);
         }
@@ -118,7 +118,7 @@ namespace inzBackend.Controllers
         [HttpPost("module/{moduleId}/complete")]
         public ActionResult CompleteStudentModule([FromRoute] int moduleId)
         {
-            _studentCourseService.completeStudentModule(moduleId);
+            _studentCourseService.CompleteStudentModule(moduleId);
             return Ok();
         }
     }

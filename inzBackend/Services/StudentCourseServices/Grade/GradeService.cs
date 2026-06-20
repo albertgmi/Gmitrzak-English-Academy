@@ -19,7 +19,7 @@ namespace inzBackend.Services.StudentCourseServices.Grade
             _mapper = mapper;
         }
 
-        public List<GradeDto> getGrades()
+        public List<GradeDto> GetGrades()
         {
             var userId = _userContextService.GetUserId;
 

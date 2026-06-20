@@ -13,7 +13,7 @@ namespace inzBackend.Services.AiIntegrationServices
             _chatClient = chatClient;
         }
 
-        public async Task<SpellCheckResult> checkTextAsync(string text, string language = "English")
+        public async Task<SpellCheckResult> CheckTextAsync(string text, string language = "English")
         {
             if (string.IsNullOrWhiteSpace(text))
                 return new SpellCheckResult { HasError = false };
@@ -50,7 +50,7 @@ namespace inzBackend.Services.AiIntegrationServices
             return result ?? new SpellCheckResult { HasError = false };
         }
 
-        public async Task<List<SpellCheckResult>> checkBatchAsync(List<(string Text, string Language)> items)
+        public async Task<List<SpellCheckResult>> CheckBatchAsync(List<SpellCheckRequestItem> items)
         {
             if (items == null || !items.Any())
                 return new List<SpellCheckResult>();

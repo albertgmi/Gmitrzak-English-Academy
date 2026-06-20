@@ -25,7 +25,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext = dbContext;
             _aiTranslationService = aiTranslationService;
         }
-        public List<SentenceStockDto> getAllStock()
+        public List<SentenceStockDto> GetAllStock()
         {
             return _dbContext.SentenceStocks
                 .OrderBy(x => x.Category).ThenBy(x => x.Polish)
@@ -39,7 +39,7 @@ namespace inzBackend.Services.SentenceServices
                 .ToList();
         }
 
-        public void createStock(CreateSentenceStockRequest request)
+        public void CreateStock(CreateSentenceStockRequest request)
         {
             _dbContext.SentenceStocks.Add(new SentenceStock
             {
@@ -50,7 +50,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteStock(int id)
+        public void DeleteStock(int id)
         {
             var s = _dbContext.SentenceStocks.FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Sentence not found");
@@ -59,7 +59,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public async Task<int> uploadStockFromExcel(IFormFile file)
+        public async Task<int> UploadStockFromExcel(IFormFile file)
         {
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
@@ -119,7 +119,7 @@ namespace inzBackend.Services.SentenceServices
             return toAdd.Count;
         }
 
-        public List<SentenceSetGroupDto> getAllSetsGrouped()
+        public List<SentenceSetGroupDto> GetAllSetsGrouped()
         {
             var sets = _dbContext.SentenceSets
                 .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
@@ -151,7 +151,7 @@ namespace inzBackend.Services.SentenceServices
                 .ToList();
         }
 
-        public SentenceSetDto getSet(int id)
+        public SentenceSetDto GetSet(int id)
         {
             var set = _dbContext.SentenceSets
                 .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
@@ -176,7 +176,7 @@ namespace inzBackend.Services.SentenceServices
             };
         }
 
-        public SentenceSetDto createSet(CreateSentenceSetRequest request)
+        public SentenceSetDto CreateSet(CreateSentenceSetRequest request)
         {
             var set = new SentenceSet
             {
@@ -198,10 +198,10 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SentenceSetItems.AddRange(items);
             _dbContext.SaveChanges();
 
-            return getSet(set.Id);
+            return GetSet(set.Id);
         }
 
-        public void deleteSet(int id)
+        public void DeleteSet(int id)
         {
             var set = _dbContext.SentenceSets
                 .Include(x => x.Items)
@@ -213,7 +213,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public void assignToUser(AssignSentenceRequest request)
+        public void AssignToUser(AssignSentenceRequest request)
         {
             var stockSentence = _dbContext.SentenceStocks
                 .FirstOrDefault(x => x.Id == request.SentenceStockId)
@@ -252,7 +252,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public void assignToModule(AssignSetToModuleRequest request)
+        public void AssignToModule(AssignSetToModuleRequest request)
         {
             var exists = _dbContext.ModuleSentenceSets
                 .Any(x => x.ModuleId == request.ModuleId && x.SentenceSetId == request.SentenceSetId);
@@ -268,7 +268,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public List<SentenceSetDto> getSetsForModule(int moduleId)
+        public List<SentenceSetDto> GetSetsForModule(int moduleId)
         {
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
@@ -297,7 +297,7 @@ namespace inzBackend.Services.SentenceServices
                 .ToList();
         }
 
-        public void removeSetFromModule(int moduleId, int setId)
+        public void RemoveSetFromModule(int moduleId, int setId)
         {
             var link = _dbContext.ModuleSentenceSets
                 .FirstOrDefault(x => x.ModuleId == moduleId && x.SentenceSetId == setId)
@@ -307,7 +307,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public void updateStock(int id, UpdateSentenceStockRequest request)
+        public void UpdateStock(int id, UpdateSentenceStockRequest request)
         {
             var stock = _dbContext.SentenceStocks.FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Sentence not found");
@@ -329,7 +329,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public async Task<List<SearchSentenceResultDto>> searchSentence(string query, int studentId)
+        public async Task<List<SearchSentenceResultDto>> SearchSentence(string query, int studentId)
         {
             var normalizedQuery = query.Trim().ToLower();
 

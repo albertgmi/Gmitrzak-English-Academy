@@ -26,7 +26,7 @@ namespace inzBackend.Services.ReportServices
             _userAnswerService = userAnswerService;
         }
 
-        public byte[] generateRangePdf(DateRangeReportDto report)
+        public byte[] GenerateRangePdf(DateRangeReportDto report)
         {
             QuestPDF.Settings.License = LicenseType.Community;
 
@@ -139,7 +139,7 @@ namespace inzBackend.Services.ReportServices
             }).GeneratePdf();
         }
 
-        public byte[] generateRangeDocx(DateRangeReportDto report)
+        public byte[] GenerateRangeDocx(DateRangeReportDto report)
         {
             using var stream = new MemoryStream();
 
@@ -198,7 +198,7 @@ namespace inzBackend.Services.ReportServices
             return stream.ToArray();
         }
 
-        public byte[] generateActiveStudentsZipReport(DateOnly dateFrom, DateOnly dateTo)
+        public byte[] GenerateActiveStudentsZipReport(DateOnly dateFrom, DateOnly dateTo)
         {
             var activeStudentIds = _dbContext
                 .Users
@@ -212,7 +212,7 @@ namespace inzBackend.Services.ReportServices
             {
                 try
                 {
-                    var report = _userAnswerService.generateDateRangeReport(studentId, dateFrom, dateTo);
+                    var report = _userAnswerService.GenerateDateRangeReport(studentId, dateFrom, dateTo);
 
                     if (report.Modules != null && report.Modules.Any())
                     {
@@ -225,10 +225,10 @@ namespace inzBackend.Services.ReportServices
                 }
             }
 
-            return generateActiveStudentsDocxZip(reports);
+            return GenerateActiveStudentsDocxZip(reports);
         }
 
-        private byte[] generateActiveStudentsDocxZip(IEnumerable<DateRangeReportDto> reports)
+        private byte[] GenerateActiveStudentsDocxZip(IEnumerable<DateRangeReportDto> reports)
         {
             using var zipStream = new MemoryStream();
 
@@ -241,7 +241,7 @@ namespace inzBackend.Services.ReportServices
 
                     var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
 
-                    var docxBytes = generateRangeDocx(report);
+                    var docxBytes = GenerateRangeDocx(report);
 
                     using var entryStream = zipEntry.Open();
                     entryStream.Write(docxBytes, 0, docxBytes.Length);

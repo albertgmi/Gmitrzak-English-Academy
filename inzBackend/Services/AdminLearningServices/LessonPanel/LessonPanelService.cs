@@ -29,7 +29,7 @@ public class LessonPanelService : ILessonPanelService
         _userContextService = userContextService;
     }
 
-    public AgendaDto getAgenda(int studentUserId)
+    public AgendaDto GetAgenda(int studentUserId)
     {
         var agenda = _dbContext.Agendas
             .FirstOrDefault(x => x.UserId == studentUserId);
@@ -51,7 +51,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public void updateAgenda(int studentUserId, UpdateAgendaRequest request)
+    public void UpdateAgenda(int studentUserId, UpdateAgendaRequest request)
     {
         var agenda = _dbContext.Agendas
             .FirstOrDefault(x => x.UserId == studentUserId);
@@ -70,7 +70,7 @@ public class LessonPanelService : ILessonPanelService
         _dbContext.SaveChanges();
     }
 
-    public List<LessonGradeDto> getGrades(int studentUserId)
+    public List<LessonGradeDto> GetGrades(int studentUserId)
     {
         return _dbContext.Grades
             .Where(x => x.UserId == studentUserId)
@@ -86,7 +86,7 @@ public class LessonPanelService : ILessonPanelService
             .ToList();
     }
 
-    public ActivityPointsLessonSummaryDto getActivityPoints(int studentUserId)
+    public ActivityPointsLessonSummaryDto GetActivityPoints(int studentUserId)
     {
         var today = PolandTime.Today;
         var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
@@ -115,7 +115,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public void addActivityPoints(int studentUserId, int points, string reason)
+    public void AddActivityPoints(int studentUserId, int points, string reason)
     {
         var user = _dbContext.Users
             .FirstOrDefault(u => u.Id == studentUserId)
@@ -137,7 +137,7 @@ public class LessonPanelService : ILessonPanelService
         _dbContext.SaveChanges();
     }
 
-    public LessonFlashcardSummaryDto getFlashcardSummary(int studentUserId)
+    public LessonFlashcardSummaryDto GetFlashcardSummary(int studentUserId)
     {
         var today = PolandTime.Today;
 
@@ -181,7 +181,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public List<FlashcardDto> getAllFlashcardsForUser(int userId)
+    public List<FlashcardDto> GetAllFlashcardsForUser(int userId)
     {
         var flashcards = _dbContext.Flashcards
             .Include(x => x.Vocabulary)
@@ -191,7 +191,7 @@ public class LessonPanelService : ILessonPanelService
         return _mapper.Map<List<FlashcardDto>>(flashcards);
     }
 
-    public StudentStudyTimeDto getStudyTime(int studentUserId)
+    public StudentStudyTimeDto GetStudyTime(int studentUserId)
     {
         var logs = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId)
@@ -223,7 +223,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public LessonLastWeekDto getLastWeek(int studentUserId)
+    public LessonLastWeekDto GetLastWeek(int studentUserId)
     {
         var today = PolandTime.Today;
         var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
@@ -290,7 +290,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public LessonStatsDto getStats(int studentUserId)
+    public LessonStatsDto GetStats(int studentUserId)
     {
         var today = PolandTime.Today;
         var last30Days = today.AddDays(-30);
@@ -346,7 +346,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public List<AttendanceDto> getAttendance(int studentId)
+    public List<AttendanceDto> GetAttendance(int studentId)
     {
         var now = PolandTime.Now;
 
@@ -378,7 +378,7 @@ public class LessonPanelService : ILessonPanelService
         return records;
     }
 
-    public List<AttendanceDto> getAttendanceHistory(int studentId)
+    public List<AttendanceDto> GetAttendanceHistory(int studentId)
     {
         var now = PolandTime.Now;
 
@@ -411,7 +411,7 @@ public class LessonPanelService : ILessonPanelService
         return records;
     }
 
-    public AttendanceDto addAttendance(CreateAttendanceDto dto)
+    public AttendanceDto AddAttendance(CreateAttendanceDto dto)
     {
         var studentExists = _dbContext
             .Users
@@ -444,7 +444,7 @@ public class LessonPanelService : ILessonPanelService
         };
     }
 
-    public bool deleteAttendance(int id)
+    public bool DeleteAttendance(int id)
     {
         var attendance = _dbContext
             .Attendance
@@ -458,7 +458,7 @@ public class LessonPanelService : ILessonPanelService
 
         return true;
     }
-    public void updateFlashcardInterval(int studentUserId, int flashcardId, int newInterval)
+    public void UpdateFlashcardInterval(int studentUserId, int flashcardId, int newInterval)
     {
         var card = _dbContext.Flashcards
             .FirstOrDefault(x => x.Id == flashcardId && x.UserId == studentUserId);
@@ -471,7 +471,7 @@ public class LessonPanelService : ILessonPanelService
         _dbContext.SaveChanges();
     }
 
-    public ActivityScoreDto calculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd)
+    public ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd)
     {
         var dueModules = _dbContext.UserModuleAssignments
             .Where(x => x.UserId == studentUserId

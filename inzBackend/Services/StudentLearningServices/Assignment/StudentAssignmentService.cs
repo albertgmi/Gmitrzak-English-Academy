@@ -21,7 +21,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
             _userContextService = userContextService;
             _mapper = mapper;
         }
-        public List<AssignmentStudentDto> getActiveAssignments()
+        public List<AssignmentStudentDto> GetActiveAssignments()
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
@@ -99,7 +99,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                 .ToList();
         }
 
-        public List<AssignmentStudentDto> getAssignmentHistory()
+        public List<AssignmentStudentDto> GetAssignmentHistory()
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;

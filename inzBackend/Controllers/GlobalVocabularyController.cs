@@ -23,48 +23,48 @@ namespace inzBackend.Controllers
         [HttpGet]
         public ActionResult<List<GlobalVocabularyDto>> GetAllVocabulary()
         {
-            return Ok(_globalVocabularyService.getAllVocabulary());
+            return Ok(_globalVocabularyService.GetAllVocabulary());
         }
 
         [HttpPost]
         public ActionResult<Vocabulary> CreateVocabulary([FromBody] VocabularyAddingRequest request)
         {
-            var newVocabulary = _globalVocabularyService.createNewVocabulary(request);
+            var newVocabulary = _globalVocabularyService.CreateNewVocabulary(request);
             return Created();
         }
 
         [HttpPut("update/{vocabularyId}")]
         public ActionResult UpdateVocabulary([FromBody] VocabularyUpdateRequest request, [FromRoute] int vocabularyId)
         {
-            _globalVocabularyService.updateVocabulary(request, vocabularyId);
+            _globalVocabularyService.UpdateVocabulary(request, vocabularyId);
             return Ok();
         }
 
         [HttpGet("search")]
         public async Task<ActionResult<SearchVocabularyResult>> SearchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
         {
-            var result = await _globalVocabularyService.searchVocabulary(query, studentUserId);
+            var result = await _globalVocabularyService.SearchVocabulary(query, studentUserId);
             return Ok(result);
         }
 
         [HttpPost("translation")]
         public ActionResult<VocabularyDto> AddTranslation([FromBody] AddTranslationRequest request)
         {
-            var result = _globalVocabularyService.addTranslation(request);
+            var result = _globalVocabularyService.AddTranslation(request);
             return Ok(result);
         }
 
         [HttpPost("assign")]
         public ActionResult AssignVocabularyToStudent([FromBody] AssignVocabularyToStudentRequest request)
         {
-            _globalVocabularyService.assignVocabularyToStudent(request);
+            _globalVocabularyService.AssignVocabularyToStudent(request);
             return Ok();
         }
 
         [HttpPost("assign-multiple")]
         public ActionResult AssignMultiple([FromBody] AssignMultipleVocabularyToStudentRequest request)
         {
-            _globalVocabularyService.assignMultipleVocabularyToStudent(request);
+            _globalVocabularyService.AssignMultipleVocabularyToStudent(request);
             return Ok();
         }
     }

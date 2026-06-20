@@ -5,11 +5,11 @@ namespace inzBackend.Services.CourseServices
 {
     public interface ICourseService
     {
-        List<CourseDto> getAllCourses();
-        void updateCourse(int courseId, UpdateCourseRequest request);
-        Course createCourse(CreateCourseRequest request);
-        void deleteCourse(int courseId);
-        void assignProgram(int courseId, int programId);
-        void removeProgram(int courseId, int programId);
+        List<CourseDto> GetAllCourses();
+        void UpdateCourse(int courseId, UpdateCourseRequest request);
+        Course CreateCourse(CreateCourseRequest request);
+        void DeleteCourse(int courseId);
+        void AssignProgram(int courseId, int programId);
+        void RemoveProgram(int courseId, int programId);
     }
 }

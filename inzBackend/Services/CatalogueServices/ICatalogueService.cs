@@ -4,10 +4,10 @@ namespace inzBackend.Services.CatalogueServices
 {
     public interface ICatalogueService
     {
-        Task<CatalogueDto> uploadCatalogue(IFormFile file);
-        List<CatalogueDto> getAllCatalogues();
-        List<CatalogueEntryDto> getEntries(CatalogueEntryFilterRequest filter);
-        void deleteCatalogue(int catalogueId);
-        void updateTranslation(UpdateTranslationRequest request, int entryId);
+        Task<CatalogueDto> UploadCatalogue(IFormFile file);
+        List<CatalogueDto> GetAllCatalogues();
+        List<CatalogueEntryDto> GetEntries(CatalogueEntryFilterRequest filter);
+        void DeleteCatalogue(int catalogueId);
+        void UpdateTranslation(UpdateTranslationRequest request, int entryId);
     }
 }

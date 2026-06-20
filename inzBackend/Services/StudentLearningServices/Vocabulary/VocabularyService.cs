@@ -18,7 +18,7 @@ namespace inzBackend.Services.StudentLearningServices.Vocabulary
             _userContextService = userContextService;
         }
 
-        public List<VocabularyDto> getAllVocabulary()
+        public List<VocabularyDto> GetAllVocabulary()
         {
             var userId = _userContextService.GetUserId;
             return _dbContext

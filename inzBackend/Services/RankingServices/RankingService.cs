@@ -36,11 +36,11 @@ namespace inzBackend.Services.RankingServices
             _lessonPanelService = lessonPanelService;
         }
 
-        public RankingDto getRanking(string period)
+        public RankingDto GetRanking(string period)
         {
             var currentUserId = _userContextService.GetUserId!.Value;
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var (dateFrom, dateTo) = getDateRange(period, today);
+            var (dateFrom, dateTo) = GetDateRange(period, today);
 
             var dow = ((int)today.DayOfWeek + 6) % 7;
             var thisWeekStart = today.AddDays(-dow);
@@ -77,7 +77,7 @@ namespace inzBackend.Services.RankingServices
             var entries = users.Select(u =>
             {
                 var activityScore = _lessonPanelService
-                    .calculateActivityScore(u.Id, scoreWeekStart, scoreWeekEnd);
+                    .CalculateActivityScore(u.Id, scoreWeekStart, scoreWeekEnd);
 
                 var avg = (decimal)(grades.FirstOrDefault(x => x.UserId == u.Id)?.Average ?? 0);
 
@@ -142,7 +142,7 @@ namespace inzBackend.Services.RankingServices
             };
         }
 
-        public void addReaction(AddReactionRequest request)
+        public void AddReaction(AddReactionRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
             var validEmojis = new[] { "👏", "👑", "🔥" };
@@ -170,7 +170,7 @@ namespace inzBackend.Services.RankingServices
             _dbContext.SaveChanges();
         }
 
-        public void removeReaction(int toUserId, string emoji, string period)
+        public void RemoveReaction(int toUserId, string emoji, string period)
         {
             var userId = _userContextService.GetUserId!.Value;
             var reaction = _dbContext.RankingReactions.FirstOrDefault(x =>
@@ -184,7 +184,7 @@ namespace inzBackend.Services.RankingServices
             _dbContext.SaveChanges();
         }
 
-        private static (DateOnly from, DateOnly to) getDateRange(string period, DateOnly today)
+        private static (DateOnly from, DateOnly to) GetDateRange(string period, DateOnly today)
         {
             return period switch
             {

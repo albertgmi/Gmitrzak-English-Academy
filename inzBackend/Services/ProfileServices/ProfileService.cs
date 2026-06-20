@@ -22,7 +22,7 @@ namespace inzBackend.Services.ProfileServices
             _cloudinary = cloudinary;
         }
 
-        public ProfileDto getProfile(int userId)
+        public ProfileDto GetProfile(int userId)
         {
             var profile = _dbContext.Profiles
                 .Include(x => x.User)
@@ -34,7 +34,7 @@ namespace inzBackend.Services.ProfileServices
             return _mapper.Map<ProfileDto>(profile);
         }
 
-        public void updateProfile(int userId, UpdateProfileRequest request)
+        public void UpdateProfile(int userId, UpdateProfileRequest request)
         {
             var profile = _dbContext.Profiles
                 .FirstOrDefault(x => x.UserId == userId);
@@ -71,7 +71,7 @@ namespace inzBackend.Services.ProfileServices
             _dbContext.SaveChanges();
         }
 
-        public async Task<string> uploadAvatar(int userId, IFormFile file)
+        public async Task<string> UploadAvatar(int userId, IFormFile file)
         {
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();

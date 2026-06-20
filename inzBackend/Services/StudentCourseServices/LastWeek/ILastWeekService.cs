@@ -4,6 +4,6 @@ namespace inzBackend.Services.StudentCourseServices.LastWeek
 {
     public interface ILastWeekService
     {
-        LastWeekDto getLastWeek();
+        LastWeekDto GetLastWeek();
     }
 }

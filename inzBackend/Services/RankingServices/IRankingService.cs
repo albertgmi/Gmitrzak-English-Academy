@@ -4,8 +4,8 @@ namespace inzBackend.Services.RankingServices
 {
     public interface IRankingService
     {
-        RankingDto getRanking(string period);
-        void addReaction(AddReactionRequest request);
-        void removeReaction(int toUserId, string emoji, string period);
+        RankingDto GetRanking(string period);
+        void AddReaction(AddReactionRequest request);
+        void RemoveReaction(int toUserId, string emoji, string period);
     }
 }

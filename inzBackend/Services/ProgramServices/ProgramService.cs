@@ -17,7 +17,7 @@ namespace inzBackend.Services.ProgramServices
             _mapper = mapper;
         }
 
-        public List<ProgramDto> getAllPrograms()
+        public List<ProgramDto> GetAllPrograms()
         {
             var programs = _dbContext
                 .Programs
@@ -29,7 +29,7 @@ namespace inzBackend.Services.ProgramServices
             return dtos;
         }
 
-        public void updateProgram(int programId, UpdateProgramRequest request)
+        public void UpdateProgram(int programId, UpdateProgramRequest request)
         {
             var program = _dbContext
                 .Programs
@@ -43,7 +43,7 @@ namespace inzBackend.Services.ProgramServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteProgram(int programId)
+        public void DeleteProgram(int programId)
         {
             var program = _dbContext
                 .Programs
@@ -55,7 +55,7 @@ namespace inzBackend.Services.ProgramServices
             _dbContext.SaveChanges();
         }
 
-        public Entities.Curriculum.Program createProgram(CreateProgramRequest request)
+        public Entities.Curriculum.Program CreateProgram(CreateProgramRequest request)
         {
             var newProgram = new Entities.Curriculum.Program
             {

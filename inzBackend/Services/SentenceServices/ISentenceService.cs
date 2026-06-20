@@ -8,19 +8,19 @@ namespace inzBackend.Services.SentenceServices
 {
     public interface ISentenceService
     {
-        List<SentenceStockDto> getAllStock();
-        void createStock(CreateSentenceStockRequest request);
-        void deleteStock(int id);
-        Task<int> uploadStockFromExcel(IFormFile file);
-        List<SentenceSetGroupDto> getAllSetsGrouped();
-        SentenceSetDto getSet(int id);
-        SentenceSetDto createSet(CreateSentenceSetRequest request);
-        void deleteSet(int id);
-        void assignToUser(AssignSentenceRequest request);
-        void assignToModule(AssignSetToModuleRequest request);
-        List<SentenceSetDto> getSetsForModule(int moduleId);
-        void removeSetFromModule(int moduleId, int setId);
-        void updateStock(int id, UpdateSentenceStockRequest request);
-        Task<List<SearchSentenceResultDto>> searchSentence(string query, int studentId);
+        List<SentenceStockDto> GetAllStock();
+        void CreateStock(CreateSentenceStockRequest request);
+        void DeleteStock(int id);
+        Task<int> UploadStockFromExcel(IFormFile file);
+        List<SentenceSetGroupDto> GetAllSetsGrouped();
+        SentenceSetDto GetSet(int id);
+        SentenceSetDto CreateSet(CreateSentenceSetRequest request);
+        void DeleteSet(int id);
+        void AssignToUser(AssignSentenceRequest request);
+        void AssignToModule(AssignSetToModuleRequest request);
+        List<SentenceSetDto> GetSetsForModule(int moduleId);
+        void RemoveSetFromModule(int moduleId, int setId);
+        void UpdateStock(int id, UpdateSentenceStockRequest request);
+        Task<List<SearchSentenceResultDto>> SearchSentence(string query, int studentId);
     }
 }

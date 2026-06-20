@@ -29,7 +29,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             _creditService = creditService;
         }
 
-        public List<FlashcardDto> getAllFlashcards()
+        public List<FlashcardDto> GetAllFlashcards()
         {
             var userId = _userContextService.GetUserId;
             var flashcards = _dbContext.Flashcards
@@ -40,7 +40,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
 
-        public List<FlashcardDto> getLeeches()
+        public List<FlashcardDto> GetLeeches()
         {
             var userId = _userContextService.GetUserId;
             var flashcards = _dbContext.Flashcards
@@ -51,7 +51,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
 
-        public List<FlashcardDto> getStudiedToday()
+        public List<FlashcardDto> GetStudiedToday()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;
@@ -70,7 +70,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
 
-        public List<FlashcardStudyLogDto> getStudyLogs()
+        public List<FlashcardStudyLogDto> GetStudyLogs()
         {
             var userId = _userContextService.GetUserId;
             var studyLogs = _dbContext.FlashcardStudyLogs
@@ -84,7 +84,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             return _mapper.Map<List<FlashcardStudyLogDto>>(studyLogs);
         }
 
-        public List<FlashcardDto> searchFlashcards(string query)
+        public List<FlashcardDto> SearchFlashcards(string query)
         {
             var userId = _userContextService.GetUserId;
             var q = query.ToLower();
@@ -99,7 +99,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
 
-        public void reviewCard(int flashcardId, ReviewCardRequest request)
+        public void ReviewCard(int flashcardId, ReviewCardRequest request)
         {
             var userId = _userContextService.GetUserId;
 
@@ -132,9 +132,9 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                     break;
             }
 
-            _lessonPanelService.addActivityPoints((int)userId, 2, "Flashcard done");
-            _creditService.checkAndAwardDailyChallenge((int)userId);
-            _creditService.checkAndAwardWeeklyChallenge((int)userId);
+            _lessonPanelService.AddActivityPoints((int)userId, 2, "Flashcard done");
+            _creditService.CheckAndAwardDailyChallenge((int)userId);
+            _creditService.CheckAndAwardWeeklyChallenge((int)userId);
 
             card.IsLeech = card.EaseFactor <= 150;
 
@@ -179,7 +179,7 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
 
                     if (!hasMoreDueCards)
                     {
-                        _lessonPanelService.addActivityPoints(userId.Value, 15, "Daily Flashcard Session Completed - Bonus!");
+                        _lessonPanelService.AddActivityPoints(userId.Value, 15, "Daily Flashcard Session Completed - Bonus!");
                     }
                 }
             }

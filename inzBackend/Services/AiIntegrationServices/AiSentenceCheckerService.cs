@@ -1,4 +1,5 @@
-﻿using OpenAI.Chat;
+﻿using inzBackend.Models.AIAnswerCheckingModels;
+using OpenAI.Chat;
 using System.Text.Json;
 
 namespace inzBackend.Services.AiIntegrationServices
@@ -12,7 +13,7 @@ namespace inzBackend.Services.AiIntegrationServices
             _chatClient = chatClient;
         }
 
-        public async Task<(string result, string explanation)> CheckAnswerAsync(
+        public async Task<SentenceCheckResult> CheckAnswerAsync(
             string polish, string expectedEnglish, string userAnswer)
         {
             var messages = new List<ChatMessage>
@@ -49,7 +50,11 @@ namespace inzBackend.Services.AiIntegrationServices
             var result = doc.RootElement.GetProperty("result").GetString() ?? "Incorrect";
             var explanation = doc.RootElement.GetProperty("explanation").GetString() ?? string.Empty;
 
-            return (result, explanation);
+            return new SentenceCheckResult
+            {
+                Result = result,
+                Explanation = explanation
+            };
         }
     }
 }
