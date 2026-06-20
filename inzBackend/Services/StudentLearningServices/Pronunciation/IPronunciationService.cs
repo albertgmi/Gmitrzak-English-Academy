@@ -6,8 +6,8 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
 {
     public interface IPronunciationService
     {
-        List<PronunciationEntryDto> getAllEntries();
-        List<PronunciationTestItemDto> getCorrectPronunciation();
-        List<PronunciationAttemptDto> getAttempts(int pronunciationEntryId);
+        List<PronunciationEntryDto> GetAllEntries();
+        List<PronunciationTestItemDto> GetCorrectPronunciation();
+        List<PronunciationAttemptDto> GetAttempts(int pronunciationEntryId);
     }
 }

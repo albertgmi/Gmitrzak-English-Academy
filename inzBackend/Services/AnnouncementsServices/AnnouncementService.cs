@@ -21,7 +21,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _userContextService = userContextService;
         }
 
-        public List<AnnouncementDto> getAll()
+        public List<AnnouncementDto> GetAll()
         {
             return _dbContext.Announcements
                 .Include(x => x.Sender)
@@ -44,7 +44,7 @@ namespace inzBackend.Services.AnnouncementsServices
                 .ToList();
         }
 
-        public List<AnnouncementInboxDto> getInbox()
+        public List<AnnouncementInboxDto> GetInbox()
         {
             var userId = _userContextService.GetUserId;
             return _dbContext.AnnouncementRecipients
@@ -71,7 +71,7 @@ namespace inzBackend.Services.AnnouncementsServices
                 .ToList();
         }
 
-        public UnreadCountDto getUnreadCount()
+        public UnreadCountDto GetUnreadCount()
         {
             var userId = _userContextService.GetUserId;
             var count = _dbContext.AnnouncementRecipients
@@ -79,7 +79,7 @@ namespace inzBackend.Services.AnnouncementsServices
             return new UnreadCountDto { Count = count };
         }
 
-        public void create(CreateAnnouncementRequest request)
+        public void Create(CreateAnnouncementRequest request)
         {
             var senderId = _userContextService.GetUserId!.Value;
 
@@ -123,7 +123,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.SaveChanges();
         }
 
-        public void signUp(int recipientId)
+        public void SignUp(int recipientId)
         {
             var userId = _userContextService.GetUserId;
             var recipient = _dbContext.AnnouncementRecipients
@@ -136,7 +136,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.SaveChanges();
         }
 
-        public void vote(int recipientId, bool voteValue)
+        public void Vote(int recipientId, bool voteValue)
         {
             var userId = _userContextService.GetUserId;
             var recipient = _dbContext.AnnouncementRecipients
@@ -149,7 +149,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.SaveChanges();
         }
 
-        public void markRead(int recipientId)
+        public void MarkRead(int recipientId)
         {
             var userId = _userContextService.GetUserId;
             var recipient = _dbContext.AnnouncementRecipients
@@ -160,7 +160,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.SaveChanges();
         }
 
-        public void markAllRead()
+        public void MarkAllRead()
         {
             var userId = _userContextService.GetUserId;
             var unread = _dbContext.AnnouncementRecipients
@@ -174,7 +174,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.SaveChanges();
         }
 
-        public void delete(int id)
+        public void Delete(int id)
         {
             var announcement = _dbContext.Announcements
                 .Include(x => x.Recipients)
@@ -187,7 +187,7 @@ namespace inzBackend.Services.AnnouncementsServices
             _dbContext.SaveChanges();
         }
 
-        public AnnouncementDetailsDto getDetails(int announcementId)
+        public AnnouncementDetailsDto GetDetails(int announcementId)
         {
             var announcement = _dbContext.Announcements
                 .Include(a => a.Recipients)

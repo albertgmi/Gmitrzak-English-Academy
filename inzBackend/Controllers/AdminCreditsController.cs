@@ -21,21 +21,21 @@ namespace inzBackend.Controllers
         [HttpGet("summary")]
         public ActionResult<List<UserCreditSummaryDto>> GetSummary()
         {
-            var result = _creditService.getAllUsersCreditSummary();
+            var result = _creditService.GetAllUsersCreditSummary();
             return Ok(result);
         }
 
         [HttpGet("student/{studentId}")]
         public ActionResult<StudentCreditDetailDto> GetStudentDetail(int studentId)
         {
-            var result = _creditService.getStudentCreditDetail(studentId);
+            var result = _creditService.GetStudentCreditDetail(studentId);
             return Ok(result);
         }
 
         [HttpPatch("purchase/{purchaseId}/status")]
         public ActionResult UpdateStatus(int purchaseId, [FromBody] UpdatePurchaseStatusRequest request)
         {
-            _creditService.updatePurchaseStatus(purchaseId, request.Status);
+            _creditService.UpdatePurchaseStatus(purchaseId, request.Status);
             return Ok();
         }
     }

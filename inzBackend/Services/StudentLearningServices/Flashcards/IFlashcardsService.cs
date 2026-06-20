@@ -4,11 +4,11 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
     public interface IFlashcardsService
     {
-        List<FlashcardDto> getAllFlashcards();
-        List<FlashcardDto> getLeeches();
-        List<FlashcardDto> getStudiedToday();
-        List<FlashcardStudyLogDto> getStudyLogs();
-        List<FlashcardDto> searchFlashcards(string query);
-        void reviewCard(int flashcardId, ReviewCardRequest request);
+        List<FlashcardDto> GetAllFlashcards();
+        List<FlashcardDto> GetLeeches();
+        List<FlashcardDto> GetStudiedToday();
+        List<FlashcardStudyLogDto> GetStudyLogs();
+        List<FlashcardDto> SearchFlashcards(string query);
+        void ReviewCard(int flashcardId, ReviewCardRequest request);
     }
 }

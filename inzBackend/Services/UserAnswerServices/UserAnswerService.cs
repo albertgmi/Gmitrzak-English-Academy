@@ -31,7 +31,7 @@ namespace inzBackend.Services.UserAnswerServices
             _lessonPanelService = lessonPanelService;
         }
 
-        public async Task<AnswerResultDto> submitAnswerAsync(SubmitAnswerRequest request)
+        public async Task<AnswerResultDto> SubmitAnswerAsync(SubmitAnswerRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
 
@@ -47,7 +47,7 @@ namespace inzBackend.Services.UserAnswerServices
                 .FirstOrDefaultAsync(x => x.Id == request.SentenceStockId)
                 ?? throw new NotFoundException("Sentence not found");
 
-            var (result, explanation) = await _aiService.CheckAnswerAsync(
+            var sentenceCheckResult = await _aiService.CheckAnswerAsync(
                 sentence.Polish, sentence.EnglishTranslation, request.UserAnswer);
 
             var existingAnswer = await _dbContext.UserSentenceAnswers
@@ -58,8 +58,8 @@ namespace inzBackend.Services.UserAnswerServices
             if (existingAnswer is not null)
             {
                 existingAnswer.UserAnswer = request.UserAnswer;
-                existingAnswer.AiResult = result;
-                existingAnswer.AiExplanation = explanation;
+                existingAnswer.AiResult = sentenceCheckResult.Result;
+                existingAnswer.AiExplanation = sentenceCheckResult.Explanation;
                 existingAnswer.TeacherOverride = null;
                 existingAnswer.TeacherExplanation = null;
                 existingAnswer.TeacherReviewed = false;
@@ -72,8 +72,8 @@ namespace inzBackend.Services.UserAnswerServices
                     ModuleId = request.ModuleId,
                     SentenceStockId = request.SentenceStockId,
                     UserAnswer = request.UserAnswer,
-                    AiResult = result,
-                    AiExplanation = explanation,
+                    AiResult = sentenceCheckResult.Result,
+                    AiExplanation = sentenceCheckResult.Explanation,
                     TeacherReviewed = false
                 };
                 _dbContext.UserSentenceAnswers.Add(existingAnswer);
@@ -85,7 +85,7 @@ namespace inzBackend.Services.UserAnswerServices
 
             if (!alreadyExists)
             {
-                var isCorrectOrPartial = result == "Correct" || result == "Partial";
+                var isCorrectOrPartial = sentenceCheckResult.Result == "Correct" || sentenceCheckResult.Result == "Partial";
 
                 _dbContext.Sentences.Add(new Sentence
                 {
@@ -100,7 +100,7 @@ namespace inzBackend.Services.UserAnswerServices
             }
 
             await _dbContext.SaveChangesAsync();
-            await tryCompleteModuleAsync(userId, request.ModuleId);
+            await TryCompleteModuleAsync(userId, request.ModuleId);
             await _dbContext.SaveChangesAsync();
 
             return new AnswerResultDto
@@ -109,23 +109,23 @@ namespace inzBackend.Services.UserAnswerServices
                 Polish = sentence.Polish,
                 ExpectedTranslation = sentence.EnglishTranslation,
                 UserAnswer = request.UserAnswer,
-                AiResult = result,
-                AiExplanation = explanation
+                AiResult = sentenceCheckResult.Result,
+                AiExplanation = sentenceCheckResult.Explanation
             };
         }
 
-        public List<AnswerResultDto> getAnswersForModule(int moduleId)
+        public List<AnswerResultDto> GetAnswersForModule(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
-            return mapAnswers(moduleId, userId);
+            return MapAnswers(moduleId, userId);
         }
 
-        public List<AnswerResultDto> getAnswersForModuleByStudent(int moduleId, int studentId)
+        public List<AnswerResultDto> GetAnswersForModuleByStudent(int moduleId, int studentId)
         {
-            return mapAnswers(moduleId, studentId);
+            return MapAnswers(moduleId, studentId);
         }
 
-        public void overrideAnswer(int answerId, TeacherOverrideRequest request)
+        public void OverrideAnswer(int answerId, TeacherOverrideRequest request)
         {
             var answer = _dbContext.UserSentenceAnswers
                 .FirstOrDefault(x => x.Id == answerId)
@@ -137,7 +137,7 @@ namespace inzBackend.Services.UserAnswerServices
             _dbContext.SaveChanges();
         }
 
-        public ModuleReportDto generateReport(int moduleId, int studentId)
+        public ModuleReportDto GenerateReport(int moduleId, int studentId)
         {
             var module = _dbContext.Modules
                 .FirstOrDefault(x => x.Id == moduleId)
@@ -195,7 +195,7 @@ namespace inzBackend.Services.UserAnswerServices
             };
         }
 
-        public List<CompletedSentenceModuleDto> getCompletedSentenceModules(int studentId, DateOnly dateFrom, DateOnly dateTo)
+        public List<CompletedSentenceModuleDto> GetCompletedSentenceModules(int studentId, DateOnly dateFrom, DateOnly dateTo)
         {
             var result = new List<CompletedSentenceModuleDto>();
 
@@ -272,15 +272,15 @@ namespace inzBackend.Services.UserAnswerServices
                 .ToList();
         }
 
-        public DateRangeReportDto generateDateRangeReport(int studentId, DateOnly dateFrom, DateOnly dateTo)
+        public DateRangeReportDto GenerateDateRangeReport(int studentId, DateOnly dateFrom, DateOnly dateTo)
         {
             var student = _dbContext.Users.FirstOrDefault(x => x.Id == studentId)
                 ?? throw new NotFoundException("Student not found");
 
-            var modules = getCompletedSentenceModules(studentId, dateFrom, dateTo);
+            var modules = GetCompletedSentenceModules(studentId, dateFrom, dateTo);
 
             var moduleReports = modules
-                .Select(m => generateReport(m.ModuleId, studentId))
+                .Select(m => GenerateReport(m.ModuleId, studentId))
                 .ToList();
 
             return new DateRangeReportDto
@@ -299,7 +299,7 @@ namespace inzBackend.Services.UserAnswerServices
 
 
 
-        private List<AnswerResultDto> mapAnswers(int moduleId, int userId)
+        private List<AnswerResultDto> MapAnswers(int moduleId, int userId)
         {
             return _dbContext.UserSentenceAnswers
                 .Include(x => x.SentenceStock)
@@ -319,7 +319,7 @@ namespace inzBackend.Services.UserAnswerServices
                 .ToList();
         }
 
-        private async Task tryCompleteModuleAsync(int userId, int moduleId)
+        private async Task TryCompleteModuleAsync(int userId, int moduleId)
         {
             var totalSentences = await _dbContext.ModuleSentenceSets
                 .Include(x => x.SentenceSet).ThenInclude(s => s.Items)
@@ -340,7 +340,7 @@ namespace inzBackend.Services.UserAnswerServices
 
             if (directAssignment is not null && !directAssignment.IsCompleted)
             {
-                await assignModuleCompletionPointsAsync(userId, moduleId, directAssignment);
+                await AssignModuleCompletionPointsAsync(userId, moduleId, directAssignment);
                 directAssignment.IsCompleted = true;
                 await _dbContext.SaveChangesAsync();
             }
@@ -379,7 +379,7 @@ namespace inzBackend.Services.UserAnswerServices
                             DueDate = dueDate,
                             IsCompleted = false
                         };
-                        await assignModuleCompletionPointsAsync(userId, moduleId, fakeAssignment);
+                        await AssignModuleCompletionPointsAsync(userId, moduleId, fakeAssignment);
                     }
 
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
@@ -394,7 +394,7 @@ namespace inzBackend.Services.UserAnswerServices
             await _dbContext.SaveChangesAsync();
         }
 
-        private async Task assignModuleCompletionPointsAsync(int userId, int moduleId, UserModuleAssignment? assignment)
+        private async Task AssignModuleCompletionPointsAsync(int userId, int moduleId, UserModuleAssignment? assignment)
         {
             var answers = await _dbContext.UserSentenceAnswers
                 .Where(x => x.UserId == userId && x.ModuleId == moduleId)
@@ -423,7 +423,7 @@ namespace inzBackend.Services.UserAnswerServices
                 ? $"Module '{moduleName}' completed (+{bonus} bonus for on-time)"
                 : $"Module '{moduleName}' completed (no bonus — past due date)";
 
-            _lessonPanelService.addActivityPoints(userId, totalPoints, reason);
+            _lessonPanelService.AddActivityPoints(userId, totalPoints, reason);
         }
     }
 }

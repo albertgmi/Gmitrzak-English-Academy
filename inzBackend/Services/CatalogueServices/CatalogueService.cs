@@ -29,7 +29,7 @@ namespace inzBackend.Services.CatalogueServices
             _mapper = mapper;
         }
 
-        public async Task<CatalogueDto> uploadCatalogue(IFormFile file)
+        public async Task<CatalogueDto> UploadCatalogue(IFormFile file)
         {
             var allowedExtensions = new[] { ".xlsx", ".xls" };
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -180,7 +180,7 @@ namespace inzBackend.Services.CatalogueServices
             return _mapper.Map<CatalogueDto>(lastCatalogue);
         }
 
-        public List<CatalogueDto> getAllCatalogues()
+        public List<CatalogueDto> GetAllCatalogues()
         {
             return _dbContext.Catalogues
                 .Include(x => x.UploadedBy)
@@ -197,7 +197,7 @@ namespace inzBackend.Services.CatalogueServices
                 .ToList();
         }
 
-        public List<CatalogueEntryDto> getEntries(CatalogueEntryFilterRequest filter)
+        public List<CatalogueEntryDto> GetEntries(CatalogueEntryFilterRequest filter)
         {
             var query = _dbContext.CatalogueEntries
                 .Include(x => x.Catalogue)
@@ -230,7 +230,7 @@ namespace inzBackend.Services.CatalogueServices
                 .ToList();
         }
 
-        public void deleteCatalogue(int catalogueId)
+        public void DeleteCatalogue(int catalogueId)
         {
             var catalogue = _dbContext
                 .Catalogues
@@ -250,7 +250,7 @@ namespace inzBackend.Services.CatalogueServices
             _dbContext.SaveChanges();
         }
 
-        public void updateTranslation(UpdateTranslationRequest request, int entryId)
+        public void UpdateTranslation(UpdateTranslationRequest request, int entryId)
         {
             var entry = _dbContext.CatalogueEntries.FirstOrDefault(x => x.Id == entryId);
             if (entry is null)

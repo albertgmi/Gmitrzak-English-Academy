@@ -20,54 +20,54 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<List<AnnouncementDto>> GetAll()
         {
-            return _announcementService.getAll();
+            return _announcementService.GetAll();
         }
 
         [HttpGet("inbox")]
         public ActionResult<List<AnnouncementInboxDto>> GetInbox()
         {
-            return _announcementService.getInbox();
+            return _announcementService.GetInbox();
         }
 
         [HttpGet("unread-count")]
         public ActionResult<UnreadCountDto> GetUnreadCount()
         {
-            return _announcementService.getUnreadCount();
+            return _announcementService.GetUnreadCount();
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public ActionResult Create([FromBody] CreateAnnouncementRequest request)
         {
-            _announcementService.create(request);
+            _announcementService.Create(request);
             return Ok();
         }
 
         [HttpPatch("{recipientId}/read")]
         public ActionResult MarkRead([FromRoute] int recipientId)
         {
-            _announcementService.markRead(recipientId);
+            _announcementService.MarkRead(recipientId);
             return Ok();
         }
 
         [HttpPatch("{recipientId}/signup")]
         public ActionResult SignUp([FromRoute] int recipientId)
         {
-            _announcementService.signUp(recipientId);
+            _announcementService.SignUp(recipientId);
             return Ok();
         }
 
         [HttpPatch("{recipientId}/vote")]
         public ActionResult Vote([FromRoute] int recipientId, [FromQuery] bool value)
         {
-            _announcementService.vote(recipientId, value);
+            _announcementService.Vote(recipientId, value);
             return Ok();
         }
 
         [HttpPatch("read-all")]
         public ActionResult MarkAllRead()
         {
-            _announcementService.markAllRead();
+            _announcementService.MarkAllRead();
             return Ok();
         }
 
@@ -75,7 +75,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult Delete([FromRoute] int id)
         {
-            _announcementService.delete(id);
+            _announcementService.Delete(id);
             return NoContent();
         }
 
@@ -83,7 +83,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<AnnouncementDetailsDto> GetDetails([FromRoute] int id)
         {
-            return _announcementService.getDetails(id);
+            return _announcementService.GetDetails(id);
         }
     }
 }

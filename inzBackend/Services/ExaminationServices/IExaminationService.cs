@@ -4,6 +4,6 @@ namespace inzBackend.Services.ExaminationServices
 {
     public interface IExaminationService
     {
-        ExaminationDto getExamination(int studentId);
+        ExaminationDto GetExamination(int studentId);
     }
 }

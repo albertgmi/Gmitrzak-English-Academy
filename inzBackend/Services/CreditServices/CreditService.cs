@@ -21,7 +21,7 @@ namespace inzBackend.Services.CreditServices
             _dbContext = dbContext;
         }
 
-        public void awardCredits(int userId, int amount, string reason)
+        public void AwardCredits(int userId, int amount, string reason)
         {
             _dbContext.Credits.Add(new Credit
             {
@@ -33,7 +33,7 @@ namespace inzBackend.Services.CreditServices
             _dbContext.SaveChanges();
         }
 
-        public void checkAndAwardDailyChallenge(int userId)
+        public void CheckAndAwardDailyChallenge(int userId)
         {
             var today = PolandTime.Today;
 
@@ -51,12 +51,12 @@ namespace inzBackend.Services.CreditServices
 
             if (todayCount >= DAILY_FLASHCARD_GOAL)
             {
-                awardCredits(userId, DAILY_CREDIT_REWARD,
+                AwardCredits(userId, DAILY_CREDIT_REWARD,
                     "Daily challenge: 75 flashcards");
             }
         }
 
-        public void checkAndAwardWeeklyChallenge(int userId)
+        public void CheckAndAwardWeeklyChallenge(int userId)
         {
             var today = PolandTime.Today;
             var dow = ((int)today.DayOfWeek + 6) % 7;
@@ -79,12 +79,12 @@ namespace inzBackend.Services.CreditServices
 
             if (weekCount >= WEEKLY_FLASHCARD_GOAL)
             {
-                awardCredits(userId, WEEKLY_CREDIT_REWARD,
+                AwardCredits(userId, WEEKLY_CREDIT_REWARD,
                     "Weekly challenge: 300 flashcards");
             }
         }
 
-        public CreditSummaryDto getCreditSummary(int userId)
+        public CreditSummaryDto GetCreditSummary(int userId)
         {
             var credits = _dbContext.Credits
                 .Where(x => x.UserId == userId)
@@ -141,9 +141,9 @@ namespace inzBackend.Services.CreditServices
             };
         }
 
-        public List<ShopItemDto> getShopItems(int userId)
+        public List<ShopItemDto> GetShopItems(int userId)
         {
-            var summary = getCreditSummary(userId);
+            var summary = GetCreditSummary(userId);
             var available = summary.TotalCredits;
 
             return _dbContext.ShopItems
@@ -161,7 +161,7 @@ namespace inzBackend.Services.CreditServices
                 .ToList();
         }
 
-        public List<ShopItemDto> getShopItems()
+        public List<ShopItemDto> GetShopItems()
         {
             return _dbContext.ShopItems
                 .Where(x => x.IsActive)
@@ -178,7 +178,7 @@ namespace inzBackend.Services.CreditServices
                 .ToList();
         }
 
-        public ShopPurchaseResultDto purchaseItem(int userId, int shopItemId)
+        public ShopPurchaseResultDto PurchaseItem(int userId, int shopItemId)
         {
             var item = _dbContext.ShopItems
                 .FirstOrDefault(x => x.Id == shopItemId && x.IsActive);
@@ -187,7 +187,7 @@ namespace inzBackend.Services.CreditServices
                 return new ShopPurchaseResultDto
                 { Success = false, Message = "Item not found." };
 
-            var summary = getCreditSummary(userId);
+            var summary = GetCreditSummary(userId);
             var available = summary.TotalCredits;
 
             if (available < item.CreditCost)
@@ -219,7 +219,7 @@ namespace inzBackend.Services.CreditServices
             };
         }
 
-        public List<UserCreditSummaryDto> getAllUsersCreditSummary()
+        public List<UserCreditSummaryDto> GetAllUsersCreditSummary()
         {
             var users = _dbContext.Users
                 .Include(x=>x.Profile)
@@ -228,7 +228,7 @@ namespace inzBackend.Services.CreditServices
 
             var result = users.Select(u =>
             {
-                var summary = getCreditSummary(u.Id);
+                var summary = GetCreditSummary(u.Id);
                 return new UserCreditSummaryDto
                 {
                     UserId = u.Id,
@@ -244,12 +244,12 @@ namespace inzBackend.Services.CreditServices
             return result;
         }
 
-        public StudentCreditDetailDto getStudentCreditDetail(int studentId)
+        public StudentCreditDetailDto GetStudentCreditDetail(int studentId)
         {
             var user = _dbContext.Users.FirstOrDefault(x => x.Id == studentId)
                 ?? throw new NotFoundException("Student not found");
 
-            var summary = getCreditSummary(studentId);
+            var summary = GetCreditSummary(studentId);
 
             return new StudentCreditDetailDto
             {
@@ -263,7 +263,7 @@ namespace inzBackend.Services.CreditServices
             };
         }
 
-        public void updatePurchaseStatus(int purchaseId, string status)
+        public void UpdatePurchaseStatus(int purchaseId, string status)
         {
             var purchase = _dbContext.ShopPurchases
                 .FirstOrDefault(x => x.Id == purchaseId)

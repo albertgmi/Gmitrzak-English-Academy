@@ -27,7 +27,7 @@ namespace inzBackend.Services.ModuleServices
             _mapper = mapper;
             _userContextService = userContextService;
         }
-        public List<ModuleDto> getAllModules()
+        public List<ModuleDto> GetAllModules()
         {
             var modules = _dbContext.Modules
                 .Include(m => m.MatrixModules).ThenInclude(mm => mm.Matrix)
@@ -37,7 +37,7 @@ namespace inzBackend.Services.ModuleServices
             return _mapper.Map<List<ModuleDto>>(modules);
         }
 
-        public List<ModuleDto> getSentenceModulesForStudent(int studentId)
+        public List<ModuleDto> GetSentenceModulesForStudent(int studentId)
         {
             var studentMatrixIds = _dbContext.UserMatrixAssignments
                 .Where(x => x.UserId == studentId)
@@ -58,7 +58,7 @@ namespace inzBackend.Services.ModuleServices
             return _mapper.Map<List<ModuleDto>>(modules);
         }
 
-        public ModuleDto createModule(CreateModuleRequest request)
+        public ModuleDto CreateModule(CreateModuleRequest request)
         {
             var module = new Module
             {
@@ -91,7 +91,7 @@ namespace inzBackend.Services.ModuleServices
             return _mapper.Map<ModuleDto>(module);
         }
 
-        public void deleteModule(int moduleId)
+        public void DeleteModule(int moduleId)
         {
             var module = _dbContext.Modules.FirstOrDefault(x => x.Id == moduleId)
                 ?? throw new NotFoundException($"Module with id {moduleId} was not found");
@@ -100,7 +100,7 @@ namespace inzBackend.Services.ModuleServices
             _dbContext.SaveChanges();
         }
 
-        public void updateModule(int moduleId, UpdateModuleRequest request)
+        public void UpdateModule(int moduleId, UpdateModuleRequest request)
         {
             var module = _dbContext.Modules
                 .Include(m => m.Presentation)
@@ -143,7 +143,7 @@ namespace inzBackend.Services.ModuleServices
             _dbContext.SaveChanges();
         }
 
-        public void assignMatrix(int moduleId, int matrixId, AssignModuleToMatrixRequest request)
+        public void AssignMatrix(int moduleId, int matrixId, AssignModuleToMatrixRequest request)
         {
             var module = _dbContext.Modules.FirstOrDefault(x => x.Id == moduleId)
                 ?? throw new NotFoundException($"Module with id {moduleId} was not found");
@@ -167,7 +167,7 @@ namespace inzBackend.Services.ModuleServices
             _dbContext.SaveChanges();
         }
 
-        public void detachMatrix(int moduleId, int matrixId)
+        public void DetachMatrix(int moduleId, int matrixId)
         {
             var module = _dbContext.Modules.FirstOrDefault(x => x.Id == moduleId)
                 ?? throw new NotFoundException($"Module with id {moduleId} was not found");
@@ -183,7 +183,7 @@ namespace inzBackend.Services.ModuleServices
             _dbContext.MatrixModules.Remove(matrixModule);
             _dbContext.SaveChanges();
         }
-        public StudentModuleDto? getStudentModule(int userId, int moduleId)
+        public StudentModuleDto? GetStudentModule(int userId, int moduleId)
         {
             var today = PolandTime.Today;
 
@@ -195,8 +195,7 @@ namespace inzBackend.Services.ModuleServices
             if (direct is not null)
             {
                 var assignedDate = DateOnly.FromDateTime(direct.CreatedAt.DateTime);
-                var (days, req, canComplete, reason) =
-                    getActivityStatus(userId, direct.Module.Category, today, assignedDate);
+                var activityStatus1 = GetActivityStatus(userId, direct.Module.Category, today, assignedDate);
 
                 return new StudentModuleDto
                 {
@@ -210,10 +209,10 @@ namespace inzBackend.Services.ModuleServices
                     IsCompleted = direct.IsCompleted,
                     IsOverdue = direct.DueDate < today,
                     Url = direct.Module.TheaterItem?.Url,
-                    ActivityDaysCount = days,
-                    ActivityDaysRequired = req,
-                    CanComplete = canComplete,
-                    CompletionBlockReason = reason,
+                    ActivityDaysCount = activityStatus1.Streak,
+                    ActivityDaysRequired = activityStatus1.Required,
+                    CanComplete = activityStatus1.CanComplete,
+                    CompletionBlockReason = activityStatus1.BlockReason,
                     PresentationUrl = direct.Module.Presentation?.Url,
                     PresentationText = direct.Module.Presentation?.Text
                 };
@@ -247,8 +246,7 @@ namespace inzBackend.Services.ModuleServices
             var isCompleted = _dbContext.UserMatrixModuleCompletions
                 .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
 
-            var (mDays, mReq, mCan, mReason) =
-                getActivityStatus(userId, mm.Module.Category, today, unlockDate);
+            var activityStatus = GetActivityStatus(userId, mm.Module.Category, today, unlockDate);
 
             return new StudentModuleDto
             {
@@ -262,16 +260,16 @@ namespace inzBackend.Services.ModuleServices
                 IsCompleted = isCompleted,
                 IsOverdue = false,
                 Url = mm.Module.TheaterItem?.Url,
-                ActivityDaysCount = mDays,
-                ActivityDaysRequired = mReq,
-                CanComplete = mCan,
-                CompletionBlockReason = mReason,
+                ActivityDaysCount = activityStatus.Streak,
+                ActivityDaysRequired = activityStatus.Required,
+                CanComplete = activityStatus.CanComplete,
+                CompletionBlockReason = activityStatus.BlockReason,
                 PresentationUrl = mm.Module.Presentation?.Url,
                 PresentationText = mm.Module.Presentation?.Text
             };
         }
 
-        public void completeStudentModule(int userId, int moduleId)
+        public void CompleteStudentModule(int userId, int moduleId)
         {
             var today = PolandTime.Today;
 
@@ -284,11 +282,10 @@ namespace inzBackend.Services.ModuleServices
                 if (direct.IsCompleted) return;
 
                 var assignedDate = DateOnly.FromDateTime(direct.CreatedAt.DateTime);
-                var (_, _, canComplete, reason) =
-                    getActivityStatus(userId, direct.Module.Category, today, assignedDate);
+                var activityStatus1 = GetActivityStatus(userId, direct.Module.Category, today, assignedDate);
 
-                if (!canComplete)
-                    throw new BadRequestException(reason ?? "Not enough consecutive days.");
+                if (!activityStatus1.CanComplete)
+                    throw new BadRequestException(activityStatus1.BlockReason ?? "Not enough consecutive days.");
 
                 direct.IsCompleted = true;
                 _dbContext.SaveChanges();
@@ -319,11 +316,10 @@ namespace inzBackend.Services.ModuleServices
                 .AddDays((mm.WeekNumber - 1) * mm.Matrix.RefreshIntervalDays)
                 .AddDays(mm.DayOfWeek - 1);
 
-            var (_, _, mCan, mReason) =
-                getActivityStatus(userId, mm.Module.Category, today, unlockDate);
+            var activityStatus = GetActivityStatus(userId, mm.Module.Category, today, unlockDate);
 
-            if (!mCan)
-                throw new BadRequestException(mReason ?? "Not enough consecutive days.");
+            if (!activityStatus.CanComplete)
+                throw new BadRequestException(activityStatus.BlockReason ?? "Not enough consecutive days.");
 
             _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
             {
@@ -335,9 +331,7 @@ namespace inzBackend.Services.ModuleServices
             _dbContext.SaveChanges();
         }
 
-        private (int streak, int required, bool canComplete, string? blockReason)
-            getActivityStatus(int userId, string category,
-                              DateOnly today, DateOnly? assignedDate = null)
+        private ActivityStatus GetActivityStatus(int userId, string category, DateOnly today, DateOnly? assignedDate = null)
         {
             const int REQUIRED = 3;
             var countFrom = assignedDate ?? DateOnly.MinValue;
@@ -353,10 +347,14 @@ namespace inzBackend.Services.ModuleServices
                             .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = countConsecutiveStreak(dates, today);
-                        return (streak, REQUIRED, streak >= REQUIRED,
-                            streak >= REQUIRED ? null
-                                : $"Study flashcards for {REQUIRED - streak} more consecutive day(s).");
+                        var streak = CountConsecutiveStreak(dates, today);
+                        return new ActivityStatus
+                        {
+                            Streak = streak,
+                            Required = REQUIRED,
+                            CanComplete = streak >= REQUIRED,
+                            BlockReason = streak >= REQUIRED ? null : $"Study flashcards for {REQUIRED - streak} more consecutive day(s)."
+                        };
                     }
 
                 case "SentenceFlashcards":
@@ -370,10 +368,14 @@ namespace inzBackend.Services.ModuleServices
                             .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = countConsecutiveStreak(dates, today);
-                        return (streak, REQUIRED, streak >= REQUIRED,
-                            streak >= REQUIRED ? null
-                                : $"Practice sentence flashcards for {REQUIRED - streak} more consecutive day(s).");
+                        var streak = CountConsecutiveStreak(dates, today);
+                        return new ActivityStatus
+                        {
+                            Streak = streak,
+                            Required = REQUIRED,
+                            CanComplete = streak >= REQUIRED,
+                            BlockReason = streak >= REQUIRED ? null : $"Practice sentence flashcards for {REQUIRED - streak} more consecutive day(s)."
+                        };
                     }
 
                 case "Memories":
@@ -387,10 +389,14 @@ namespace inzBackend.Services.ModuleServices
                             .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = countConsecutiveStreak(dates, today);
-                        return (streak, REQUIRED, streak >= REQUIRED,
-                            streak >= REQUIRED ? null
-                                : $"Visit Memories for {REQUIRED - streak} more consecutive day(s).");
+                        var streak = CountConsecutiveStreak(dates, today);
+                        return new ActivityStatus
+                        {
+                            Streak = streak,
+                            Required = REQUIRED,
+                            CanComplete = streak >= REQUIRED,
+                            BlockReason = streak >= REQUIRED ? null : $"Visit Memories for {REQUIRED - streak} more consecutive day(s)."
+                        };
                     }
 
                 case "Pronunciation":
@@ -404,21 +410,31 @@ namespace inzBackend.Services.ModuleServices
                             .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = countConsecutiveStreak(dates, today);
-                        return (streak, REQUIRED, streak >= REQUIRED,
-                            streak >= REQUIRED ? null
-                                : $"Practice pronunciation for {REQUIRED - streak} more consecutive day(s).");
+                        var streak = CountConsecutiveStreak(dates, today);
+                        return new ActivityStatus
+                        {
+                            Streak = streak,
+                            Required = REQUIRED,
+                            CanComplete = streak >= REQUIRED,
+                            BlockReason = streak >= REQUIRED ? null : $"Practice pronunciation for {REQUIRED - streak} more consecutive day(s)."
+                        };
                     }
 
                 case "Sentences":
                 case "Presentation":
                 case "General":
                 default:
-                    return (0, 0, true, null);
+                    return new ActivityStatus
+                    {
+                        Streak = 0,
+                        Required = 0,
+                        CanComplete = true,
+                        BlockReason = null
+                    };
             }
         }
 
-        private static int countConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
+        private static int CountConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
         {
             if (!datesDesc.Any()) return 0;
 

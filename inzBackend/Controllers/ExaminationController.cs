@@ -19,7 +19,7 @@ namespace inzBackend.Controllers
         [HttpGet("{studentId}")]
         public ActionResult<ExaminationDto> GetExamination(int studentId)
         {
-            return _examinationService.getExamination(studentId);
+            return _examinationService.GetExamination(studentId);
         }
     }
 }

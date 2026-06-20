@@ -4,6 +4,6 @@ namespace inzBackend.Services.StudentLearningServices.Vocabulary
 {
     public interface IVocabularyService
     {
-        List<VocabularyDto> getAllVocabulary();
+        List<VocabularyDto> GetAllVocabulary();
     }
 }

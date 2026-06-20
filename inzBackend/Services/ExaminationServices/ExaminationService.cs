@@ -13,7 +13,7 @@ namespace inzBackend.Services.ExaminationServices
             _dbContext = dbContext;
         }
 
-        public ExaminationDto getExamination(int studentId)
+        public ExaminationDto GetExamination(int studentId)
         {
             var studiedFlashcardIds = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == studentId)

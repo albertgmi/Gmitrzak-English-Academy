@@ -26,7 +26,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "User")]
         public async Task<ActionResult<AnswerResultDto>> SubmitAnswer([FromBody] SubmitAnswerRequest request)
         {
-            var result = await _service.submitAnswerAsync(request);
+            var result = await _service.SubmitAnswerAsync(request);
             return Ok(result);
         }
 
@@ -34,21 +34,21 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "User")]
         public ActionResult<List<AnswerResultDto>> GetAnswersForModule([FromRoute] int moduleId)
         {
-            return Ok(_service.getAnswersForModule(moduleId));
+            return Ok(_service.GetAnswersForModule(moduleId));
         }
 
         [HttpGet("module/{moduleId}/student/{studentId}")]
         [Authorize(Roles = "Admin")]
         public ActionResult<List<AnswerResultDto>> GetAnswersForStudent([FromRoute] int moduleId, [FromRoute] int studentId)
         {
-            return Ok(_service.getAnswersForModuleByStudent(moduleId, studentId));
+            return Ok(_service.GetAnswersForModuleByStudent(moduleId, studentId));
         }
 
         [HttpPatch("{answerId}/override")]
         [Authorize(Roles = "Admin")]
         public ActionResult OverrideAnswer([FromRoute] int answerId, [FromBody] TeacherOverrideRequest request)
         {
-            _service.overrideAnswer(answerId, request);
+            _service.OverrideAnswer(answerId, request);
             return Ok();
         }
 
@@ -58,7 +58,7 @@ namespace inzBackend.Controllers
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
-            return Ok(_service.getCompletedSentenceModules(studentId, from, to));
+            return Ok(_service.GetCompletedSentenceModules(studentId, from, to));
         }
 
         [HttpGet("report/range")]
@@ -67,8 +67,8 @@ namespace inzBackend.Controllers
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
-            var report = _service.generateDateRangeReport(studentId, from, to);
-            var pdf = _reportExportService.generateRangePdf(report);
+            var report = _service.GenerateDateRangeReport(studentId, from, to);
+            var pdf = _reportExportService.GenerateRangePdf(report);
             var filename = $"report_{report.StudentUsername}_{from}_{to}.pdf"
                 .Replace(" ", "_");
             return File(pdf, "application/pdf", filename);
@@ -80,8 +80,8 @@ namespace inzBackend.Controllers
         {
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
-            var report = _service.generateDateRangeReport(studentId, from, to);
-            var docx = _reportExportService.generateRangeDocx(report);
+            var report = _service.GenerateDateRangeReport(studentId, from, to);
+            var docx = _reportExportService.GenerateRangeDocx(report);
             var filename = $"report_{report.StudentUsername}_{from}_{to}.docx"
                 .Replace(" ", "_");
             return File(docx,
@@ -95,7 +95,7 @@ namespace inzBackend.Controllers
             var from = PolandTime.ParseDate(dateFrom);
             var to = PolandTime.ParseDate(dateTo);
 
-            byte[] zipFileBytes = _reportExportService.generateActiveStudentsZipReport(from, to);
+            byte[] zipFileBytes = _reportExportService.GenerateActiveStudentsZipReport(from, to);
 
             var fileName = $"Reports_Active_Users_{dateFrom:yyyyMMdd}-{dateTo:yyyyMMdd}.zip";
             return File(zipFileBytes, "application/zip", fileName);
