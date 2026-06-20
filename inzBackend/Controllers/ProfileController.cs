@@ -20,14 +20,14 @@ namespace inzBackend.Controllers
         [Authorize(Roles ="Admin,User")]
         public ActionResult<ProfileDto> GetProfile([FromRoute] int userId)
         {
-            return _profileService.getProfile(userId);
+            return _profileService.GetProfile(userId);
         }
 
         [HttpPut("{userId}")]
         [Authorize(Roles = "Admin")]
         public ActionResult UpdateProfile([FromRoute] int userId, [FromBody] UpdateProfileRequest request)
         {
-            _profileService.updateProfile(userId, request);
+            _profileService.UpdateProfile(userId, request);
             return NoContent();
         }
 
@@ -35,7 +35,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin,User")]
         public async Task<string> UploadAvatar([FromRoute] int userId, IFormFile file)
         {
-            return await _profileService.uploadAvatar(userId, file);
+            return await _profileService.UploadAvatar(userId, file);
         }
     }
 }

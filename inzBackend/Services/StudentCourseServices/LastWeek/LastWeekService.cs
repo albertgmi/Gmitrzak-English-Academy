@@ -16,7 +16,7 @@ namespace inzBackend.Services.StudentCourseServices.LastWeek
             _userContextService = userContextService;
         }
 
-        public LastWeekDto getLastWeek()
+        public LastWeekDto GetLastWeek()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;

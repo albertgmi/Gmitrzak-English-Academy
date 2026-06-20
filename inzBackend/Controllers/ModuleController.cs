@@ -20,46 +20,46 @@ namespace inzBackend.Controllers
         [HttpGet]
         public ActionResult<List<ModuleDto>> GetAllModules()
         {
-            return _moduleService.getAllModules();
+            return _moduleService.GetAllModules();
         }
 
         [HttpGet("student/{studentId}/sentences")]
         public ActionResult<List<ModuleDto>> GetSentenceModulesForStudent([FromRoute] int studentId)
         {
-            return Ok(_moduleService.getSentenceModulesForStudent(studentId));
+            return Ok(_moduleService.GetSentenceModulesForStudent(studentId));
         }
 
         [HttpPost]
         public ActionResult<Module> CreateModule([FromBody] CreateModuleRequest request)
         {
-            return Ok(_moduleService.createModule(request));
+            return Ok(_moduleService.CreateModule(request));
         }
 
         [HttpPut("{moduleId}")]
         public ActionResult UpdateModule([FromRoute] int moduleId, [FromBody] UpdateModuleRequest request)
         {
-            _moduleService.updateModule(moduleId, request);
+            _moduleService.UpdateModule(moduleId, request);
             return Ok();
         }
 
         [HttpDelete("{moduleId}")]
         public ActionResult DeleteModule([FromRoute] int moduleId)
         {
-            _moduleService.deleteModule(moduleId);
+            _moduleService.DeleteModule(moduleId);
             return NoContent();
         }
 
         [HttpPost("{moduleId}/matrix/{matrixId}")]
         public ActionResult AssignMatrix([FromRoute] int moduleId, [FromRoute] int matrixId, [FromBody] AssignModuleToMatrixRequest request)
         {
-            _moduleService.assignMatrix(moduleId, matrixId, request);
+            _moduleService.AssignMatrix(moduleId, matrixId, request);
             return Ok();
         }
 
         [HttpDelete("{moduleId}/matrix/{matrixId}")]
         public ActionResult DetachMatrix([FromRoute] int moduleId, [FromRoute] int matrixId)
         {
-            _moduleService.detachMatrix(moduleId, matrixId);
+            _moduleService.DetachMatrix(moduleId, matrixId);
             return NoContent();
         }
     }

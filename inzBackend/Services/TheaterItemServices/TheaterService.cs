@@ -15,7 +15,7 @@ namespace inzBackend.Services.TheaterItemServices
             _dbContext = dbContext;
         }
 
-        public List<TheaterItemDto> getAll()
+        public List<TheaterItemDto> GetAll()
         {
             return _dbContext.TheaterItems
                 .OrderBy(x => x.Title)
@@ -23,7 +23,7 @@ namespace inzBackend.Services.TheaterItemServices
                 .ToList();
         }
 
-        public List<RepertoireItemDto> getRepertoire()
+        public List<RepertoireItemDto> GetRepertoire()
         {
             var items = _dbContext.TheaterItems
                 .Where(x => x.IsActive)
@@ -62,7 +62,7 @@ namespace inzBackend.Services.TheaterItemServices
             .ToList();
         }
 
-        public TheaterItemDto getById(int id)
+        public TheaterItemDto GetById(int id)
         {
             var item = _dbContext.TheaterItems.FirstOrDefault(x => x.Id == id);
             if (item is null)
@@ -70,7 +70,7 @@ namespace inzBackend.Services.TheaterItemServices
             return MapToDto(item);
         }
 
-        public TheaterItemDto create(CreateTheaterItemRequest request)
+        public TheaterItemDto Create(CreateTheaterItemRequest request)
         {
             if (!Enum.TryParse<MediaType>(request.MediaType, out var mediaType))
                 throw new BadRequestException($"Invalid media type: {request.MediaType}");
@@ -92,7 +92,7 @@ namespace inzBackend.Services.TheaterItemServices
             return MapToDto(item);
         }
 
-        public void update(int id, UpdateTheaterItemRequest request)
+        public void Update(int id, UpdateTheaterItemRequest request)
         {
             var item = _dbContext.TheaterItems.FirstOrDefault(x => x.Id == id);
             if (item is null)
@@ -113,7 +113,7 @@ namespace inzBackend.Services.TheaterItemServices
             _dbContext.SaveChanges();
         }
 
-        public void delete(int id)
+        public void Delete(int id)
         {
             var item = _dbContext.TheaterItems.FirstOrDefault(x => x.Id == id);
             if (item is null)
@@ -123,7 +123,7 @@ namespace inzBackend.Services.TheaterItemServices
             _dbContext.SaveChanges();
         }
 
-        public void toggleActive(int id)
+        public void ToggleActive(int id)
         {
             var item = _dbContext.TheaterItems.FirstOrDefault(x => x.Id == id);
             if (item is null)

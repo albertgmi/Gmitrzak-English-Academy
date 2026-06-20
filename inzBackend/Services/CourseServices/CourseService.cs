@@ -17,7 +17,7 @@ namespace inzBackend.Services.CourseServices
             _mapper = mapper;
         }
 
-        public List<CourseDto> getAllCourses()
+        public List<CourseDto> GetAllCourses()
         {
             var courses = _dbContext
                 .Courses
@@ -30,7 +30,7 @@ namespace inzBackend.Services.CourseServices
             return _mapper.Map<List<CourseDto>>(courses);
         }
         
-        public Course createCourse(CreateCourseRequest request)
+        public Course CreateCourse(CreateCourseRequest request)
         {
             var newCourse = new Course
             {
@@ -43,7 +43,7 @@ namespace inzBackend.Services.CourseServices
             return newCourse;
         }
 
-        public void updateCourse(int courseId, UpdateCourseRequest request)
+        public void UpdateCourse(int courseId, UpdateCourseRequest request)
         {
             var course = _dbContext
                 .Courses
@@ -58,7 +58,7 @@ namespace inzBackend.Services.CourseServices
 
         }
 
-        public void deleteCourse(int courseId)
+        public void DeleteCourse(int courseId)
         {
             var course = _dbContext
                 .Courses
@@ -70,7 +70,7 @@ namespace inzBackend.Services.CourseServices
             _dbContext.SaveChanges();
         }
 
-        public void assignProgram(int courseId, int programId)
+        public void AssignProgram(int courseId, int programId)
         {
             var course = _dbContext
                 .Courses
@@ -99,7 +99,7 @@ namespace inzBackend.Services.CourseServices
             _dbContext.SaveChanges();
         }
 
-        public void removeProgram(int courseId, int programId)
+        public void RemoveProgram(int courseId, int programId)
         {
             var course = _dbContext.Courses.FirstOrDefault(c => c.Id == courseId);
             if (course is null)

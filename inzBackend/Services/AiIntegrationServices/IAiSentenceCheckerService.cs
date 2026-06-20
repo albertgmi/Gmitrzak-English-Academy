@@ -1,8 +1,9 @@
-﻿namespace inzBackend.Services.AiIntegrationServices
+﻿using inzBackend.Models.AIAnswerCheckingModels;
+
+namespace inzBackend.Services.AiIntegrationServices
 {
     public interface IAiSentenceCheckerService
     {
-        Task<(string result, string explanation)> CheckAnswerAsync(
-            string polish, string expectedEnglish, string userAnswer);
+        Task<SentenceCheckResult> CheckAnswerAsync(string polish, string expectedEnglish, string userAnswer);
     }
 }

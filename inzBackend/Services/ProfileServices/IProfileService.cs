@@ -4,8 +4,8 @@ namespace inzBackend.Services.ProfileServices
 {
     public interface IProfileService
     {
-        ProfileDto getProfile(int userId);
-        void updateProfile(int userId, UpdateProfileRequest request);
-        Task<string> uploadAvatar(int userId, IFormFile file);
+        ProfileDto GetProfile(int userId);
+        void UpdateProfile(int userId, UpdateProfileRequest request);
+        Task<string> UploadAvatar(int userId, IFormFile file);
     }
 }

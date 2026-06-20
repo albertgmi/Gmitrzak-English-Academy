@@ -20,45 +20,45 @@ namespace inzBackend.Controllers
         [HttpGet]
         public ActionResult<List<TheaterItemDto>> GetAll()
         {
-            return _theaterService.getAll();
+            return _theaterService.GetAll();
         }
             
         [HttpGet("repertoire")]
         public ActionResult<List<RepertoireItemDto>> GetRepertoire()
         {
-            return _theaterService.getRepertoire();
+            return _theaterService.GetRepertoire();
         } 
 
         [HttpGet("{id}")]
         public ActionResult<TheaterItemDto> GetById([FromRoute] int id)
         {
-            return _theaterService.getById(id);
+            return _theaterService.GetById(id);
         }
             
         [HttpPost]
         public ActionResult<TheaterItemDto> Create([FromBody] CreateTheaterItemRequest request)
         {
-            return _theaterService.create(request);
+            return _theaterService.Create(request);
         }
             
         [HttpPut("{id}")]
         public ActionResult Update([FromRoute] int id, [FromBody] UpdateTheaterItemRequest request)
         {
-            _theaterService.update(id, request);
+            _theaterService.Update(id, request);
             return Ok();
         }
 
         [HttpDelete("{id}")]
         public ActionResult Delete([FromRoute] int id)
         {
-            _theaterService.delete(id);
+            _theaterService.Delete(id);
             return NoContent();
         }
 
         [HttpPatch("{id}/toggle")]
         public ActionResult Toggle([FromRoute] int id)
         {
-            _theaterService.toggleActive(id);
+            _theaterService.ToggleActive(id);
             return Ok();
         }
     }

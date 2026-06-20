@@ -26,7 +26,7 @@ namespace inzBackend.Services.SectionActivityServices
             _creditService = creditService;
         }
 
-        public void logActivity(LogActivityRequest request)
+        public void LogActivity(LogActivityRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
@@ -58,7 +58,7 @@ namespace inzBackend.Services.SectionActivityServices
                     _ => 1
                 };
 
-                _lessonPanelService.addActivityPoints(
+                _lessonPanelService.AddActivityPoints(
                     userId, points, $"Daily visit: {request.Section.ToLower()}");
 
                 _dbContext.SaveChanges();
@@ -66,8 +66,8 @@ namespace inzBackend.Services.SectionActivityServices
                 if (request.Section.ToLower() == "flashcards" ||
                     request.Section.ToLower() == "sentenceflashcards")
                 {
-                    _creditService.checkAndAwardDailyChallenge(userId);
-                    _creditService.checkAndAwardWeeklyChallenge(userId);
+                    _creditService.CheckAndAwardDailyChallenge(userId);
+                    _creditService.CheckAndAwardWeeklyChallenge(userId);
                 }
             }
         }

@@ -17,7 +17,7 @@ namespace inzBackend.Services.MatrixServices
             _mapper = mapper;
         }
 
-        public List<MatrixDto> getAllMatrices()
+        public List<MatrixDto> GetAllMatrices()
         {
             var matrices = _dbContext
                 .Matrices
@@ -30,7 +30,7 @@ namespace inzBackend.Services.MatrixServices
             return _mapper.Map<List<MatrixDto>>(matrices);
         }
 
-        public Matrix createMatrix(CreateMatrixRequest request)
+        public Matrix CreateMatrix(CreateMatrixRequest request)
         {
             var matrix = new Matrix
             {
@@ -44,7 +44,7 @@ namespace inzBackend.Services.MatrixServices
             return matrix;
         }
 
-        public void updateMatrix(int matrixId, UpdateMatrixRequest request)
+        public void UpdateMatrix(int matrixId, UpdateMatrixRequest request)
         {
             var matrix = _dbContext
                 .Matrices
@@ -60,7 +60,7 @@ namespace inzBackend.Services.MatrixServices
             _dbContext.SaveChanges();
         }
 
-        public void deleteMatrix(int matrixId)
+        public void DeleteMatrix(int matrixId)
         {
             var matrix = _dbContext
                 .Matrices
@@ -72,7 +72,7 @@ namespace inzBackend.Services.MatrixServices
             _dbContext.SaveChanges();
         }
 
-        public void assignCourse(int matrixId, int courseId)
+        public void AssignCourse(int matrixId, int courseId)
         {
             var matrix = _dbContext
                 .Matrices
@@ -102,7 +102,7 @@ namespace inzBackend.Services.MatrixServices
             _dbContext.SaveChanges();
         }
 
-        public void detachCourse(int matrixId, int courseId)
+        public void DetachCourse(int matrixId, int courseId)
         {
             var matrix = _dbContext
                 .Matrices

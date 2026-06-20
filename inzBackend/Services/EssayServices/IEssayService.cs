@@ -4,11 +4,11 @@ namespace inzBackend.Services.EssayServices
 {
     public interface IEssayService
     {
-        EssayModuleDto getEssayModule(int moduleId);
-        UserEssayDto submitEssay(SubmitEssayRequest request);
-        List<UserEssayDto> getAllEssaysForAdmin();
-        List<UserEssayDto> getEssaysForStudent(int studentId);
-        UserEssayDto reviewEssay(int essayId, ReviewEssayRequest request);
-        byte[] exportEssayToDocx(int essayId);
+        EssayModuleDto GetEssayModule(int moduleId);
+        UserEssayDto SubmitEssay(SubmitEssayRequest request);
+        List<UserEssayDto> GetAllEssaysForAdmin();
+        List<UserEssayDto> GetEssaysForStudent(int studentId);
+        UserEssayDto ReviewEssay(int essayId, ReviewEssayRequest request);
+        byte[] ExportEssayToDocx(int essayId);
     }
 }

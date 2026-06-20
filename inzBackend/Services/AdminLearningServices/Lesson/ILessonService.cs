@@ -7,28 +7,28 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 {
     public interface ILessonService
     {
-        SearchGlobalFlashcardResult searchGlobalFlashcard(string query, int studentUserId);
-        VocabularyDto addTranslation(AddTranslationRequest request);
-        void assignFlashcardToStudent(AssignFlashcardToStudentRequest request);
-        void addSentence(AddSentenceRequest request);
-        void addMemory(AddMemoryRequest request);
-        void addPronunciation(AddPronunciationRequest request);
-        List<HomeworkItemDto> getHomeworkForWeek(int studentUserId);
-        void checkHomework(int assignmentId);
-        void uncheckHomework(int assignmentId);
-        List<PronunciationTestItemDto> getPronunciationList(int studentUserId);
-        void checkPronunciationWord(int entryId);
-        void uncheckPronunciationWord(int entryId);
-        void addGrade(AddGradeRequest request);
-        List<GradeListDto> getGrades(int studentUserId);
-        void removeGrade(int gradeId);
-        List<TeacherNoteDto> getNotes(int studentUserId);
-        void saveNote(SaveNoteRequest request);
-        void deleteNote(int noteId);
-        void addListeningReport(AddListeningReportRequest request);
-        List<ListeningReportDto> getListeningReports(int studentUserId);
-        List<MemoryDto> getMemories(int studentUserId);
-        void markPronunciationResult(MarkPronunciationRequest request);
-        List<PronunciationTestItemDto> getCorrectEntries(int studentUserId);
+        SearchGlobalFlashcardResult SearchGlobalFlashcard(string query, int studentUserId);
+        VocabularyDto AddTranslation(AddTranslationRequest request);
+        void AssignFlashcardToStudent(AssignFlashcardToStudentRequest request);
+        void AddSentence(AddSentenceRequest request);
+        void AddMemory(AddMemoryRequest request);
+        void AddPronunciation(AddPronunciationRequest request);
+        List<HomeworkItemDto> GetHomeworkForWeek(int studentUserId);
+        void CheckHomework(int assignmentId);
+        void UncheckHomework(int assignmentId);
+        List<PronunciationTestItemDto> GetPronunciationList(int studentUserId);
+        void CheckPronunciationWord(int entryId);
+        void UncheckPronunciationWord(int entryId);
+        void AddGrade(AddGradeRequest request);
+        List<GradeListDto> GetGrades(int studentUserId);
+        void RemoveGrade(int gradeId);
+        List<TeacherNoteDto> GetNotes(int studentUserId);
+        void SaveNote(SaveNoteRequest request);
+        void DeleteNote(int noteId);
+        void AddListeningReport(AddListeningReportRequest request);
+        List<ListeningReportDto> GetListeningReports(int studentUserId);
+        List<MemoryDto> GetMemories(int studentUserId);
+        void MarkPronunciationResult(MarkPronunciationRequest request);
+        List<PronunciationTestItemDto> GetCorrectEntries(int studentUserId);
     }
 }
