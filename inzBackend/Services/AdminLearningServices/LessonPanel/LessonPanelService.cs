@@ -117,12 +117,22 @@ public class LessonPanelService : ILessonPanelService
 
     public void addActivityPoints(int studentUserId, int points, string reason)
     {
+        var user = _dbContext.Users
+            .FirstOrDefault(u => u.Id == studentUserId)
+            ?? throw new NotFoundException($"User with id: {studentUserId} was not found");
+
+        var today = PolandTime.Today;
+        var hasActiveBoost = user.DoublePointsExpiresAt.HasValue && user.DoublePointsExpiresAt.Value >= today;
+
+        var finalPoints = hasActiveBoost ? points * 2 : points;
+        var finalReason = hasActiveBoost ? $"{reason} (2x boost)" : reason;
+
         _dbContext.ActivityPoints.Add(new ActivityPoint
         {
             UserId = studentUserId,
-            PointDate = PolandTime.Today,
-            Points = points,
-            Reason = reason
+            PointDate = today,
+            Points = finalPoints,
+            Reason = finalReason
         });
         _dbContext.SaveChanges();
     }

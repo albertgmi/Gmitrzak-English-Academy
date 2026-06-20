@@ -4,7 +4,8 @@ namespace inzBackend.Services.ShopActionServices
 {
     public interface IShopActionService
     {
-        ShopPurchaseResultDto SkipHomework(int userId, int moduleId);
-        ShopPurchaseResultDto ExtendHomework(int userId, int assignmentId, DateOnly newDueDate);
+        ShopPurchaseResultDto SkipHomework(int moduleId);
+        ShopPurchaseResultDto ExtendHomework(int assignmentId, DateOnly newDueDate);
+        ShopPurchaseResultDto PurchasePointsBoost();
     }
 }

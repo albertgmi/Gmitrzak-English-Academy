@@ -1,9 +1,11 @@
 ﻿using inzBackend.Entities.Assignments;
 using inzBackend.Enums;
+using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.CreditModels;
 using inzBackend.Services.CreditServices;
+using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.ShopActionServices
@@ -12,14 +14,19 @@ namespace inzBackend.Services.ShopActionServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly ICreditService _creditService;
+        private readonly IUserContextService _userContextService;
 
-        public ShopActionService(GmitrzakEnglishAcademyDbContext dbContext, ICreditService creditService)
+        public ShopActionService(GmitrzakEnglishAcademyDbContext dbContext, ICreditService creditService,
+            IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _creditService = creditService;
+            _userContextService = userContextService;
         }
-        public ShopPurchaseResultDto SkipHomework(int userId, int assignmentId)
+        public ShopPurchaseResultDto SkipHomework(int assignmentId)
         {
+            var userId = _userContextService.GetUserId!.Value;
+
             var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "Homework Skip" && x.IsActive);
             if (shopItem is null)
                 return new ShopPurchaseResultDto { Success = false, Message = "Item 'Homework Skip' is currently unavailable." };
@@ -49,8 +56,10 @@ namespace inzBackend.Services.ShopActionServices
             };
         }
 
-        public ShopPurchaseResultDto ExtendHomework(int userId, int assignmentId, DateOnly newDueDate)
+        public ShopPurchaseResultDto ExtendHomework(int assignmentId, DateOnly newDueDate)
         {
+            var userId = _userContextService.GetUserId!.Value;
+
             var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "Homework Extension" && x.IsActive);
             if (shopItem is null)
                 return new ShopPurchaseResultDto { Success = false, Message = "Item 'Homework Extension' is currently unavailable." };
@@ -146,6 +155,33 @@ namespace inzBackend.Services.ShopActionServices
             _creditService.updatePurchaseStatus(result.PurchaseId.Value, "Fulfilled");
             result.Message = $"Deadline extended to {newDueDate:dd.MM.yyyy}!";
             return result;
+        }
+
+        public ShopPurchaseResultDto PurchasePointsBoost()
+        {
+            var userId = _userContextService.GetUserId!.Value;
+
+            var shopItem = _dbContext.ShopItems.FirstOrDefault(x => x.Name == "Points Boost" && x.IsActive);
+
+            var purchaseResult = _creditService.purchaseItem(userId, shopItem.Id);
+            if (!purchaseResult.Success || !purchaseResult.PurchaseId.HasValue)
+                return purchaseResult;
+
+            var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+                ?? throw new NotFoundException($"User with id: {userId} was not found");
+
+            var today = PolandTime.Today;
+            var currentlyActive = user.DoublePointsExpiresAt.HasValue && user.DoublePointsExpiresAt.Value >= today;
+
+            user.DoublePointsExpiresAt = currentlyActive
+                ? user.DoublePointsExpiresAt!.Value.AddDays(7)
+                : today.AddDays(6);
+
+            _dbContext.SaveChanges();
+
+            _creditService.updatePurchaseStatus(purchaseResult.PurchaseId.Value, "Fulfilled");
+            purchaseResult.Message = $"Double points active until {user.DoublePointsExpiresAt:dd.MM.yyyy}!";
+            return purchaseResult;
         }
 
         private ActionTargetResult CompleteModuleForUser(int userId, int assignmentId)

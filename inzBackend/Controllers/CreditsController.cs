@@ -48,17 +48,22 @@ namespace inzBackend.Controllers
         [HttpPost("shop/action/skip-homework")]
         public ActionResult<ShopPurchaseResultDto> PurchaseHomeworkSkip([FromBody] SkipHomeworkRequestDto request)
         {
-            var userId = _userContextService.GetUserId!.Value;
-            var result = _shopActionService.SkipHomework(userId, request.AssignmentId);
+            var result = _shopActionService.SkipHomework(request.AssignmentId);
             return Ok(result);
         }
 
         [HttpPost("shop/action/extend-homework")]
         public ActionResult<ShopPurchaseResultDto> ExtendHomework([FromBody] ExtendHomeworkRequestDto request)
         {
-            var userId = _userContextService.GetUserId!.Value;
             var dateOnly = DateOnly.FromDateTime(request.NewDueDate);
-            var result = _shopActionService.ExtendHomework(userId, request.AssignmentId, dateOnly);
+            var result = _shopActionService.ExtendHomework(request.AssignmentId, dateOnly);
+            return Ok(result);
+        }
+
+        [HttpPost("shop/action/points-boost")]
+        public ActionResult<ShopPurchaseResultDto> PurchasePointsBoost()
+        {
+            var result = _shopActionService.PurchasePointsBoost();
             return Ok(result);
         }
     }
