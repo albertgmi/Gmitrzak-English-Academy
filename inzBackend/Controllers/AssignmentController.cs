@@ -22,21 +22,21 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<List<MatrixAssignmentDto>> GetAllMatrixAssignments()
         {
-            return _assignmentService.getAllMatrixAssignments();
+            return _assignmentService.GetAllMatrixAssignments();
         }
 
         [HttpGet("matrix/user/{userId}")]
         [Authorize(Roles = "Admin, User")]
         public ActionResult<List<MatrixAssignmentDto>> GetMatrixAssignmentsByUser([FromRoute] int userId)
         {
-            return _assignmentService.getMatrixAssignmentsByUser(userId);
+            return _assignmentService.GetMatrixAssignmentsByUser(userId);
         }
 
         [HttpPost("matrix")]
         [Authorize(Roles = "Admin")]
         public ActionResult CreateMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
         {
-            _assignmentService.createMatrixAssignment(request);
+            _assignmentService.CreateMatrixAssignment(request);
             return Created();
         }
 
@@ -44,7 +44,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult DeleteMatrixAssignment([FromRoute] int id)
         {
-            _assignmentService.deleteMatrixAssignment(id);
+            _assignmentService.DeleteMatrixAssignment(id);
             return NoContent();
         }
 
@@ -52,21 +52,21 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<List<ModuleAssignmentDto>> GetAllModuleAssignments()
         {
-            return _assignmentService.getAllModuleAssignments();
+            return _assignmentService.GetAllModuleAssignments();
         }
 
         [HttpGet("module/user/{userId}")]
         [Authorize(Roles = "Admin, User")]
         public ActionResult<List<ModuleAssignmentDto>> GetModuleAssignmentsByUser([FromRoute] int userId)
         {
-            return _assignmentService.getModuleAssignmentsByUser(userId);
+            return _assignmentService.GetModuleAssignmentsByUser(userId);
         }
 
         [HttpPost("module")]
         [Authorize(Roles = "Admin")]
         public ActionResult CreateModuleAssignment([FromBody] CreateModuleAssignmentRequest request)
         {
-            _assignmentService.createModuleAssignment(request);
+            _assignmentService.CreateModuleAssignment(request);
             return Created();
         }
 
@@ -74,7 +74,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult DeleteModuleAssignment([FromRoute] int id)
         {
-            _assignmentService.deleteModuleAssignment(id);
+            _assignmentService.DeleteModuleAssignment(id);
             return NoContent();
         }
 
@@ -82,7 +82,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult CompleteModuleAssignment([FromRoute] int id)
         {
-            _assignmentService.completeModuleAssignment(id);
+            _assignmentService.CompleteModuleAssignment(id);
             return Ok();
         }
 
@@ -90,7 +90,7 @@ namespace inzBackend.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult UncompleteModuleAssignment([FromRoute] int id)
         {
-            _assignmentService.uncompleteModuleAssignment(id);
+            _assignmentService.UncompleteModuleAssignment(id);
             return Ok();
         }
     }
