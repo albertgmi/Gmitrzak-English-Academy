@@ -57,7 +57,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                 .Where(x => x.UserId == userId)
                 .ToList();
 
-            var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
+            var weekStart = WeekHelper.GetWeekMonday(today);
             var weekEnd = weekStart.AddDays(6);
 
             foreach (var ma in matrixAssignments)

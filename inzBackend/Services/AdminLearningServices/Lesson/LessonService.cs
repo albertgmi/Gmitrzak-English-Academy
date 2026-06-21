@@ -187,7 +187,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         public List<HomeworkItemDto> GetHomeworkForWeek(int studentUserId)
         {
             var today = PolandTime.Today;
-            var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
+            var weekStart = WeekHelper.GetWeekMonday(today);
             var weekEnd = weekStart.AddDays(6);
 
             var result = new List<HomeworkItemDto>();

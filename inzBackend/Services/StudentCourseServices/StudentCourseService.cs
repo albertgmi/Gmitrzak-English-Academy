@@ -30,7 +30,7 @@ namespace inzBackend.Services.StudentCourseServices
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;
-            var currentWeekMonday = GetWeekMonday(today);
+            var currentWeekMonday = WeekHelper.GetWeekMonday(today);
 
             var assignments = _dbContext.UserMatrixAssignments
                 .Include(uma => uma.Matrix)
@@ -274,7 +274,7 @@ namespace inzBackend.Services.StudentCourseServices
             var deadlineOverride = GetDueDateOverride(userId, matrixModule.Id);
             var effectiveDeadline = deadlineOverride ?? originalDeadline;
 
-            var unlockDate = GetWeekMonday(originalDeadline);
+            var unlockDate = WeekHelper.GetWeekMonday(originalDeadline);
             var isCompleted = _dbContext.UserMatrixModuleCompletions
                 .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
 
@@ -392,7 +392,7 @@ namespace inzBackend.Services.StudentCourseServices
                 assignment.StartDate, mm.WeekNumber, mm.DayOfWeek, assignment.Matrix.RefreshIntervalDays);
 
             var effectiveDeadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : originalDeadline;
-            var unlockDate = GetWeekMonday(originalDeadline);
+            var unlockDate = WeekHelper.GetWeekMonday(originalDeadline);
 
             var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
             var isOverdue = today > effectiveDeadline && !isCompleted;
@@ -429,13 +429,6 @@ namespace inzBackend.Services.StudentCourseServices
                 .Where(x => x.UserId == userId && x.MatrixModuleId == matrixModuleId)
                 .Select(x => (DateOnly?)x.NewDeadline)
                 .FirstOrDefault();
-        }
-
-        private static DateOnly GetWeekMonday(DateOnly date)
-        {
-            var dow = (int)date.DayOfWeek;
-            if (dow == 0) dow = 7;
-            return date.AddDays(-(dow - 1));
         }
 
         private StudentModuleDto BuildModuleDto(int id, int moduleId, Module module, int order,
