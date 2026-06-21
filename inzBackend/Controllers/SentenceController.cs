@@ -118,5 +118,12 @@ namespace inzBackend.Controllers
             var result = await _sentenceService.SearchSentence(query, studentId);
             return Ok(result);
         }
+
+        [HttpPost("assign-set")]
+        public ActionResult AssignSentenceSet([FromBody] AssignSentenceSetToStudentRequest request)
+        {
+            _sentenceService.AssignSentenceSetToUser(request);
+            return Ok();
+        }
     }
 }

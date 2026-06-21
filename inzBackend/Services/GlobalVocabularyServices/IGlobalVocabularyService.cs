@@ -14,5 +14,6 @@ namespace inzBackend.Services.GlobalVocabularyServices
         GlobalVocabularyDto AddTranslation(AddTranslationRequest request);
         void AssignVocabularyToStudent(AssignVocabularyToStudentRequest request);
         void AssignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request);
+        void AssignCatalogueToStudent(AssignCatalogueToStudentRequest request);
     }
 }

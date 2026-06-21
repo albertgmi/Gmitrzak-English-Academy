@@ -1,17 +1,15 @@
 ﻿using ClosedXML.Excel;
-using inzBackend.Entities;
+using inzBackend.Entities.Assignments;
+using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
+using inzBackend.Helpers;
+using inzBackend.Models;
+using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.ModuleSentenceModels;
 using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
-using inzBackend.Models;
 using inzBackend.Services.AiIntegrationServices;
-using inzBackend.Models.ModuleSentenceModels;
-using inzBackend.Helpers;
-using inzBackend.Models.AdminLearningModels;
 using Microsoft.EntityFrameworkCore;
-using inzBackend.Entities.LearningMaterials;
-using inzBackend.Entities.Assignments;
-using System.Threading.Tasks;
 
 namespace inzBackend.Services.SentenceServices
 {
@@ -387,6 +385,69 @@ namespace inzBackend.Services.SentenceServices
             }
 
             return results;
+        }
+
+        public void AssignSentenceSetToUser(AssignSentenceSetToStudentRequest request)
+        {
+            var set = _dbContext.SentenceSets
+                .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
+                .FirstOrDefault(x => x.Id == request.SentenceSetId)
+                ?? throw new NotFoundException("Sentence set not found");
+
+            if (!set.Items.Any())
+                throw new BadRequestException("This sentence set has no items to assign.");
+
+            var dueDate = DateOnly.Parse(request.DueDate);
+            var today = PolandTime.Today;
+
+            var stockItems = set.Items.Select(i => i.SentenceStock).ToList();
+
+            var existingTranslations = _dbContext.Sentences
+                .Where(x => x.UserId == request.UserId)
+                .Select(x => x.Translation.Trim().ToLower())
+                .ToHashSet();
+
+            var sentencesToAdd = new List<Sentence>();
+            var assignmentsToAdd = new List<UserSentenceAssignment>();
+
+            foreach (var stock in stockItems)
+            {
+                var normalizedTranslation = stock.EnglishTranslation.Trim().ToLower();
+
+                if (!existingTranslations.Contains(normalizedTranslation))
+                {
+                    sentencesToAdd.Add(new Sentence
+                    {
+                        UserId = request.UserId,
+                        Content = stock.Polish,
+                        Translation = stock.EnglishTranslation,
+                        Notes = "Assigned from sentence stock",
+                        IsReviewed = false,
+                        EaseFactor = 250,
+                        Interval = 0,
+                        IsLeech = false,
+                        NextReviewDate = today
+                    });
+
+                    existingTranslations.Add(normalizedTranslation);
+                }
+
+                assignmentsToAdd.Add(new UserSentenceAssignment
+                {
+                    UserId = request.UserId,
+                    SentenceSetId = request.SentenceSetId,
+                    SentenceStockId = stock.Id,
+                    DueDate = dueDate,
+                    IsCompleted = false
+                });
+            }
+
+            if (sentencesToAdd.Any())
+                _dbContext.Sentences.AddRange(sentencesToAdd);
+
+            _dbContext.UserSentenceAssignments.AddRange(assignmentsToAdd);
+
+            _dbContext.SaveChanges();
         }
 
         string RemovePunctuation(string input)

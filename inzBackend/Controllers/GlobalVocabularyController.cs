@@ -67,5 +67,12 @@ namespace inzBackend.Controllers
             _globalVocabularyService.AssignMultipleVocabularyToStudent(request);
             return Ok();
         }
+
+        [HttpPost("assign-catalogue")]
+        public ActionResult AssignCatalogue([FromBody] AssignCatalogueToStudentRequest request)
+        {
+            _globalVocabularyService.AssignCatalogueToStudent(request);
+            return Ok();
+        }
     }
 }

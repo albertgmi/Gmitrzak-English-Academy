@@ -127,31 +127,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
 
         public void AssignVocabularyToStudent(AssignVocabularyToStudentRequest request)
         {
-            var vocab = _dbContext.Vocabulary
-                .FirstOrDefault(x => x.Id == request.VocabularyId);
-
-            if (vocab is null)
-                throw new NotFoundException("Vocabulary entry not found in global database");
-
-            var alreadyExists = _dbContext.Flashcards
-                .Any(x => x.UserId == request.StudentUserId && x.VocabularyId == vocab.Id);
-
-            if (alreadyExists) return;
-
-            var today = PolandTime.Today;
-
-            var flashcard = new Flashcard
-            {
-                UserId = request.StudentUserId,
-                VocabularyId = vocab.Id,
-                EaseFactor = 250,
-                Interval = 0,
-                IsLeech = false,
-                NextReviewDate = today
-            };
-
-            _dbContext.Flashcards.Add(flashcard);
-            _dbContext.SaveChanges();
+            AssignVocabularyIdsToStudent(request.StudentUserId, new List<int> { request.VocabularyId });
         }
 
         public void AssignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request)
@@ -159,8 +135,30 @@ namespace inzBackend.Services.GlobalVocabularyServices
             if (request.VocabularyIds == null || !request.VocabularyIds.Any())
                 return;
 
+            AssignVocabularyIdsToStudent(request.StudentUserId, request.VocabularyIds);
+        }
+
+        public void AssignCatalogueToStudent(AssignCatalogueToStudentRequest request)
+        {
+            var catalogueExists = _dbContext.Catalogues.Any(x => x.Id == request.CatalogueId);
+            if (!catalogueExists)
+                throw new NotFoundException("Catalogue not found");
+
+            var vocabularyIds = _dbContext.Vocabulary
+                .Where(v => v.CatalogueId == request.CatalogueId)
+                .Select(v => v.Id)
+                .ToList();
+
+            if (!vocabularyIds.Any())
+                throw new BadRequestException("This catalogue has no vocabulary entries to assign.");
+
+            AssignVocabularyIdsToStudent(request.StudentUserId, vocabularyIds);
+        }
+
+        private void AssignVocabularyIdsToStudent(int studentUserId, List<int> vocabularyIds)
+        {
             var validVocabularyIds = _dbContext.Vocabulary
-                .Where(x => request.VocabularyIds.Contains(x.Id))
+                .Where(x => vocabularyIds.Contains(x.Id))
                 .Select(x => x.Id)
                 .ToList();
 
@@ -168,30 +166,24 @@ namespace inzBackend.Services.GlobalVocabularyServices
                 throw new NotFoundException("None of the specified vocabulary entries were found in global database");
 
             var alreadyAssignedIds = _dbContext.Flashcards
-                .Where(x => x.UserId == request.StudentUserId && validVocabularyIds.Contains(x.VocabularyId))
+                .Where(x => x.UserId == studentUserId && validVocabularyIds.Contains(x.VocabularyId))
                 .Select(x => x.VocabularyId)
                 .ToList();
 
             var idsToAssign = validVocabularyIds.Except(alreadyAssignedIds).ToList();
-
             if (!idsToAssign.Any())
                 return;
 
             var today = PolandTime.Today;
-            var flashcardsToAdd = new List<Flashcard>();
-
-            foreach (var vocabId in idsToAssign)
+            var flashcardsToAdd = idsToAssign.Select(vocabId => new Flashcard
             {
-                flashcardsToAdd.Add(new Flashcard
-                {
-                    UserId = request.StudentUserId,
-                    VocabularyId = vocabId,
-                    EaseFactor = 250,
-                    Interval = 0,
-                    IsLeech = false,
-                    NextReviewDate = today
-                });
-            }
+                UserId = studentUserId,
+                VocabularyId = vocabId,
+                EaseFactor = 250,
+                Interval = 0,
+                IsLeech = false,
+                NextReviewDate = today
+            }).ToList();
 
             _dbContext.Flashcards.AddRange(flashcardsToAdd);
             _dbContext.SaveChanges();
