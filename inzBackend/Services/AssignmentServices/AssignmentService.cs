@@ -207,12 +207,17 @@ namespace inzBackend.Services.AssignmentServices
             };
         }
 
-        private static ModuleUnlockDto MapToModuleUnlockDto(MatrixModule mm, DateOnly startDate, int refreshIntervalDays,
-            bool isCompleted, DateOnly? deadlineOverride)
+        private static ModuleUnlockDto MapToModuleUnlockDto(MatrixModule mm, DateOnly startDate, int refreshIntervalDays, bool isCompleted, DateOnly? deadlineOverride)
         {
-            var unlockDate = MatrixModuleDateHelper.ComputeDeadline(startDate, mm.WeekNumber, mm.DayOfWeek, refreshIntervalDays);
-            var deadline = deadlineOverride ?? unlockDate;
+            var deadline = MatrixModuleDateHelper.ComputeDeadline(
+                startDate, mm.WeekNumber, mm.DayOfWeek, refreshIntervalDays);
+
+            var unlockDate = WeekHelper.GetWeekMonday(deadline);
+            var effectiveDeadline = deadlineOverride ?? deadline;
             var today = PolandTime.Today;
+            var currentWeekMonday = WeekHelper.GetWeekMonday(today);
+
+            var isFutureWeek = unlockDate > currentWeekMonday;
 
             return new ModuleUnlockDto
             {
@@ -223,8 +228,8 @@ namespace inzBackend.Services.AssignmentServices
                 WeekNumber = mm.WeekNumber,
                 DayOfWeek = mm.DayOfWeek,
                 UnlockDate = unlockDate,
-                Deadline = deadline,
-                IsUnlocked = unlockDate <= today,
+                Deadline = effectiveDeadline,
+                IsUnlocked = !isFutureWeek,
                 IsCompleted = isCompleted
             };
         }
