@@ -114,7 +114,7 @@ namespace inzBackend
             builder.Services.AddScoped<ChatClient>(sp =>
             {
                 var apiKey = builder.Configuration["GroqSettings:ApiKey"] ?? "";
-                var modelId = builder.Configuration["GroqSettings:ModelId"] ?? "llama-3.3-70b-versatile";
+                var modelId = builder.Configuration["GroqSettings:ModelId"] ?? "openai/gpt-oss-120b";
 
                 var clientOptions = new OpenAIClientOptions
                 {
