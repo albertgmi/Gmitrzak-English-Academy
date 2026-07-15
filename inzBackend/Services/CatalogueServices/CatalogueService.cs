@@ -55,8 +55,9 @@ namespace inzBackend.Services.CatalogueServices
                     var dateCell = row.Cell(1).GetValue<string>();
                     var userRef = row.Cell(2).GetValue<string>().Trim();
                     var entryVal = row.Cell(3).GetValue<string>().Trim();
-                    var computedKey = row.Cell(4).GetValue<string>().Trim();
-                    var catalogueName = row.Cell(5).GetValue<string>().Trim();
+                    var translationCell = row.Cell(4).GetValue<string>().Trim();
+                    var computedKey = row.Cell(5).GetValue<string>().Trim();
+                    var catalogueName = row.Cell(6).GetValue<string>().Trim();
 
                     if (string.IsNullOrWhiteSpace(entryVal)) continue;
 
@@ -67,6 +68,7 @@ namespace inzBackend.Services.CatalogueServices
                         entryDate,
                         userRef,
                         entryVal,
+                        translationCell,
                         computedKey,
                         catalogueName));
                 }
@@ -114,38 +116,66 @@ namespace inzBackend.Services.CatalogueServices
                         EntryDate = e.EntryDate,
                         UserRef = e.UserRef,
                         Entry = e.EntryVal,
-                        ComputedKey = e.ComputedKey
+                        ComputedKey = e.ComputedKey,
+                        TranslatedEntry = e.Translation
                     })
                     .ToList();
 
-                var textsToTranslate = catEntries
-                    .Select(e => e.Entry)
+                var withExistingTranslation = catEntries
+                    .Select((e, idx) => (Entry: e, Index: idx))
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Entry.TranslatedEntry))
                     .ToList();
 
-                var translatedTexts = await _aiTranslationService
-                    .TranslateBatchAsync(textsToTranslate, "Polish");
+                var validTranslationIndexes = new HashSet<int>();
+                if (withExistingTranslation.Any())
+                {
+                    var pairsToValidate = withExistingTranslation
+                        .Select(x => (Source: x.Entry.Entry, Translation: x.Entry.TranslatedEntry))
+                        .ToList();
+
+                    var validationResults = await _aiTranslationService
+                        .ValidateTranslationsAsync(pairsToValidate, "Polish");
+
+                    for (int i = 0; i < withExistingTranslation.Count; i++)
+                    {
+                        if (i < validationResults.Count && validationResults[i])
+                            validTranslationIndexes.Add(withExistingTranslation[i].Index);
+                    }
+                }
+
+                var indexesNeedingTranslation = Enumerable.Range(0, catEntries.Count)
+                    .Where(i => !validTranslationIndexes.Contains(i))
+                    .ToList();
+
+                if (indexesNeedingTranslation.Any())
+                {
+                    var textsToTranslate = indexesNeedingTranslation
+                        .Select(i => catEntries[i].Entry)
+                        .ToList();
+
+                    var translatedTexts = await _aiTranslationService
+                        .TranslateBatchAsync(textsToTranslate, "Polish");
+
+                    for (int i = 0; i < indexesNeedingTranslation.Count; i++)
+                    {
+                        if (i < translatedTexts.Count)
+                            catEntries[indexesNeedingTranslation[i]].TranslatedEntry = translatedTexts[i];
+                    }
+                }
 
                 var newVocabularies = new List<Vocabulary>();
 
-                for (int i = 0; i < catEntries.Count; i++)
+                foreach (var ce in catEntries)
                 {
-                    if (i < translatedTexts.Count)
+                    if (!string.IsNullOrWhiteSpace(ce.Entry) && !string.IsNullOrWhiteSpace(ce.TranslatedEntry))
                     {
-                        var originalText = catEntries[i].Entry;
-                        var translatedText = translatedTexts[i];
-
-                        catEntries[i].TranslatedEntry = translatedText;
-
-                        if (!string.IsNullOrWhiteSpace(originalText) && !string.IsNullOrWhiteSpace(translatedText))
+                        newVocabularies.Add(new Vocabulary
                         {
-                            newVocabularies.Add(new Vocabulary
-                            {
-                                Front = originalText,
-                                Back = translatedText,
-                                Category = catName,
-                                CatalogueId = existing.Id
-                            });
-                        }
+                            Front = ce.Entry,
+                            Back = ce.TranslatedEntry,
+                            Category = catName,
+                            CatalogueId = existing.Id
+                        });
                     }
                 }
 

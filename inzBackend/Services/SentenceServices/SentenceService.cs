@@ -62,13 +62,11 @@ namespace inzBackend.Services.SentenceServices
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
             stream.Position = 0;
-
             using var workbook = new XLWorkbook(stream);
             var ws = workbook.Worksheets.First();
             var rows = ws.RangeUsed().RowsUsed().Skip(1).ToList();
 
             var toTranslate = new List<SentenceImportEntry>();
-
             var existingStockSentences = _dbContext.SentenceStocks
                 .Select(x => x.EnglishTranslation.Trim().ToLower())
                 .ToHashSet();
@@ -76,33 +74,73 @@ namespace inzBackend.Services.SentenceServices
             foreach (var row in rows)
             {
                 var english = row.Cell(3).GetValue<string>().Trim();
+                var existingTranslation = row.Cell(4).GetValue<string>().Trim();
                 var category = row.Cell(5).GetValue<string>().Trim();
 
                 if (string.IsNullOrWhiteSpace(english))
                     continue;
-
                 if (existingStockSentences.Contains(english.ToLower()))
                     continue;
 
                 toTranslate.Add(new SentenceImportEntry
                 {
                     English = english,
-                    Category = category
+                    Category = category,
+                    ExistingTranslation = existingTranslation
                 });
-
                 existingStockSentences.Add(english.ToLower());
             }
 
             if (!toTranslate.Any()) return 0;
 
-            var englishTexts = toTranslate.Select(x => x.English).ToList();
-            var polishTranslations = await _aiTranslationService.TranslateBatchAsync(englishTexts, "Polish");
+            var withExistingTranslation = toTranslate
+                .Select((e, idx) => (Entry: e, Index: idx))
+                .Where(x => !string.IsNullOrWhiteSpace(x.Entry.ExistingTranslation))
+                .ToList();
+
+            var validTranslationIndexes = new HashSet<int>();
+            if (withExistingTranslation.Any())
+            {
+                var pairsToValidate = withExistingTranslation
+                    .Select(x => (Source: x.Entry.English, Translation: x.Entry.ExistingTranslation))
+                    .ToList();
+
+                var validationResults = await _aiTranslationService
+                    .ValidateTranslationsAsync(pairsToValidate, "Polish");
+
+                for (int i = 0; i < withExistingTranslation.Count; i++)
+                {
+                    if (i < validationResults.Count && validationResults[i])
+                        validTranslationIndexes.Add(withExistingTranslation[i].Index);
+                }
+            }
+
+            var indexesNeedingTranslation = Enumerable.Range(0, toTranslate.Count)
+                .Where(i => !validTranslationIndexes.Contains(i))
+                .ToList();
+
+            var polishByIndex = new Dictionary<int, string>();
+            if (indexesNeedingTranslation.Any())
+            {
+                var englishTexts = indexesNeedingTranslation
+                    .Select(i => toTranslate[i].English)
+                    .ToList();
+
+                var polishTranslations = await _aiTranslationService
+                    .TranslateBatchAsync(englishTexts, "Polish");
+
+                for (int i = 0; i < indexesNeedingTranslation.Count; i++)
+                {
+                    if (i < polishTranslations.Count)
+                        polishByIndex[indexesNeedingTranslation[i]] = polishTranslations[i];
+                }
+            }
 
             var toAdd = new List<SentenceStock>();
             for (var i = 0; i < toTranslate.Count; i++)
             {
-                var polish = i < polishTranslations.Count ? polishTranslations[i] : string.Empty;
                 var entry = toTranslate[i];
+                var polish = polishByIndex.TryGetValue(i, out var p) ? p : entry.ExistingTranslation;
 
                 toAdd.Add(new SentenceStock
                 {

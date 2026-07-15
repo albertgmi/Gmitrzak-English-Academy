@@ -2,7 +2,8 @@
 {
     public class SentenceImportEntry
     {
-        public string English { get; set; }
-        public string Category { get; set; }
+        public string English { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string ExistingTranslation { get; set; } = string.Empty;
     }
 }

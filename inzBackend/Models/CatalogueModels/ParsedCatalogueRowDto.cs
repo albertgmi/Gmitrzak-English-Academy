@@ -4,6 +4,7 @@
         DateOnly EntryDate,
         string UserRef,
         string EntryVal,
+        string Translation,
         string ComputedKey,
         string CatalogueName
     );
