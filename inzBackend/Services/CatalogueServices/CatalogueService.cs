@@ -121,30 +121,8 @@ namespace inzBackend.Services.CatalogueServices
                     })
                     .ToList();
 
-                var withExistingTranslation = catEntries
-                    .Select((e, idx) => (Entry: e, Index: idx))
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Entry.TranslatedEntry))
-                    .ToList();
-
-                var validTranslationIndexes = new HashSet<int>();
-                if (withExistingTranslation.Any())
-                {
-                    var pairsToValidate = withExistingTranslation
-                        .Select(x => (Source: x.Entry.Entry, Translation: x.Entry.TranslatedEntry))
-                        .ToList();
-
-                    var validationResults = await _aiTranslationService
-                        .ValidateTranslationsAsync(pairsToValidate, "Polish");
-
-                    for (int i = 0; i < withExistingTranslation.Count; i++)
-                    {
-                        if (i < validationResults.Count && validationResults[i])
-                            validTranslationIndexes.Add(withExistingTranslation[i].Index);
-                    }
-                }
-
                 var indexesNeedingTranslation = Enumerable.Range(0, catEntries.Count)
-                    .Where(i => !validTranslationIndexes.Contains(i))
+                    .Where(i => string.IsNullOrWhiteSpace(catEntries[i].TranslatedEntry))
                     .ToList();
 
                 if (indexesNeedingTranslation.Any())

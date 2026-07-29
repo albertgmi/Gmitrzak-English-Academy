@@ -93,30 +93,8 @@ namespace inzBackend.Services.SentenceServices
 
             if (!toTranslate.Any()) return 0;
 
-            var withExistingTranslation = toTranslate
-                .Select((e, idx) => (Entry: e, Index: idx))
-                .Where(x => !string.IsNullOrWhiteSpace(x.Entry.ExistingTranslation))
-                .ToList();
-
-            var validTranslationIndexes = new HashSet<int>();
-            if (withExistingTranslation.Any())
-            {
-                var pairsToValidate = withExistingTranslation
-                    .Select(x => (Source: x.Entry.English, Translation: x.Entry.ExistingTranslation))
-                    .ToList();
-
-                var validationResults = await _aiTranslationService
-                    .ValidateTranslationsAsync(pairsToValidate, "Polish");
-
-                for (int i = 0; i < withExistingTranslation.Count; i++)
-                {
-                    if (i < validationResults.Count && validationResults[i])
-                        validTranslationIndexes.Add(withExistingTranslation[i].Index);
-                }
-            }
-
             var indexesNeedingTranslation = Enumerable.Range(0, toTranslate.Count)
-                .Where(i => !validTranslationIndexes.Contains(i))
+                .Where(i => string.IsNullOrWhiteSpace(toTranslate[i].ExistingTranslation))
                 .ToList();
 
             var polishByIndex = new Dictionary<int, string>();
