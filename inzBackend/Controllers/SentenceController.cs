@@ -45,12 +45,11 @@ namespace inzBackend.Controllers
         {
             var allowedExtensions = new[] { ".xlsx", ".xls" };
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-
             if (!allowedExtensions.Contains(ext))
                 return BadRequest(new { message = "Only .xlsx and .xls files are allowed" });
 
-            var count = await _sentenceService.UploadStockFromExcel(file);
-            return Ok(new { added = count });
+            var set = await _sentenceService.UploadStockFromExcel(file);
+            return Ok(set);
         }
 
         [HttpGet("sets")]

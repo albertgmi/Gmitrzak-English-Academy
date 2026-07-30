@@ -57,7 +57,7 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
-        public async Task<int> UploadStockFromExcel(IFormFile file)
+        public async Task<SentenceSetDto> UploadStockFromExcel(IFormFile file)
         {
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
@@ -66,10 +66,8 @@ namespace inzBackend.Services.SentenceServices
             var ws = workbook.Worksheets.First();
             var rows = ws.RangeUsed().RowsUsed().Skip(1).ToList();
 
-            var toTranslate = new List<SentenceImportEntry>();
-            var existingStockSentences = _dbContext.SentenceStocks
-                .Select(x => x.EnglishTranslation.Trim().ToLower())
-                .ToHashSet();
+            var parsedRows = new List<SentenceImportEntry>();
+            var seenInFile = new HashSet<string>();
 
             foreach (var row in rows)
             {
@@ -79,29 +77,44 @@ namespace inzBackend.Services.SentenceServices
 
                 if (string.IsNullOrWhiteSpace(english))
                     continue;
-                if (existingStockSentences.Contains(english.ToLower()))
+
+                var normalizedEnglish = english.ToLower();
+                if (!seenInFile.Add(normalizedEnglish))
                     continue;
 
-                toTranslate.Add(new SentenceImportEntry
+                parsedRows.Add(new SentenceImportEntry
                 {
                     English = english,
                     Category = category,
                     ExistingTranslation = existingTranslation
                 });
-                existingStockSentences.Add(english.ToLower());
             }
 
-            if (!toTranslate.Any()) return 0;
+            if (!parsedRows.Any())
+                throw new BadRequestException("File contains no valid entries");
 
-            var indexesNeedingTranslation = Enumerable.Range(0, toTranslate.Count)
-                .Where(i => string.IsNullOrWhiteSpace(toTranslate[i].ExistingTranslation))
+            var existingStockMap = await _dbContext.SentenceStocks
+                .Select(x => new { x.Id, Normalized = x.EnglishTranslation.Trim().ToLower() })
+                .ToDictionaryAsync(x => x.Normalized, x => x.Id);
+
+            var rowsNeedingNewStock = new List<(SentenceImportEntry Entry, int Index)>();
+            for (int i = 0; i < parsedRows.Count; i++)
+            {
+                var normalized = parsedRows[i].English.Trim().ToLower();
+                if (!existingStockMap.ContainsKey(normalized))
+                    rowsNeedingNewStock.Add((parsedRows[i], i));
+            }
+
+            var indexesNeedingTranslation = rowsNeedingNewStock
+                .Where(x => string.IsNullOrWhiteSpace(x.Entry.ExistingTranslation))
+                .Select(x => x.Index)
                 .ToList();
 
             var polishByIndex = new Dictionary<int, string>();
             if (indexesNeedingTranslation.Any())
             {
                 var englishTexts = indexesNeedingTranslation
-                    .Select(i => toTranslate[i].English)
+                    .Select(i => parsedRows[i].English)
                     .ToList();
 
                 var polishTranslations = await _aiTranslationService
@@ -114,23 +127,91 @@ namespace inzBackend.Services.SentenceServices
                 }
             }
 
-            var toAdd = new List<SentenceStock>();
-            for (var i = 0; i < toTranslate.Count; i++)
+            var newStockByIndex = new Dictionary<int, SentenceStock>();
+            var newStockEntries = new List<SentenceStock>();
+            foreach (var (entry, index) in rowsNeedingNewStock)
             {
-                var entry = toTranslate[i];
-                var polish = polishByIndex.TryGetValue(i, out var p) ? p : entry.ExistingTranslation;
+                var polish = polishByIndex.TryGetValue(index, out var p) ? p : entry.ExistingTranslation;
 
-                toAdd.Add(new SentenceStock
+                var stock = new SentenceStock
                 {
                     Polish = polish,
                     EnglishTranslation = entry.English,
                     Category = entry.Category
-                });
+                };
+                newStockEntries.Add(stock);
+                newStockByIndex[index] = stock;
             }
 
-            _dbContext.SentenceStocks.AddRange(toAdd);
-            _dbContext.SaveChanges();
-            return toAdd.Count;
+            if (newStockEntries.Any())
+            {
+                _dbContext.SentenceStocks.AddRange(newStockEntries);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            var stockIdByIndex = new Dictionary<int, int>();
+            for (int i = 0; i < parsedRows.Count; i++)
+            {
+                var normalized = parsedRows[i].English.Trim().ToLower();
+                if (existingStockMap.TryGetValue(normalized, out var existingId))
+                    stockIdByIndex[i] = existingId;
+                else if (newStockByIndex.TryGetValue(i, out var newStock))
+                    stockIdByIndex[i] = newStock.Id;
+            }
+
+            var setName = Path.GetFileNameWithoutExtension(file.FileName);
+
+            var set = await _dbContext.SentenceSets
+                .FirstOrDefaultAsync(x => x.Name == setName);
+
+            if (set is null)
+            {
+                var groupName = setName;
+                var maxOrderInGroup = await _dbContext.SentenceSets
+                    .Where(x => x.GroupName == groupName)
+                    .Select(x => (int?)x.Order)
+                    .MaxAsync() ?? 0;
+
+                set = new SentenceSet
+                {
+                    Name = setName,
+                    GroupName = groupName,
+                    Order = maxOrderInGroup + 1
+                };
+                _dbContext.SentenceSets.Add(set);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            var existingItems = await _dbContext.SentenceSetItems
+                .Where(x => x.SentenceSetId == set.Id)
+                .ToListAsync();
+
+            var existingItemStockIds = existingItems.Select(x => x.SentenceStockId).ToHashSet();
+            var nextItemOrder = existingItems.Any() ? existingItems.Max(x => x.Order) + 1 : 1;
+
+            var itemsToAdd = new List<SentenceSetItem>();
+            foreach (var kvp in stockIdByIndex.OrderBy(x => x.Key))
+            {
+                var stockId = kvp.Value;
+                if (existingItemStockIds.Contains(stockId))
+                    continue;
+
+                itemsToAdd.Add(new SentenceSetItem
+                {
+                    SentenceSetId = set.Id,
+                    SentenceStockId = stockId,
+                    Order = nextItemOrder++
+                });
+                existingItemStockIds.Add(stockId);
+            }
+
+            if (itemsToAdd.Any())
+            {
+                _dbContext.SentenceSetItems.AddRange(itemsToAdd);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return GetSet(set.Id);
         }
 
         public List<SentenceSetGroupDto> GetAllSetsGrouped()

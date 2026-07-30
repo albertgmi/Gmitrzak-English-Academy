@@ -11,7 +11,7 @@ namespace inzBackend.Services.SentenceServices
         List<SentenceStockDto> GetAllStock();
         void CreateStock(CreateSentenceStockRequest request);
         void DeleteStock(int id);
-        Task<int> UploadStockFromExcel(IFormFile file);
+        Task<SentenceSetDto> UploadStockFromExcel(IFormFile file);
         List<SentenceSetGroupDto> GetAllSetsGrouped();
         SentenceSetDto GetSet(int id);
         SentenceSetDto CreateSet(CreateSentenceSetRequest request);
