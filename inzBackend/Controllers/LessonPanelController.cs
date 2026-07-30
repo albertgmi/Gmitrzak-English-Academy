@@ -63,6 +63,20 @@ namespace inzBackend.Controllers
             return _service.GetAllFlashcardsForUser(studentUserId);
         }
 
+        [HttpGet("flashcards/{studentUserId}/pdf")]
+        public ActionResult ExportFlashcardsPdf([FromRoute] int studentUserId)
+        {
+            var bytes = _service.ExportFlashcardsToPdf(studentUserId);
+            return File(bytes, "application/pdf", $"flashcards_{studentUserId}.pdf");
+        }
+
+        [HttpGet("flashcards/{studentUserId}/excel")]
+        public ActionResult ExportFlashcardsExcel([FromRoute] int studentUserId)
+        {
+            var bytes = _service.ExportFlashcardsToExcel(studentUserId);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"flashcards_{studentUserId}.xlsx");
+        }
+
         [HttpGet("study-time/{studentUserId}")]
         public ActionResult<StudentStudyTimeDto> GetStudyTime([FromRoute] int studentUserId)
         {

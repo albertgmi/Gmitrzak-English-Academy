@@ -23,5 +23,7 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         List<FlashcardDto> GetAllFlashcardsForUser(int userId);
         void UpdateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
         ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
+        byte[] ExportFlashcardsToPdf(int userId);
+        byte[] ExportFlashcardsToExcel(int userId);
     }
 }

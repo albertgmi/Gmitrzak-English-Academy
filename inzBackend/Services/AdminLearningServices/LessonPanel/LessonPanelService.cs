@@ -1,20 +1,22 @@
-﻿using inzBackend.Entities.LearningMaterials;
-using inzBackend.Models.AdminLearningModels;
-using inzBackend.Models;
-using inzBackend.Services.AdminLearningServices.LessonPanel;
-using Microsoft.EntityFrameworkCore;
-using inzBackend.Helpers;
-using DocumentFormat.OpenXml.InkML;
-using inzBackend.Enums;
-using inzBackend.Models.AttendanceModels;
-using inzBackend.Exceptions;
-using inzBackend.Models.StudentLearningModels.FlashcardModels;
-using AutoMapper;
-using inzBackend.Services.UserServices;
-using inzBackend.Models.CreditModels;
-using inzBackend.Entities.SpacedRepetition;
+﻿using AutoMapper;
+using ClosedXML.Excel;
 using inzBackend.Entities.Administration;
 using inzBackend.Entities.Gamification;
+using inzBackend.Entities.SpacedRepetition;
+using inzBackend.Enums;
+using inzBackend.Exceptions;
+using inzBackend.Helpers;
+using inzBackend.Models;
+using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AttendanceModels;
+using inzBackend.Models.CreditModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using inzBackend.Services.AdminLearningServices.LessonPanel;
+using inzBackend.Services.UserServices;
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 
 public class LessonPanelService : ILessonPanelService
 {
@@ -189,6 +191,131 @@ public class LessonPanelService : ILessonPanelService
             .OrderBy(x => x.NextReviewDate)
             .ToList();
         return _mapper.Map<List<FlashcardDto>>(flashcards);
+    }
+
+    public byte[] ExportFlashcardsToPdf(int userId)
+    {
+        var flashcards = GetAllFlashcardsForUser(userId);
+        var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new NotFoundException($"User with id: {userId} was not found");
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(30);
+                page.DefaultTextStyle(x => x.FontSize(10));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().Text($"Flashcards - {user.Username}")
+                        .FontSize(18).Bold();
+                    col.Item().Text($"Generated: {PolandTime.Now:yyyy-MM-dd HH:mm}")
+                        .FontSize(9).FontColor(Colors.Grey.Medium);
+                    col.Item().PaddingTop(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                });
+
+                page.Content().PaddingTop(10).Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.ConstantColumn(30);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(2);
+                        columns.RelativeColumn(1.5f);
+                        columns.ConstantColumn(50);
+                        columns.ConstantColumn(60);
+                        columns.ConstantColumn(80);
+                        columns.ConstantColumn(50);
+                    });
+
+                    table.Header(header =>
+                    {
+                        void HeaderCell(string text) => header.Cell()
+                            .Background(Colors.Blue.Darken1)
+                            .Padding(5)
+                            .Text(text).FontColor(Colors.White).Bold();
+
+                        HeaderCell("No.");
+                        HeaderCell("Front");
+                        HeaderCell("Back");
+                        HeaderCell("Category");
+                        HeaderCell("Ease");
+                        HeaderCell("Interval");
+                        HeaderCell("Next review");
+                        HeaderCell("Leech");
+                    });
+
+                    int i = 1;
+                    foreach (var f in flashcards)
+                    {
+                        var bg = i % 2 == 0 ? Colors.Grey.Lighten4 : Colors.White;
+
+                        table.Cell().Background(bg).Padding(5).Text(i.ToString());
+                        table.Cell().Background(bg).Padding(5).Text(f.Front);
+                        table.Cell().Background(bg).Padding(5).Text(f.Back);
+                        table.Cell().Background(bg).Padding(5).Text(f.Category);
+                        table.Cell().Background(bg).Padding(5).Text(f.EaseFactor.ToString());
+                        table.Cell().Background(bg).Padding(5).Text(f.Interval.ToString());
+                        table.Cell().Background(bg).Padding(5).Text(f.NextReviewDate.ToString("yyyy-MM-dd"));
+                        table.Cell().Background(bg).Padding(5).Text(f.IsLeech ? "YES" : "");
+
+                        i++;
+                    }
+                });
+
+                page.Footer().AlignCenter().Text(x =>
+                {
+                    x.CurrentPageNumber();
+                    x.Span(" / ");
+                    x.TotalPages();
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    public byte[] ExportFlashcardsToExcel(int userId)
+    {
+        var flashcards = GetAllFlashcardsForUser(userId);
+
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.Worksheets.Add("Flashcards");
+
+        string[] headers = { "No.", "Front", "Back", "Category", "Ease Factor", "Interval", "Next Review", "Leech" };
+        for (int c = 0; c < headers.Length; c++)
+        {
+            var cell = sheet.Cell(1, c + 1);
+            cell.Value = headers[c];
+            cell.Style.Font.Bold = true;
+            cell.Style.Fill.BackgroundColor = XLColor.LightBlue;
+        }
+
+        int row = 2;
+        int rowNumber = 1;
+        foreach (var f in flashcards)
+        {
+            sheet.Cell(row, 1).Value = rowNumber++;
+            sheet.Cell(row, 2).Value = f.Front;
+            sheet.Cell(row, 3).Value = f.Back;
+            sheet.Cell(row, 4).Value = f.Category;
+            sheet.Cell(row, 5).Value = f.EaseFactor;
+            sheet.Cell(row, 6).Value = f.Interval;
+            sheet.Cell(row, 7).Value = f.NextReviewDate.ToString("yyyy-MM-dd");
+            sheet.Cell(row, 8).Value = f.IsLeech ? "YES" : "";
+            row++;
+        }
+
+        sheet.Columns().AdjustToContents();
+        sheet.SheetView.FreezeRows(1);
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
     }
 
     public StudentStudyTimeDto GetStudyTime(int studentUserId)
