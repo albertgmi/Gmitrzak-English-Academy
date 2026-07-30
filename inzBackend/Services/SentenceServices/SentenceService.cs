@@ -273,6 +273,12 @@ namespace inzBackend.Services.SentenceServices
 
         public SentenceSetDto CreateSet(CreateSentenceSetRequest request)
         {
+            var nameExists = _dbContext.SentenceSets
+                .Any(x => x.Name == request.Name);
+
+            if (nameExists)
+                throw new BadRequestException($"A sentence set named \"{request.Name}\" already exists. Please choose a different name.");
+
             var set = new SentenceSet
             {
                 Name = request.Name,
