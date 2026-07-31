@@ -58,6 +58,13 @@ namespace inzBackend.Controllers
             return _memoriesService.GetAllMemories();
         }
 
+        [HttpPut("memories/{memoryId}/add")]
+        public ActionResult AddNotes([FromRoute] int memoryId, [FromBody] AddNotesRequest userNotes)
+        {
+            _memoriesService.AddNotes(memoryId, userNotes);
+            return Ok();
+        }
+
         [HttpGet("pronunciation")]
         public ActionResult<List<PronunciationEntryDto>> GetAllPronunciation()
         {

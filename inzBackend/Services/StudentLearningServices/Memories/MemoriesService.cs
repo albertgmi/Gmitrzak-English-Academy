@@ -1,7 +1,9 @@
-﻿using inzBackend.Models.StudentLearningModels.MemoryModels;
+﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
+using inzBackend.Exceptions;
 using inzBackend.Models;
+using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Services.UserServices;
-using AutoMapper;
 
 namespace inzBackend.Services.StudentLearningServices.Memories
 {
@@ -29,6 +31,20 @@ namespace inzBackend.Services.StudentLearningServices.Memories
                 .ToList();
 
             return _mapper.Map<List<MemoryDto>>(memories);
+        }
+
+        public void AddNotes(int memoryId, AddNotesRequest note)
+        {
+            var memory = _dbContext
+                .Memories
+                .Where(m => m.Id == memoryId)
+                .FirstOrDefault();
+
+            if (memory is null)
+                throw new NotFoundException("Memory not found");
+
+            memory.Notes = note.Notes;
+            _dbContext.SaveChanges();
         }
     }
 }
