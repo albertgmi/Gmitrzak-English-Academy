@@ -207,6 +207,7 @@ namespace inzBackend
             app.UseCors("AngularCorsPolicy");
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
+            app.UseMiddleware<UpdateLastActiveMiddleware>();
             app.UseStaticFiles();
 
             if (app.Environment.IsDevelopment())

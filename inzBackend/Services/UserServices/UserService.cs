@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet.Actions;
 using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Entities;
 using inzBackend.Entities.Identity;
@@ -126,6 +127,10 @@ namespace inzBackend.Services.UserServices
                 _dbContext.SaveChanges();
             }
 
+            user.LastLoginAt = PolandTime.DateTimeNow;
+            user.LastActiveAt = PolandTime.DateTimeNow;
+            _dbContext.SaveChanges();
+
             return tokenhandler.WriteToken(token);
         }
 
@@ -193,6 +198,22 @@ namespace inzBackend.Services.UserServices
             _dbContext.SaveChanges();
         }
 
+        public List<StudentActivityDto> GetStudentsActivity()
+        {
+            return _dbContext.Users
+                .Where(u => u.IsActive && u.Role == UserRole.User)
+                .OrderByDescending(u => u.LastActiveAt)
+                .Select(u => new StudentActivityDto
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    AvatarUrl = u.Profile != null ? u.Profile.AvatarUrl : null,
+                    LastLoginAt = u.LastLoginAt,
+                    LastActiveAt = u.LastActiveAt
+                })
+                .ToList();
+        }
+
         private List<AppUserDto> GetUsers(bool isActive)
         {
             var users = _dbContext.Users
@@ -204,7 +225,9 @@ namespace inzBackend.Services.UserServices
                     Email = u.Email,
                     Role = u.Role,
                     IsActive = u.IsActive,
-                    AvatarUrl = u.Profile != null ? u.Profile.AvatarUrl : null
+                    AvatarUrl = u.Profile != null ? u.Profile.AvatarUrl : null,
+                    LastLoginAt = u.LastLoginAt,
+                    LastActiveAt = u.LastActiveAt
                 })
                 .ToList();
 

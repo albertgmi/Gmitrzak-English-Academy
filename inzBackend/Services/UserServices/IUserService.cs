@@ -13,5 +13,6 @@ namespace inzBackend.Services.UserServices
         void DeleteUser(int userId);
         void DeleteManyUsers(List<int> userIds);
         AppUserDto GetUserById();
+        List<StudentActivityDto> GetStudentsActivity();
     }
 }

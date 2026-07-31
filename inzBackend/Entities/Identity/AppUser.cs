@@ -19,5 +19,7 @@ namespace inzBackend.Entities.Identity
         public IEnumerable<Attendance> Attendances { get; set; } = new List<Attendance>();
         public ICollection<UserModuleAssignment> UserModuleAssignments { get; set; } = new List<UserModuleAssignment>();
         public ICollection<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; } = new List<UserMatrixModuleCompletion>();
+        public DateTime? LastLoginAt { get; set; }
+        public DateTime? LastActiveAt { get; set; }
     }
 }

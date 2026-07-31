@@ -27,6 +27,13 @@ namespace inzBackend.Controllers
         {
             return Ok(_userService.GetAllInactiveUsers());
         }
+
+        [HttpGet("students-activity")]
+        public ActionResult<List<StudentActivityDto>> GetStudentsActivity()
+        {
+            return Ok(_userService.GetStudentsActivity());
+        }
+
         [HttpGet]
         [Authorize(Roles = "User")]
         public ActionResult<AppUserDto> GetUserById()
