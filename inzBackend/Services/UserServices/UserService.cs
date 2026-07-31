@@ -64,8 +64,8 @@ namespace inzBackend.Services.UserServices
             if (user is null)
                 throw new BadRequestException("Invalid username or password");
 
-            if (!user.IsActive)
-                throw new BadRequestException("User is not active");
+            //if (!user.IsActive)
+            //    throw new BadRequestException("User is not active");
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (result == PasswordVerificationResult.Failed)
