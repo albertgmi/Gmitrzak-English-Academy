@@ -93,7 +93,8 @@ namespace inzBackend.Services.AnnouncementsServices
                 SenderId = senderId,
                 Title = request.Title,
                 Content = request.Content,
-                Type = announcementType
+                Type = announcementType,
+                CreatedAt = PolandTime.Now
             };
 
             _dbContext.Announcements.Add(announcement);
