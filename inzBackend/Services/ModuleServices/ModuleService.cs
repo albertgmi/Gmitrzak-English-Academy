@@ -151,19 +151,31 @@ namespace inzBackend.Services.ModuleServices
             var matrix = _dbContext.Matrices.FirstOrDefault(x => x.Id == matrixId)
                 ?? throw new NotFoundException($"Matrix with id {matrixId} was not found");
 
-            var alreadyExists = _dbContext.MatrixModules
-                .Any(mm => mm.MatrixId == matrixId && mm.ModuleId == moduleId);
-            if (alreadyExists)
-                throw new BadRequestException(
-                    $"Module {module.Name} is already assigned to matrix {matrix.Name}");
+            var repeatWeeks = request.RepeatWeeks is > 1 ? request.RepeatWeeks.Value : 1;
+            var targetWeeks = Enumerable.Range(request.WeekNumber, repeatWeeks).ToList();
 
-            _dbContext.MatrixModules.Add(new MatrixModule
+            var conflicting = _dbContext.MatrixModules
+                .Where(mm => mm.MatrixId == matrixId
+                          && mm.ModuleId == moduleId
+                          && targetWeeks.Contains(mm.WeekNumber))
+                .Select(mm => mm.WeekNumber)
+                .ToList();
+
+            if (conflicting.Any())
+                throw new BadRequestException(
+                    $"Module {module.Name} is already assigned to matrix {matrix.Name} for week(s): {string.Join(", ", conflicting)}");
+
+            foreach (var week in targetWeeks)
             {
-                MatrixId = matrixId,
-                ModuleId = moduleId,
-                WeekNumber = request.WeekNumber,
-                DayOfWeek = request.DayOfWeek
-            });
+                _dbContext.MatrixModules.Add(new MatrixModule
+                {
+                    MatrixId = matrixId,
+                    ModuleId = moduleId,
+                    WeekNumber = week,
+                    DayOfWeek = request.DayOfWeek
+                });
+            }
+
             _dbContext.SaveChanges();
         }
 
@@ -225,26 +237,13 @@ namespace inzBackend.Services.ModuleServices
 
             if (!userMatrixIds.Any()) return null;
 
-            var mm = _dbContext.MatrixModules
-                .Include(x => x.Module).ThenInclude(m => m.Presentation)
-                .Include(x => x.Module).ThenInclude(m => m.TheaterItem)
-                .Include(x => x.Matrix)
-                .FirstOrDefault(x => x.ModuleId == moduleId
-                                  && userMatrixIds.Contains(x.MatrixId));
+            var instances = GetMatrixModuleInstances(userId, moduleId, userMatrixIds);
+            if (!instances.Any()) return null;
 
-            if (mm is null) return null;
+            var selected = SelectCurrentInstance(instances, today);
+            if (selected is null) return null;
 
-            var ma = _dbContext.UserMatrixAssignments
-                .FirstOrDefault(x => x.UserId == userId && x.MatrixId == mm.MatrixId);
-
-            if (ma is null) return null;
-
-            var unlockDate = ma.StartDate
-                .AddDays((mm.WeekNumber - 1) * mm.Matrix.RefreshIntervalDays)
-                .AddDays(mm.DayOfWeek - 1);
-
-            var isCompleted = _dbContext.UserMatrixModuleCompletions
-                .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
+            var (mm, unlockDate, isCompleted) = selected.Value;
 
             var activityStatus = GetActivityStatus(userId, mm.Module.Category, today, unlockDate);
 
@@ -297,24 +296,19 @@ namespace inzBackend.Services.ModuleServices
                 .Select(x => x.MatrixId)
                 .ToList();
 
-            var mm = _dbContext.MatrixModules
-                .Include(x => x.Module)
-                .Include(x => x.Matrix)
-                .FirstOrDefault(x => x.ModuleId == moduleId
-                                  && userMatrixIds.Contains(x.MatrixId))
-                ?? throw new NotFoundException("Module assignment not found");
+            var instances = GetMatrixModuleInstances(userId, moduleId, userMatrixIds);
+            if (!instances.Any())
+                throw new NotFoundException("Module assignment not found");
 
-            var alreadyCompleted = _dbContext.UserMatrixModuleCompletions
-                .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
+            var current = instances
+                .Where(x => !x.isCompleted)
+                .OrderBy(x => x.unlockDate)
+                .FirstOrDefault();
 
-            if (alreadyCompleted) return;
+            if (current.mm is null)
+                return;
 
-            var ma = _dbContext.UserMatrixAssignments
-                .First(x => x.UserId == userId && x.MatrixId == mm.MatrixId);
-
-            var unlockDate = ma.StartDate
-                .AddDays((mm.WeekNumber - 1) * mm.Matrix.RefreshIntervalDays)
-                .AddDays(mm.DayOfWeek - 1);
+            var (mm, unlockDate, _) = current;
 
             var activityStatus = GetActivityStatus(userId, mm.Module.Category, today, unlockDate);
 
@@ -329,6 +323,57 @@ namespace inzBackend.Services.ModuleServices
             });
 
             _dbContext.SaveChanges();
+        }
+
+        private List<(MatrixModule mm, DateOnly unlockDate, bool isCompleted)> GetMatrixModuleInstances(int userId, int moduleId,
+            List<int> userMatrixIds)
+        {
+            var instances = _dbContext.MatrixModules
+                .Include(x => x.Module).ThenInclude(m => m.Presentation)
+                .Include(x => x.Module).ThenInclude(m => m.TheaterItem)
+                .Include(x => x.Matrix)
+                .Where(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId))
+                .ToList();
+
+            var result = new List<(MatrixModule, DateOnly, bool)>();
+
+            foreach (var mm in instances)
+            {
+                var ma = _dbContext.UserMatrixAssignments
+                    .FirstOrDefault(x => x.UserId == userId && x.MatrixId == mm.MatrixId);
+                if (ma is null) continue;
+
+                var unlockDate = ma.StartDate
+                    .AddDays((mm.WeekNumber - 1) * mm.Matrix.RefreshIntervalDays)
+                    .AddDays(mm.DayOfWeek - 1);
+
+                var isCompleted = _dbContext.UserMatrixModuleCompletions
+                    .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
+
+                result.Add((mm, unlockDate, isCompleted));
+            }
+
+            return result;
+        }
+
+        private static (MatrixModule mm, DateOnly unlockDate, bool isCompleted)? SelectCurrentInstance(
+            List<(MatrixModule mm, DateOnly unlockDate, bool isCompleted)> instances, DateOnly today)
+        {
+            if (!instances.Any()) return null;
+
+            var unlockedIncomplete = instances
+                .Where(x => today >= x.unlockDate && !x.isCompleted)
+                .OrderBy(x => x.unlockDate)
+                .FirstOrDefault();
+            if (unlockedIncomplete.mm is not null) return unlockedIncomplete;
+
+            var unlockedCompleted = instances
+                .Where(x => today >= x.unlockDate && x.isCompleted)
+                .OrderByDescending(x => x.unlockDate)
+                .FirstOrDefault();
+            if (unlockedCompleted.mm is not null) return unlockedCompleted;
+
+            return instances.OrderBy(x => x.unlockDate).First();
         }
 
         private ActivityStatus GetActivityStatus(int userId, string category, DateOnly today, DateOnly? assignedDate = null)

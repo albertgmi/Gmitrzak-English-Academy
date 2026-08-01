@@ -4,5 +4,6 @@
     {
         public int WeekNumber { get; set; }
         public int DayOfWeek { get; set; }
+        public int? RepeatWeeks { get; set; }
     }
 }
