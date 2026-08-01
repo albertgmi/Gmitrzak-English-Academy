@@ -253,30 +253,13 @@ namespace inzBackend.Services.StudentCourseServices
                 .Select(x => x.MatrixId)
                 .ToList();
 
-            var matrixModule = _dbContext.MatrixModules
-                .Include(x => x.Module).ThenInclude(m => m.Presentation)
-                .Include(x => x.Module).ThenInclude(m => m.TheaterItem)
-                .Include(x => x.Matrix)
-                .FirstOrDefault(x => x.ModuleId == moduleId
-                                  && userMatrixIds.Contains(x.MatrixId));
+            var instances = GetMatrixModuleInstances(userId, moduleId, userMatrixIds);
+            if (!instances.Any()) return null;
 
-            if (matrixModule is null) return null;
+            var selected = SelectCurrentInstance(instances, today);
+            if (selected is null) return null;
 
-            var matrixAssignment = _dbContext.UserMatrixAssignments
-                .FirstOrDefault(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
-
-            if (matrixAssignment is null) return null;
-
-            var originalDeadline = MatrixModuleDateHelper.ComputeDeadline(
-                matrixAssignment.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek,
-                matrixAssignment.Matrix.RefreshIntervalDays);
-
-            var deadlineOverride = GetDueDateOverride(userId, matrixModule.Id);
-            var effectiveDeadline = deadlineOverride ?? originalDeadline;
-
-            var unlockDate = WeekHelper.GetWeekMonday(originalDeadline);
-            var isCompleted = _dbContext.UserMatrixModuleCompletions
-                .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
+            var (matrixModule, unlockDate, effectiveDeadline, isCompleted) = selected.Value;
 
             return BuildModuleDto(
                 id: matrixModule.Id,
@@ -327,26 +310,21 @@ namespace inzBackend.Services.StudentCourseServices
                 .Select(x => x.MatrixId)
                 .ToList();
 
-            var matrixModule = _dbContext.MatrixModules
-                .Include(x => x.Module)
-                .Include(x => x.Matrix)
-                .FirstOrDefault(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId))
-                ?? throw new NotFoundException("Module assignment not found");
+            var instances = GetMatrixModuleInstances(userId, moduleId, userMatrixIds);
+            if (!instances.Any())
+                throw new NotFoundException("Module assignment not found");
 
-            var alreadyCompleted = _dbContext.UserMatrixModuleCompletions
-                .Any(x => x.UserId == userId && x.MatrixModuleId == matrixModule.Id);
+            var current = instances
+                .Where(x => !x.isCompleted)
+                .OrderBy(x => x.unlockDate)
+                .FirstOrDefault();
 
-            if (alreadyCompleted) return;
+            if (current.mm is null)
+                return;
 
-            var ma = _dbContext.UserMatrixAssignments
-                .First(x => x.UserId == userId && x.MatrixId == matrixModule.MatrixId);
+            var (matrixModule, _, effectiveDeadline, _) = current;
 
-            var deadlineOverride2 = GetDueDateOverride(userId, matrixModule.Id);
-            var deadline2 = MatrixModuleDateHelper.GetEffectiveDeadline(
-                ma.StartDate, matrixModule.WeekNumber, matrixModule.DayOfWeek,
-                ma.Matrix.RefreshIntervalDays, deadlineOverride2);
-
-            var matrixActivityStatus = GetActivityStatus(userId, moduleId, matrixModule.Module.Category, today, deadline2);
+            var matrixActivityStatus = GetActivityStatus(userId, moduleId, matrixModule.Module.Category, today, effectiveDeadline);
             if (!matrixActivityStatus.CanComplete)
                 throw new BadRequestException(matrixActivityStatus.BlockReason ?? "Not enough activity days.");
 
@@ -361,6 +339,63 @@ namespace inzBackend.Services.StudentCourseServices
                 userId, 10,
                 $"Completed curriculum module ({matrixModule.Module.Name})");
             _dbContext.SaveChanges();
+        }
+
+        private List<(MatrixModule mm, DateOnly unlockDate, DateOnly effectiveDeadline, bool isCompleted)>
+            GetMatrixModuleInstances(int userId, int moduleId, List<int> userMatrixIds)
+        {
+            var matrixModules = _dbContext.MatrixModules
+                .Include(x => x.Module).ThenInclude(m => m.Presentation)
+                .Include(x => x.Module).ThenInclude(m => m.TheaterItem)
+                .Include(x => x.Matrix)
+                .Where(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId))
+                .ToList();
+
+            var result = new List<(MatrixModule, DateOnly, DateOnly, bool)>();
+
+            foreach (var mm in matrixModules)
+            {
+                var matrixAssignment = _dbContext.UserMatrixAssignments
+                    .FirstOrDefault(x => x.UserId == userId && x.MatrixId == mm.MatrixId);
+                if (matrixAssignment is null) continue;
+
+                var originalDeadline = MatrixModuleDateHelper.ComputeDeadline(
+                    matrixAssignment.StartDate, mm.WeekNumber, mm.DayOfWeek,
+                    matrixAssignment.Matrix.RefreshIntervalDays);
+
+                var deadlineOverride = GetDueDateOverride(userId, mm.Id);
+                var effectiveDeadline = deadlineOverride ?? originalDeadline;
+                var unlockDate = WeekHelper.GetWeekMonday(originalDeadline);
+
+                var isCompleted = _dbContext.UserMatrixModuleCompletions
+                    .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
+
+                result.Add((mm, unlockDate, effectiveDeadline, isCompleted));
+            }
+
+            return result;
+        }
+
+        private static (MatrixModule mm, DateOnly unlockDate, DateOnly effectiveDeadline, bool isCompleted)?
+            SelectCurrentInstance(
+                List<(MatrixModule mm, DateOnly unlockDate, DateOnly effectiveDeadline, bool isCompleted)> instances,
+                DateOnly today)
+        {
+            if (!instances.Any()) return null;
+
+            var unlockedIncomplete = instances
+                .Where(x => today >= x.unlockDate && !x.isCompleted)
+                .OrderBy(x => x.unlockDate)
+                .FirstOrDefault();
+            if (unlockedIncomplete.mm is not null) return unlockedIncomplete;
+
+            var unlockedCompleted = instances
+                .Where(x => today >= x.unlockDate && x.isCompleted)
+                .OrderByDescending(x => x.unlockDate)
+                .FirstOrDefault();
+            if (unlockedCompleted.mm is not null) return unlockedCompleted;
+
+            return instances.OrderBy(x => x.unlockDate).First();
         }
 
         private StudentAssignmentDto MapToStudentAssignmentDto(UserMatrixAssignment assignment,
