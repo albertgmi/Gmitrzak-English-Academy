@@ -34,7 +34,17 @@ namespace inzBackend.Services.ModuleServices
                 .Include(m => m.TheaterItem)
                 .ToList();
 
-            return _mapper.Map<List<ModuleDto>>(modules);
+            var dtos = _mapper.Map<List<ModuleDto>>(modules);
+
+            foreach (var dto in dtos)
+            {
+                dto.Matrices = dto.Matrices
+                    .GroupBy(m => m.Id)
+                    .Select(g => g.First())
+                    .ToList();
+            }
+
+            return dtos;
         }
 
         public List<ModuleDto> GetSentenceModulesForStudent(int studentId)
@@ -187,12 +197,14 @@ namespace inzBackend.Services.ModuleServices
             var matrix = _dbContext.Matrices.FirstOrDefault(x => x.Id == matrixId)
                 ?? throw new NotFoundException($"Matrix with id {matrixId} was not found");
 
-            var matrixModule = _dbContext.MatrixModules
-                .FirstOrDefault(mm => mm.MatrixId == matrixId && mm.ModuleId == moduleId)
-                ?? throw new NotFoundException(
-                    $"Module {module.Name} is not assigned to matrix {matrix.Name}");
+            var matrixModules = _dbContext.MatrixModules
+                .Where(mm => mm.MatrixId == matrixId && mm.ModuleId == moduleId)
+                .ToList();
 
-            _dbContext.MatrixModules.Remove(matrixModule);
+            if (!matrixModules.Any())
+                throw new NotFoundException($"Module {module.Name} is not assigned to matrix {matrix.Name}");
+
+            _dbContext.MatrixModules.RemoveRange(matrixModules);
             _dbContext.SaveChanges();
         }
         public StudentModuleDto? GetStudentModule(int userId, int moduleId)

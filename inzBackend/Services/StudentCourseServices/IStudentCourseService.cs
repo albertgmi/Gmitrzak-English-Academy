@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.StudentCourseModels;
-
 namespace inzBackend.Services.StudentCourseServices
 {
     public interface IStudentCourseService
@@ -12,6 +11,8 @@ namespace inzBackend.Services.StudentCourseServices
         void UncompleteSingleModule(int id);
         List<StudentModuleDto> GetCompletedSingleModules();
         StudentModuleDto? GetStudentModule(int moduleId);
+        StudentModuleDto GetStudentMatrixModuleById(int matrixModuleId);
+        StudentModuleDto GetSingleModuleById(int id);
         void CompleteStudentModule(int moduleId);
     }
 }

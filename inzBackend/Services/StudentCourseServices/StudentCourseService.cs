@@ -280,6 +280,79 @@ namespace inzBackend.Services.StudentCourseServices
             );
         }
 
+        public StudentModuleDto GetStudentMatrixModuleById(int matrixModuleId)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            var today = PolandTime.Today;
+
+            var mm = _dbContext.MatrixModules
+                .Include(x => x.Module).ThenInclude(m => m.Presentation)
+                .Include(x => x.Module).ThenInclude(m => m.TheaterItem)
+                .Include(x => x.Matrix)
+                .FirstOrDefault(x => x.Id == matrixModuleId)
+                ?? throw new NotFoundException("Matrix module not found");
+
+            var matrixAssignment = _dbContext.UserMatrixAssignments
+                .FirstOrDefault(x => x.UserId == userId && x.MatrixId == mm.MatrixId)
+                ?? throw new NotFoundException("You are not assigned to this matrix");
+
+            var originalDeadline = MatrixModuleDateHelper.ComputeDeadline(
+                matrixAssignment.StartDate, mm.WeekNumber, mm.DayOfWeek, matrixAssignment.Matrix.RefreshIntervalDays);
+            var deadlineOverride = GetDueDateOverride(userId, mm.Id);
+            var effectiveDeadline = deadlineOverride ?? originalDeadline;
+            var unlockDate = WeekHelper.GetWeekMonday(originalDeadline);
+            var isCompleted = _dbContext.UserMatrixModuleCompletions
+                .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
+
+            return BuildModuleDto(
+                id: mm.Id,
+                moduleId: mm.ModuleId,
+                module: mm.Module,
+                order: 1,
+                weekNumber: mm.WeekNumber,
+                dayOfWeek: mm.DayOfWeek,
+                unlockDate: unlockDate,
+                deadline: effectiveDeadline,
+                isUnlocked: today >= unlockDate,
+                isCompleted: isCompleted,
+                isOverdue: today > effectiveDeadline && !isCompleted,
+                userId: userId,
+                today: today,
+                url: mm.Module?.TheaterItem?.Url,
+                assignedDate: unlockDate
+            );
+        }
+
+        public StudentModuleDto GetSingleModuleById(int id)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            var today = PolandTime.Today;
+
+            var assignment = _dbContext.UserModuleAssignments
+                .Include(x => x.Module).ThenInclude(m => m.Presentation)
+                .Include(x => x.Module).ThenInclude(m => m.TheaterItem)
+                .FirstOrDefault(x => x.Id == id && x.UserId == userId)
+                ?? throw new NotFoundException("Module assignment not found");
+
+            return BuildModuleDto(
+                id: assignment.Id,
+                moduleId: assignment.ModuleId,
+                module: assignment.Module,
+                order: 1,
+                weekNumber: 0,
+                dayOfWeek: 0,
+                unlockDate: DateOnly.FromDateTime(assignment.CreatedAt.DateTime),
+                deadline: assignment.DueDate,
+                isUnlocked: true,
+                isCompleted: assignment.IsCompleted,
+                isOverdue: assignment.DueDate < today && !assignment.IsCompleted,
+                userId: userId,
+                today: today,
+                url: assignment.Module?.TheaterItem?.Url,
+                assignedDate: DateOnly.FromDateTime(assignment.CreatedAt.DateTime)
+            );
+        }
+
         public void CompleteStudentModule(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
@@ -316,7 +389,7 @@ namespace inzBackend.Services.StudentCourseServices
 
             var current = instances
                 .Where(x => !x.isCompleted)
-                .OrderBy(x => x.unlockDate)
+                .OrderBy(x => x.effectiveDeadline)
                 .FirstOrDefault();
 
             if (current.mm is null)
@@ -385,17 +458,17 @@ namespace inzBackend.Services.StudentCourseServices
 
             var unlockedIncomplete = instances
                 .Where(x => today >= x.unlockDate && !x.isCompleted)
-                .OrderBy(x => x.unlockDate)
+                .OrderBy(x => x.effectiveDeadline)
                 .FirstOrDefault();
             if (unlockedIncomplete.mm is not null) return unlockedIncomplete;
 
             var unlockedCompleted = instances
                 .Where(x => today >= x.unlockDate && x.isCompleted)
-                .OrderByDescending(x => x.unlockDate)
+                .OrderByDescending(x => x.effectiveDeadline)
                 .FirstOrDefault();
             if (unlockedCompleted.mm is not null) return unlockedCompleted;
 
-            return instances.OrderBy(x => x.unlockDate).First();
+            return instances.OrderBy(x => x.effectiveDeadline).First();
         }
 
         private StudentAssignmentDto MapToStudentAssignmentDto(UserMatrixAssignment assignment,

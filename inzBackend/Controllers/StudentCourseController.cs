@@ -121,5 +121,17 @@ namespace inzBackend.Controllers
             _studentCourseService.CompleteStudentModule(moduleId);
             return Ok();
         }
+
+        [HttpGet("matrix-module/{matrixModuleId}")]
+        public ActionResult<StudentModuleDto> GetStudentMatrixModule([FromRoute] int matrixModuleId)
+        {
+            return Ok(_studentCourseService.GetStudentMatrixModuleById(matrixModuleId));
+        }
+
+        [HttpGet("single-modules/{id}")]
+        public ActionResult<StudentModuleDto> GetSingleModuleById([FromRoute] int id)
+        {
+            return Ok(_studentCourseService.GetSingleModuleById(id));
+        }
     }
 }
