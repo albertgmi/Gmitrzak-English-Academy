@@ -299,7 +299,6 @@ namespace inzBackend.Services.EssayServices
             {
                 direct.IsCompleted = true;
                 _dbContext.SaveChanges();
-                return;
             }
 
             var userMatrixIds = _dbContext.UserMatrixAssignments
@@ -307,25 +306,28 @@ namespace inzBackend.Services.EssayServices
                 .Select(x => x.MatrixId)
                 .ToList();
 
-            var mm = _dbContext.MatrixModules
-                .FirstOrDefault(x => x.ModuleId == moduleId
-                                  && userMatrixIds.Contains(x.MatrixId));
+            var matrixModules = _dbContext.MatrixModules
+                .Where(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId))
+                .Select(x => x.Id)
+                .ToList();
 
-            if (mm is null) return;
-
-            var alreadyDone = _dbContext.UserMatrixModuleCompletions
-                .Any(x => x.UserId == userId && x.MatrixModuleId == mm.Id);
-
-            if (!alreadyDone)
+            foreach (var mmId in matrixModules)
             {
-                _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
+                var alreadyDone = _dbContext.UserMatrixModuleCompletions
+                    .Any(x => x.UserId == userId && x.MatrixModuleId == mmId);
+
+                if (!alreadyDone)
                 {
-                    UserId = userId,
-                    MatrixModuleId = mm.Id,
-                    CompletedDate = PolandTime.Today
-                });
-                _dbContext.SaveChanges();
+                    _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
+                    {
+                        UserId = userId,
+                        MatrixModuleId = mmId,
+                        CompletedDate = PolandTime.Today
+                    });
+                }
             }
+
+            _dbContext.SaveChanges();
         }
 
         private static UserEssayDto MapToDto(UserEssay x, Module module) => new()
