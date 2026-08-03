@@ -1,4 +1,6 @@
-﻿using inzBackend.Models.MatrixAssignmentModels;
+﻿using inzBackend.Models.AssignmentModels;
+using inzBackend.Models.CourseModels;
+using inzBackend.Models.MatrixAssignmentModels;
 using inzBackend.Models.ModuleAssignmentModels;
 using inzBackend.Services.AssignmentServices;
 using Microsoft.AspNetCore.Authorization;
@@ -30,14 +32,6 @@ namespace inzBackend.Controllers
         public ActionResult<List<MatrixAssignmentDto>> GetMatrixAssignmentsByUser([FromRoute] int userId)
         {
             return _assignmentService.GetMatrixAssignmentsByUser(userId);
-        }
-
-        [HttpPost("matrix")]
-        [Authorize(Roles = "Admin")]
-        public ActionResult CreateMatrixAssignment([FromBody] CreateMatrixAssignmentRequest request)
-        {
-            _assignmentService.CreateMatrixAssignment(request);
-            return Created();
         }
 
         [HttpDelete("matrix/{id}")]
@@ -92,6 +86,20 @@ namespace inzBackend.Controllers
         {
             _assignmentService.UncompleteModuleAssignment(id);
             return Ok();
+        }
+
+        [HttpPost("matrix/bulk")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<BulkAssignmentResultDto> CreateBulkMatrixAssignment([FromBody] CreateBulkMatrixAssignmentRequest request)
+        {
+            return _assignmentService.CreateBulkMatrixAssignment(request);
+        }
+
+        [HttpPost("course")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<BulkAssignmentResultDto> CreateCourseAssignment([FromBody] CreateCourseAssignmentRequest request)
+        {
+            return _assignmentService.CreateCourseAssignment(request);
         }
     }
 }

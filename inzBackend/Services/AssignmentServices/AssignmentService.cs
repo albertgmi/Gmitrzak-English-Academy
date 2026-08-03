@@ -5,6 +5,7 @@ using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AssignmentModels;
+using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixAssignmentModels;
 using inzBackend.Models.ModuleAssignmentModels;
 using Microsoft.EntityFrameworkCore;
@@ -45,35 +46,97 @@ namespace inzBackend.Services.AssignmentServices
                 .ToList();
         }
 
-        public void CreateMatrixAssignment(CreateMatrixAssignmentRequest request)
+        public BulkAssignmentResultDto CreateBulkMatrixAssignment(CreateBulkMatrixAssignmentRequest request)
         {
-            var user = _dbContext
-                .Users
-                .FirstOrDefault(x => x.Id == request.UserId);
-            if (user is null)
-                throw new NotFoundException("User not found");
-
-            var matrixExists = _dbContext
-                .Matrices
-                .Any(x => x.Id == request.MatrixId);
-            if (!matrixExists)
+            var matrix = _dbContext.Matrices.FirstOrDefault(x => x.Id == request.MatrixId);
+            if (matrix is null)
                 throw new NotFoundException("Matrix not found");
-            // TODO maile
-            var alreadyAssigned = _dbContext
-                .UserMatrixAssignments
-                .Any(x => x.UserId == request.UserId && x.MatrixId == request.MatrixId);
-            if (alreadyAssigned)
-                throw new BadRequestException("This matrix is already assigned to this user");
 
-            var assignment = new UserMatrixAssignment
+            var startDate = DateOnly.Parse(request.StartDate);
+            var result = new BulkAssignmentResultDto();
+
+            foreach (var userId in request.UserIds.Distinct())
             {
-                UserId = request.UserId,
-                MatrixId = request.MatrixId,
-                StartDate = DateOnly.Parse(request.StartDate)
-            };
+                var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+                if (user is null)
+                {
+                    result.Skipped.Add($"User #{userId}: not found");
+                    continue;
+                }
 
-            _dbContext.UserMatrixAssignments.Add(assignment);
+                var alreadyAssigned = _dbContext.UserMatrixAssignments
+                    .Any(x => x.UserId == userId && x.MatrixId == request.MatrixId);
+                if (alreadyAssigned)
+                {
+                    result.Skipped.Add($"{user.Username}: matrix \"{matrix.Name}\" already assigned");
+                    continue;
+                }
+
+                _dbContext.UserMatrixAssignments.Add(new UserMatrixAssignment
+                {
+                    UserId = userId,
+                    MatrixId = request.MatrixId,
+                    StartDate = startDate
+                });
+                result.AssignedUsernames.Add(user.Username);
+            }
+
             _dbContext.SaveChanges();
+            return result;
+        }
+
+        public BulkAssignmentResultDto CreateCourseAssignment(CreateCourseAssignmentRequest request)
+        {
+            var course = _dbContext.Courses
+                .Include(c => c.CourseMatrices)
+                    .ThenInclude(cm => cm.Matrix)
+                .FirstOrDefault(x => x.Id == request.CourseId);
+            if (course is null)
+                throw new NotFoundException("Course not found");
+
+            var matrices = course.CourseMatrices.Select(cm => cm.Matrix).ToList();
+            if (!matrices.Any())
+                throw new BadRequestException("This course has no matrices assigned to it");
+
+            var startDate = DateOnly.Parse(request.StartDate);
+            var result = new BulkAssignmentResultDto();
+
+            foreach (var userId in request.UserIds.Distinct())
+            {
+                var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+                if (user is null)
+                {
+                    result.Skipped.Add($"User #{userId}: not found");
+                    continue;
+                }
+
+                var assignedAnyMatrix = false;
+
+                foreach (var matrix in matrices)
+                {
+                    var alreadyAssigned = _dbContext.UserMatrixAssignments
+                        .Any(x => x.UserId == userId && x.MatrixId == matrix.Id);
+                    if (alreadyAssigned)
+                    {
+                        result.Skipped.Add($"{user.Username}: \"{matrix.Name}\" already assigned");
+                        continue;
+                    }
+
+                    _dbContext.UserMatrixAssignments.Add(new UserMatrixAssignment
+                    {
+                        UserId = userId,
+                        MatrixId = matrix.Id,
+                        StartDate = startDate
+                    });
+                    assignedAnyMatrix = true;
+                }
+
+                if (assignedAnyMatrix)
+                    result.AssignedUsernames.Add(user.Username);
+            }
+
+            _dbContext.SaveChanges();
+            return result;
         }
 
         public void DeleteMatrixAssignment(int id)

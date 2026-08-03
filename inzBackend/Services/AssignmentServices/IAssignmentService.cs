@@ -1,4 +1,6 @@
-﻿using inzBackend.Models.MatrixAssignmentModels;
+﻿using inzBackend.Models.AssignmentModels;
+using inzBackend.Models.CourseModels;
+using inzBackend.Models.MatrixAssignmentModels;
 using inzBackend.Models.ModuleAssignmentModels;
 
 namespace inzBackend.Services.AssignmentServices
@@ -7,7 +9,8 @@ namespace inzBackend.Services.AssignmentServices
     {
         List<MatrixAssignmentDto> GetAllMatrixAssignments();
         List<MatrixAssignmentDto> GetMatrixAssignmentsByUser(int userId);
-        void CreateMatrixAssignment(CreateMatrixAssignmentRequest request);
+        BulkAssignmentResultDto CreateBulkMatrixAssignment(CreateBulkMatrixAssignmentRequest request);
+        BulkAssignmentResultDto CreateCourseAssignment(CreateCourseAssignmentRequest request);
         void DeleteMatrixAssignment(int id);
         List<ModuleAssignmentDto> GetAllModuleAssignments();
         List<ModuleAssignmentDto> GetModuleAssignmentsByUser(int userId);
