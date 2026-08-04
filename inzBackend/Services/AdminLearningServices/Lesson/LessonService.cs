@@ -135,10 +135,17 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.Sentences.Add(new Sentence
             {
                 UserId = request.StudentUserId,
-                Content = request.Content,
-                Translation = request.Translation,
+                Content = request.Translation,
+                Translation = request.Content,
                 Notes = request.Notes
             });
+
+            _dbContext.SentenceStocks.Add(new SentenceStock {
+                Polish = request.Translation,
+                EnglishTranslation = request.Content,
+                Category = string.Empty
+            });
+
             _dbContext.SaveChanges();
         }
 
