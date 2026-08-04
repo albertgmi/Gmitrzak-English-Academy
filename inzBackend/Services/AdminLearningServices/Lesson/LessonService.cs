@@ -676,7 +676,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 : PromptTemplates.Where(t => t.Key == category).ToList();
 
             var lines = new List<string>();
-
             foreach (var promptTemplateItem in templates)
             {
                 if (promptTemplateItem.Template.Contains("{B}") && string.IsNullOrWhiteSpace(optionB))
@@ -684,11 +683,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
                 var prompt = promptTemplateItem.Template.Trim()
                     .Replace("{A}", optionA.Trim())
-                    .Replace("{B}", optionB.Trim() ?? string.Empty);
+                    .Replace("{B}", optionB?.Trim() ?? string.Empty);
 
-                lines.Add($"{prompt}");
+                lines.Add(prompt);
             }
-
             return string.Join("\n", lines);
         }
     }
