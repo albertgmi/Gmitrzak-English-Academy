@@ -10,7 +10,7 @@ namespace inzBackend.Services.GlobalVocabularyServices
         List<GlobalVocabularyDto> GetAllVocabulary();
         Vocabulary CreateNewVocabulary(VocabularyAddingRequest request);
         void UpdateVocabulary(VocabularyUpdateRequest request, int vocabularyId);
-        Task<SearchVocabularyResult> SearchVocabulary(string query, int studentUserId);
+        Task<List<SearchVocabularyResult>> SearchVocabulary(string query, int studentUserId);
         GlobalVocabularyDto AddTranslation(AddTranslationRequest request);
         void AssignVocabularyToStudent(AssignVocabularyToStudentRequest request);
         void AssignMultipleVocabularyToStudent(AssignMultipleVocabularyToStudentRequest request);

@@ -41,7 +41,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<SearchVocabularyResult>> SearchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
+        public async Task<ActionResult<List<SearchVocabularyResult>>> SearchVocabulary([FromQuery] string query, [FromQuery] int studentUserId)
         {
             var result = await _globalVocabularyService.SearchVocabulary(query, studentUserId);
             return Ok(result);
