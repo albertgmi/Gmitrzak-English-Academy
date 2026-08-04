@@ -8,6 +8,7 @@ using inzBackend.Entities.SpacedRepetition;
 using inzBackend.Entities.LearningMaterials;
 using inzBackend.Services.AiIntegrationServices;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.GlobalVocabularyServices
 {
@@ -65,43 +66,53 @@ namespace inzBackend.Services.GlobalVocabularyServices
             _dbContext.SaveChanges();
         }
 
-        public async Task<SearchVocabularyResult> SearchVocabulary(string query, int studentUserId)
+        public async Task<List<SearchVocabularyResult>> SearchVocabulary(string query, int studentUserId)
         {
             var q = query.ToLower().Trim();
 
-            var vocab = _dbContext.Vocabulary
-                .FirstOrDefault(x => x.Front.ToLower().Contains(q) || x.Back.ToLower().Contains(q));
+            var vocabMatches = await _dbContext.Vocabulary
+                .Where(x => x.Front.ToLower().Contains(q) || x.Back.ToLower().Contains(q))
+                .ToListAsync();
 
-            List<string> toTranslate = new List<string>();
-            toTranslate.Add(query);
-            var translatedList = _aiTranslationService
-                .TranslateBatchAsync(toTranslate);
-            var translatedBack = (await translatedList).FirstOrDefault();
+            var results = new List<SearchVocabularyResult>();
 
-            if (vocab is null)
+            if (vocabMatches.Count == 0)
             {
-                return new SearchVocabularyResult
+                var translatedList = await _aiTranslationService.TranslateBatchAsync(new List<string> { query });
+                var translatedBack = translatedList.FirstOrDefault();
+
+                results.Add(new SearchVocabularyResult
                 {
                     Front = query,
                     Back = translatedBack ?? string.Empty,
                     Category = string.Empty,
                     ExistsInGlobal = false,
                     AlreadyAssignedToStudent = false
-                };
+                });
+
+                return results;
             }
 
-            var alreadyAssigned = _dbContext.Flashcards
-                .Any(x => x.UserId == studentUserId && x.VocabularyId == vocab.Id);
+            var assignedVocabIds = (await _dbContext.Flashcards
+                .Where(x => x.UserId == studentUserId)
+                .Select(x => x.VocabularyId)
+                .ToListAsync())
+                .ToHashSet();
 
-            return new SearchVocabularyResult
+            foreach (var word in vocabMatches)
             {
-                Id = vocab.Id,
-                Front = vocab.Front,
-                Back = vocab.Back,
-                Category = vocab.Category,
-                ExistsInGlobal = true,
-                AlreadyAssignedToStudent = alreadyAssigned
-            };
+                results.Add(new SearchVocabularyResult
+                {
+                    Id = word.Id,
+                    Front = word.Front,
+                    Back = word.Back,
+                    Category = word.Category,
+                    ExistsInGlobal = true,
+                    AlreadyAssignedToStudent = assignedVocabIds.Contains(word.Id)
+                });
+            }
+
+            return results;
         }
 
         public GlobalVocabularyDto AddTranslation(AddTranslationRequest request)
