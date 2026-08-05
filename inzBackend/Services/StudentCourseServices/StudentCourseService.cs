@@ -81,8 +81,13 @@ namespace inzBackend.Services.StudentCourseServices
                     matrixAssignment.Matrix.RefreshIntervalDays, deadlineOverride)
                 : today;
 
+            
+            Console.WriteLine($"[DEBUG] moduleId={matrixModuleId}, today={today}, deadline(countFrom)={deadline}");
+
             var activityStatus = GetActivityStatus(userId, matrixModule.ModuleId,
                 matrixModule.Module.Category, today, deadline);
+
+            Console.WriteLine($"[DEBUG] streak={activityStatus.Streak}, canComplete={activityStatus.CanComplete}");
 
             if (!activityStatus.CanComplete)
                 throw new BadRequestException(activityStatus.BlockReason ?? "Not enough activity days.");
