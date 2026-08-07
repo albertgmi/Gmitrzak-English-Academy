@@ -18,7 +18,7 @@ namespace inzBackend.Services.AiIntegrationServices
         private readonly string _azureSubscriptionKey;
         private readonly string _azureRegion;
 
-        private const int LETTER_PASS_THRESHOLD = 60;
+        private const int LETTER_PASS_THRESHOLD = 55;
 
         public AiAlphabetService(
             IUserContextService userContextService,
@@ -43,10 +43,19 @@ namespace inzBackend.Services.AiIntegrationServices
             if (entry == null)
                 throw new NotFoundException("Alphabet entry not found");
 
-            var referenceText = string.Join(" ", entry.Content.Where(char.IsLetterOrDigit));
+            var letterList = entry.Content
+                .Where(char.IsLetterOrDigit)
+                .Select(c => c.ToString().ToUpper())
+                .ToList();
+
+            if (!letterList.Any())
+                throw new InvalidOperationException("Alphabet entry contains no valid letters or digits.");
+
+            var referenceText = string.Join(", ", letterList) + ".";
 
             var speechConfig = SpeechConfig.FromSubscription(_azureSubscriptionKey, _azureRegion);
             speechConfig.SpeechRecognitionLanguage = "en-US";
+            speechConfig.SetProperty(PropertyId.Speech_SegmentationSilenceTimeoutMs, "3000");
 
             using var memoryStream = new MemoryStream();
             await audioStream.CopyToAsync(memoryStream);
@@ -78,19 +87,23 @@ namespace inzBackend.Services.AiIntegrationServices
 
                 foreach (var word in pronResult.Words)
                 {
+                    string cleanLetter = word.Word.Trim(',', '.', ' ').ToUpper();
+
                     if (word.ErrorType == "Omission" || word.AccuracyScore < LETTER_PASS_THRESHOLD)
-                        problemLetters.Add(word.Word.ToUpper());
+                    {
+                        problemLetters.Add(cleanLetter);
+                    }
                 }
 
                 problemLetters = problemLetters.Distinct().ToList();
 
                 feedbackMessage = problemLetters.Count == 0
-                    ? "All letters pronounced correctly!"
+                    ? "Great job! All letters pronounced correctly!"
                     : $"Work on these letters: {string.Join(", ", problemLetters)}.";
             }
             else
             {
-                feedbackMessage = "No speech could be recognized. Speak clearly, one letter at a time.";
+                feedbackMessage = "No speech could be recognized. Please spell out each letter clearly with short pauses.";
             }
 
             var attempt = new AlphabetAttempt
