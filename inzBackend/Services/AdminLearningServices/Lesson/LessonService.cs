@@ -663,17 +663,18 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         private static readonly List<PromptTemplateItem> PromptTemplates = new()
         {
-            new() { Key = "difference",   Template = "What's the difference between {A} and {B}? Provide examples." },
-            new() { Key = "comma_before",  Template = "Do you put a comma before {A}? Are there any exceptions? Back it up with examples." },
-            new() { Key = "position",      Template = "Where do you put the word {A} in a sentence? Is there only one option? Give examples." },
-            new() { Key = "past",          Template = "What are the past forms of the word {A}? Is it regular or irregular? Use all in sentences." },
-            new() { Key = "change",        Template = "How do you change a verb after the word {A}?" },
-            new() { Key = "synonym",       Template = "What are the synonyms of {A}? Show the difference between them in context." },
-            new() { Key = "antonym",       Template = "What are the antonyms of {A}? Provide example sentences." },
-            new() { Key = "preposition",   Template = "What prepositions are used with {A}? Give examples for each." },
-            new() { Key = "collocations",  Template = "What are the most common collocations with {A}? Use them in sentences." },
-            new() { Key = "formal",        Template = "Is {A} formal or informal? What's the formal/informal alternative?" },
-            new() { Key = "grammar",       Template = "Explain the grammar rules for using {A}. What are the most common mistakes?" }
+            new() { Key = "difference", Template = "What's the difference between {A} and {B}? Provide examples." },
+            new() { Key = "comma_before", Template = "Do you put a comma before {A}? Are there any exceptions? Back it up with examples." },
+            new() { Key = "position", Template = "Where do you put the word {A} in a sentence? Is there only one option? Give examples." },
+            new() { Key = "past", Template = "What are the past forms of the word {A}? Is it regular or irregular? Use all in sentences." },
+            new() { Key = "change", Template = "How do you change a verb after the word {A}?" },
+            new() { Key = "synonym", Template = "What are the synonyms of {A}? Show the difference between them in context." },
+            new() { Key = "antonym", Template = "What are the antonyms of {A}? Provide example sentences." },
+            new() { Key = "preposition", Template = "What prepositions are used with {A}? Give examples for each." },
+            new() { Key = "collocations", Template = "What are the most common collocations with {A}? Use them in sentences." },
+            new() { Key = "formal", Template = "Is {A} formal or informal? What's the formal/informal alternative?" },
+            new() { Key = "grammar", Template = "Explain the grammar rules for using {A}. What are the most common mistakes?" },
+            new() { Key = "plural", Template = "What's the plural of the word {A}?" }
         };
 
         private string GeneratePrompts(string optionA, string? optionB, string? category)
