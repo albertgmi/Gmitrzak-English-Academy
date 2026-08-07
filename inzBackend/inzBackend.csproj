@@ -17,6 +17,7 @@
     <PackageReference Include="Google.GenAI" Version="1.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.26" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.3.9" />
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.51.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.26">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
