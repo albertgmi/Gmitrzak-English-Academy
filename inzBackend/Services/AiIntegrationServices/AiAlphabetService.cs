@@ -20,20 +20,6 @@ namespace inzBackend.Services.AiIntegrationServices
 
         private const int LETTER_PASS_THRESHOLD = 50;
 
-        private static readonly Dictionary<char, string> LetterToPhonetic = new()
-        {
-            {'A', "ay"}, {'B', "bee"}, {'C', "cee"}, {'D', "dee"}, {'E', "ee"},
-            {'F', "eff"}, {'G', "gee"}, {'H', "aitch"}, {'I', "eye"}, {'J', "jay"},
-            {'K', "kay"}, {'L', "el"}, {'M', "em"}, {'N', "en"}, {'O', "oh"},
-            {'P', "pee"}, {'Q', "cue"}, {'R', "ar"}, {'S', "ess"}, {'T', "tee"},
-            {'U', "you"}, {'V', "vee"}, {'W', "doubleyou"}, {'X', "ex"}, {'Y', "why"}, {'Z', "zee"},
-            {'0', "zero"}, {'1', "one"}, {'2', "two"}, {'3', "three"}, {'4', "four"},
-            {'5', "five"}, {'6', "six"}, {'7', "seven"}, {'8', "eight"}, {'9', "nine"}
-        };
-
-        private static readonly Dictionary<string, string> PhoneticToLetter = LetterToPhonetic
-            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key.ToString(), StringComparer.OrdinalIgnoreCase);
-
         public AiAlphabetService(
             IUserContextService userContextService,
             GmitrzakEnglishAcademyDbContext dbContext,
@@ -59,20 +45,17 @@ namespace inzBackend.Services.AiIntegrationServices
 
             var rawLetters = entry.Content
                 .Where(char.IsLetterOrDigit)
-                .Select(c => char.ToUpper(c))
+                .Select(c => char.ToUpper(c).ToString())
                 .ToList();
 
             if (!rawLetters.Any())
                 throw new InvalidOperationException("Alphabet entry contains no valid letters or digits.");
 
-            var phoneticWords = rawLetters
-                .Select(c => LetterToPhonetic.TryGetValue(c, out var phonetic) ? phonetic : c.ToString().ToLower())
-                .ToList();
-
-            var referenceText = string.Join(", ", phoneticWords) + ".";
+            var referenceText = string.Join(" ", rawLetters);
 
             var speechConfig = SpeechConfig.FromSubscription(_azureSubscriptionKey, _azureRegion);
             speechConfig.SpeechRecognitionLanguage = "en-US";
+
             speechConfig.SetProperty(PropertyId.Speech_SegmentationSilenceTimeoutMs, "3000");
 
             using var memoryStream = new MemoryStream();
@@ -90,7 +73,7 @@ namespace inzBackend.Services.AiIntegrationServices
                 referenceText: referenceText,
                 gradingSystem: GradingSystem.HundredMark,
                 granularity: Granularity.Word,
-                enableMiscue: true
+                enableMiscue: false
             );
             pronConfig.ApplyTo(recognizer);
 
@@ -103,20 +86,14 @@ namespace inzBackend.Services.AiIntegrationServices
             {
                 var pronResult = PronunciationAssessmentResult.FromResult(result);
 
-                int index = 0;
                 foreach (var word in pronResult.Words)
                 {
-                    string cleanWord = word.Word.Trim(',', '.', ' ').ToLower();
-                    string originalLetter = PhoneticToLetter.TryGetValue(cleanWord, out var mappedLetter)
-                        ? mappedLetter
-                        : (index < rawLetters.Count ? rawLetters[index].ToString() : cleanWord.ToUpper());
+                    string cleanLetter = word.Word.Trim(',', '.', ' ').ToUpper();
 
                     if (word.ErrorType == "Omission" || word.AccuracyScore < LETTER_PASS_THRESHOLD)
                     {
-                        problemLetters.Add(originalLetter);
+                        problemLetters.Add(cleanLetter);
                     }
-
-                    index++;
                 }
 
                 problemLetters = problemLetters.Distinct().ToList();
@@ -127,7 +104,7 @@ namespace inzBackend.Services.AiIntegrationServices
             }
             else
             {
-                feedbackMessage = "No speech could be recognized. Speak clearly, one letter at a time.";
+                feedbackMessage = "No speech could be recognized. Speak clearly, letter by letter.";
             }
 
             var attempt = new AlphabetAttempt
