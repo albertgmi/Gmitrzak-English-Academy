@@ -1,31 +1,39 @@
-﻿using Google.GenAI;
-using Google.GenAI.Types;
-using inzBackend.Entities.LearningMaterials;
+﻿using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Services.UserServices;
+using Microsoft.CognitiveServices.Speech;
+using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.CognitiveServices.Speech.PronunciationAssessment;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiPronunciationService : IAiPronunciationService
     {
-        private readonly Client _client;
         private readonly IUserContextService _userContextService;
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
+        private readonly string _azureSubscriptionKey;
+        private readonly string _azureRegion;
 
-        public AiPronunciationService(Client client, IUserContextService userContextService,
-            GmitrzakEnglishAcademyDbContext dbContext)
+        public AiPronunciationService(
+            IUserContextService userContextService,
+            GmitrzakEnglishAcademyDbContext dbContext,
+            IConfiguration configuration)
         {
-            _client = client;
             _userContextService = userContextService;
             _dbContext = dbContext;
+            _azureSubscriptionKey = configuration["AzureSpeechSettings:SubscriptionKey"]
+                ?? throw new InvalidOperationException("AzureSpeechSettings:SubscriptionKey is missing in configuration.");
+            _azureRegion = configuration["AzureSpeechSettings:Region"]
+                ?? throw new InvalidOperationException("AzureSpeechSettings:Region is missing in configuration.");
         }
 
-        public async Task<PronunciationResult> ProcessUserAttemptAsync(Stream audioStream, string fileName,
+        public async Task<PronunciationResult> ProcessUserAttemptAsync(
+            Stream audioStream,
+            string fileName,
             int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
@@ -36,62 +44,55 @@ namespace inzBackend.Services.AiIntegrationServices
             if (entry == null)
                 throw new NotFoundException("Pronunciation entry not found");
 
+            var speechConfig = SpeechConfig.FromSubscription(_azureSubscriptionKey, _azureRegion);
+            speechConfig.SpeechRecognitionLanguage = "en-US";
+
             using var memoryStream = new MemoryStream();
             await audioStream.CopyToAsync(memoryStream);
             byte[] audioBytes = memoryStream.ToArray();
 
-            string prompt = $@"
-                You are an elite expert in English phonetics and linguistics.
-                Your task is to perform an ultra-precise audit of the user's audio against the target word: '{entry.Word}'.
+            using var pushStream = AudioInputStream.CreatePushStream();
+            pushStream.Write(audioBytes);
+            pushStream.Close();
 
-                STRICT ANALYSIS PROTOCOL:
-                1. Phoneme Precision: Even a single mispronounced consonant, vowel, or missing suffix counts as a major error.
-                2. Detailed Audit: Evaluate if every individual sound matches native pronunciation.
-                3. Penalty System: If the user misses even one letter/sound (e.g., 's' at the end, wrong vowel), the score must be below 60%.
-                4. Feedback Focus: Point out the exact sound/letter that caused the failure.
+            using var audioConfig = AudioConfig.FromStreamInput(pushStream);
+            using var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
-                Return ONLY raw JSON. Do not include any conversational filler.
-                {{
-                    ""score"": 0-100,
-                    ""result"": ""Great"" (if 75-100), ""Not yet"" (if < 75),
-                    ""feedback"": ""Identify the specific missing/wrong letter or sound. Max 15 words.""
-                }}";
+            var pronConfig = new PronunciationAssessmentConfig(
+                referenceText: entry.Word,
+                gradingSystem: GradingSystem.HundredMark,
+                granularity: Granularity.Phoneme,
+                enableMiscue: true
+            );
+            pronConfig.EnableProsodyAssessment();
+            pronConfig.ApplyTo(recognizer);
 
-            var response = await _client.Models.GenerateContentAsync(
-                model: "gemini-3.1-flash-lite",
-                contents: new List<Content>
-                {
-                    new Content
-                    {
-                        Parts =
-                        [
-                            new Part { Text = prompt },
-                            new Part
-                            {
-                                InlineData = new Blob
-                                {
-                                    MimeType = "audio/wav",
-                                    Data = audioBytes
-                                }
-                            }
-                        ]
-                    }
-                });
+            var result = await recognizer.RecognizeOnceAsync();
 
-            string responseText = response.Text.Replace("```json", "").Replace("```", "").Trim();
+            int finalScore = 0;
+            string finalResultStatus = "Not yet";
+            string feedbackMessage = "Could not evaluate pronunciation. Please try again.";
 
-            var evaluation = JsonSerializer.Deserialize<PronunciationEvaluationJson>(responseText, new JsonSerializerOptions
+            if (result.Reason == ResultReason.RecognizedSpeech)
             {
-                PropertyNameCaseInsensitive = true
-            });
+                var pronResult = PronunciationAssessmentResult.FromResult(result);
+
+                finalScore = (int)Math.Round(pronResult.AccuracyScore);
+                finalResultStatus = finalScore >= 75 ? "Great" : "Not yet";
+                feedbackMessage = BuildDetailedFeedback(pronResult);
+            }
+            else if (result.Reason == ResultReason.NoMatch)
+            {
+                feedbackMessage = "No speech could be recognized. Speak clearly into the microphone.";
+            }
 
             var attempt = new PronunciationAttempt
             {
                 UserId = userId,
                 PronunciationEntryId = pronunciationEntryId,
-                Feedback = evaluation?.Feedback ?? "No feedback",
-                Result = evaluation?.Result ?? "Not yet",
-                Score = evaluation?.Score ?? 0,
+                Feedback = feedbackMessage,
+                Result = finalResultStatus,
+                Score = finalScore,
                 CreatedAt = PolandTime.DateTimeNow
             };
 
@@ -100,10 +101,44 @@ namespace inzBackend.Services.AiIntegrationServices
 
             return new PronunciationResult
             {
-                Result = evaluation?.Result ?? "Not yet",
-                Feedback = evaluation?.Feedback ?? "No feedback",
-                Score = evaluation?.Score ?? 0
+                Result = finalResultStatus,
+                Feedback = feedbackMessage,
+                Score = finalScore
             };
+        }
+
+        private static string BuildDetailedFeedback(PronunciationAssessmentResult pronResult)
+        {
+            var mispronouncedPhonemes = new List<string>();
+
+            foreach (var word in pronResult.Words)
+            {
+                if (word.ErrorType == "Omission")
+                {
+                    return $"You omitted the word or sound in '{word.Word}'.";
+                }
+
+                foreach (var phoneme in word.Phonemes)
+                {
+                    if (phoneme.AccuracyScore < 60)
+                    {
+                        mispronouncedPhonemes.Add($"/{phoneme.Phoneme}/");
+                    }
+                }
+            }
+
+            if (mispronouncedPhonemes.Count > 0)
+            {
+                var distinctPhonemes = mispronouncedPhonemes.Distinct();
+                return $"Pay attention to the sound: {string.Join(", ", distinctPhonemes)}.";
+            }
+
+            if (pronResult.AccuracyScore >= 85)
+            {
+                return "Excellent pronunciation!";
+            }
+
+            return "Good attempt, but try to speak more clearly.";
         }
     }
 }
