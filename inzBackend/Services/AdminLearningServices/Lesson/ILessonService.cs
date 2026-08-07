@@ -1,5 +1,6 @@
 ﻿using inzBackend.Entities;
 using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.StudentLearningModels.AlphabetModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 
@@ -30,5 +31,12 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         List<MemoryDto> GetMemories(int studentUserId);
         void MarkPronunciationResult(MarkPronunciationRequest request);
         List<PronunciationTestItemDto> GetCorrectEntries(int studentUserId);
+        void AddAlphabetAbbreviation(AddAlphabetAbbreviationRequest request);
+        List<AlphabetAbbreviationDto> GetAlphabetPool();
+        void DeleteAlphabetAbbreviation(int id);
+        List<AlphabetTestItemDto> GetAlphabetTestList(int studentUserId);
+        List<AlphabetHistoryItemDto> GetAlphabetHistory(int studentUserId);
+        void MarkAlphabetResult(MarkAlphabetRequest request);
+        List<AlphabetAttemptDto> GetAlphabetEntryAttempts(int entryId);
     }
 }

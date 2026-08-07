@@ -10,9 +10,11 @@ using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AiSpellCheckingModels;
+using inzBackend.Models.StudentLearningModels.AlphabetModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Services.UserServices;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.AdminLearningServices.Lesson
@@ -657,6 +659,128 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     Content = x.Content,
                     Notes = x.Notes,
                     Category = x.Category
+                })
+                .ToList();
+        }
+
+        public void AddAlphabetAbbreviation(AddAlphabetAbbreviationRequest request)
+        {
+            var text = request.Text.Trim();
+            var alreadyExists = _dbContext.AlphabetAbbreviations
+                .Any(x => x.Text.ToLower() == text.ToLower());
+
+            if (alreadyExists) return;
+
+            _dbContext.AlphabetAbbreviations.Add(new AlphabetAbbreviation { Text = text });
+            _dbContext.SaveChanges();
+        }
+
+        public List<AlphabetAbbreviationDto> GetAlphabetPool()
+        {
+            return _dbContext.AlphabetAbbreviations
+                .OrderBy(x => x.Text)
+                .Select(x => new AlphabetAbbreviationDto { Id = x.Id, Text = x.Text })
+                .ToList();
+        }
+
+        public void DeleteAlphabetAbbreviation(int id)
+        {
+            var item = _dbContext.AlphabetAbbreviations.FirstOrDefault(x => x.Id == id);
+            if (item is null) return;
+            _dbContext.AlphabetAbbreviations.Remove(item);
+            _dbContext.SaveChanges();
+        }
+
+        public List<AlphabetTestItemDto> GetAlphabetTestList(int studentUserId)
+        {
+            var latestWeek = _dbContext.AlphabetEntries
+                .Where(x => x.UserId == studentUserId)
+                .OrderByDescending(x => x.WeekStartDate)
+                .Select(x => (DateOnly?)x.WeekStartDate)
+                .FirstOrDefault();
+
+            if (latestWeek is null) return new List<AlphabetTestItemDto>();
+
+            return _dbContext.AlphabetEntries
+                .Where(x => x.UserId == studentUserId && x.WeekStartDate == latestWeek)
+                .OrderBy(x => x.Status == PronunciationStatus.Incorrect ? 0
+                            : x.Status == PronunciationStatus.Pending ? 1 : 2)
+                .ThenBy(x => x.Type)
+                .ThenBy(x => x.SortOrder)
+                .Select(x => new AlphabetTestItemDto
+                {
+                    Id = x.Id,
+                    Type = x.Type.ToString(),
+                    Content = x.Content,
+                    Status = x.Status.ToString(),
+                    SortOrder = x.SortOrder,
+                    MarkedCorrectAt = x.MarkedCorrectAt
+                })
+                .ToList();
+        }
+
+        public List<AlphabetHistoryItemDto> GetAlphabetHistory(int studentUserId)
+        {
+            return _dbContext.AlphabetEntries
+                .Include(x => x.Attempts)
+                .Where(x => x.UserId == studentUserId)
+                .OrderByDescending(x => x.WeekStartDate)
+                .ThenBy(x => x.Type)
+                .ThenBy(x => x.SortOrder)
+                .Select(x => new AlphabetHistoryItemDto
+                {
+                    Id = x.Id,
+                    Type = x.Type.ToString(),
+                    Content = x.Content,
+                    Status = x.Status.ToString(),
+                    WeekStartDate = x.WeekStartDate,
+                    MarkedCorrectAt = x.MarkedCorrectAt,
+                    AttemptCount = x.Attempts.Count,
+                    Attempts = x.Attempts
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => new AlphabetAttemptDto
+                        {
+                            Id = a.Id,
+                            ProblemLetters = a.ProblemLetters,
+                            Feedback = a.Feedback,
+                            CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
+                        })
+                        .ToList()
+                })
+                .ToList();
+        }
+
+        public void MarkAlphabetResult(MarkAlphabetRequest request)
+        {
+            var entry = _dbContext.AlphabetEntries
+                .FirstOrDefault(x => x.Id == request.EntryId)
+                ?? throw new NotFoundException("Entry not found");
+
+            if (request.Result.ToLower() == "correct")
+            {
+                entry.Status = PronunciationStatus.Correct;
+                entry.MarkedCorrectAt = PolandTime.Today;
+            }
+            else
+            {
+                entry.Status = PronunciationStatus.Incorrect;
+                entry.MarkedCorrectAt = null;
+            }
+
+            _dbContext.SaveChanges();
+        }
+
+        public List<AlphabetAttemptDto> GetAlphabetEntryAttempts(int entryId)
+        {
+            return _dbContext.AlphabetAttempts
+                .Where(x => x.AlphabetEntryId == entryId)
+                .OrderByDescending(x => x.CreatedAt)
+                .Select(x => new AlphabetAttemptDto
+                {
+                    Id = x.Id,
+                    ProblemLetters = x.ProblemLetters,
+                    Feedback = x.Feedback,
+                    CreatedAt = PolandTime.Convert(x.CreatedAt).DateTime
                 })
                 .ToList();
         }

@@ -67,6 +67,9 @@ namespace inzBackend.Models
         public DbSet<PronunciationAttempt> PronunciationAttempts { get; set; }
         public DbSet<UserMatrixModuleDueDateOverride> UserMatrixModuleDueDateOverrides { get; set; }
         public DbSet<UserStreakShield> UserStreakShields { get; set; }
+        public DbSet<AlphabetAbbreviation> AlphabetAbbreviations { get; set; }
+        public DbSet<AlphabetEntry> AlphabetEntries { get; set; }
+        public DbSet<AlphabetAttempt> AlphabetAttempts { get; set; }
 
         public override int SaveChanges()
         {

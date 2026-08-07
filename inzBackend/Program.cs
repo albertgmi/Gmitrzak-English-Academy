@@ -35,6 +35,7 @@ using inzBackend.Services.StudentCourseServices.ActivityPoint;
 using inzBackend.Services.StudentCourseServices.Grade;
 using inzBackend.Services.StudentCourseServices.LastWeek;
 using inzBackend.Services.StudentCourseServices.Stats;
+using inzBackend.Services.StudentLearningServices.Alphabet;
 using inzBackend.Services.StudentLearningServices.Assignment;
 using inzBackend.Services.StudentLearningServices.Flashcards;
 using inzBackend.Services.StudentLearningServices.Memories;
@@ -157,6 +158,7 @@ namespace inzBackend
             builder.Services.AddScoped<ISentencesService, SentencesService>();
             builder.Services.AddScoped<IMemoriesService, MemoriesService>();
             builder.Services.AddScoped<IPronunciationService, PronunciationService>();
+            builder.Services.AddScoped<IAlphabetService, AlphabetService>();
             builder.Services.AddScoped<IFlashcardsService, FlashcardsService>();
             builder.Services.AddScoped<IVocabularyService, VocabularyService>();
             builder.Services.AddScoped<IStudentAssignmentService, StudentAssignmentService>();
@@ -179,6 +181,7 @@ namespace inzBackend
             builder.Services.AddScoped<IEssayService, EssayService>();
             builder.Services.AddScoped<IAiSpellCheckService, AiSpellCheckService>();
             builder.Services.AddScoped<IAiPronunciationService, AiPronunciationService>();
+            builder.Services.AddScoped<IAiAlphabetService, AiAlphabetService>();
             builder.Services.AddScoped<IShopActionService, ShopActionService>();
 
             // Infrastructure / cross-cutting services

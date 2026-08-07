@@ -1,5 +1,6 @@
 ﻿using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AiSpellCheckingModels;
+using inzBackend.Models.StudentLearningModels.AlphabetModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AiIntegrationServices;
@@ -168,6 +169,51 @@ namespace inzBackend.Controllers
         {
             var result = await _aiSpellCheckService.CheckTextAsync(request.Text, request.Language ?? "English");
             return Ok(result);
+        }
+
+        [HttpPost("alphabet/pool")]
+        public ActionResult AddAlphabetAbbreviation([FromBody] AddAlphabetAbbreviationRequest request)
+        {
+            _lessonService.AddAlphabetAbbreviation(request);
+            return Ok();
+        }
+
+        [HttpGet("alphabet/pool")]
+        public ActionResult<List<AlphabetAbbreviationDto>> GetAlphabetPool()
+        {
+            return Ok(_lessonService.GetAlphabetPool());
+        }
+
+        [HttpDelete("alphabet/pool/{id}")]
+        public ActionResult DeleteAlphabetAbbreviation([FromRoute] int id)
+        {
+            _lessonService.DeleteAlphabetAbbreviation(id);
+            return NoContent();
+        }
+
+        [HttpGet("alphabet-test/{studentUserId}")]
+        public ActionResult<List<AlphabetTestItemDto>> GetAlphabetTest([FromRoute] int studentUserId)
+        {
+            return Ok(_lessonService.GetAlphabetTestList(studentUserId));
+        }
+
+        [HttpGet("alphabet-test/history/{studentUserId}")]
+        public ActionResult<List<AlphabetHistoryItemDto>> GetAlphabetHistory([FromRoute] int studentUserId)
+        {
+            return Ok(_lessonService.GetAlphabetHistory(studentUserId));
+        }
+
+        [HttpPost("alphabet/mark")]
+        public ActionResult MarkAlphabet([FromBody] MarkAlphabetRequest request)
+        {
+            _lessonService.MarkAlphabetResult(request);
+            return Ok();
+        }
+
+        [HttpGet("alphabet-test/{entryId}/attempts")]
+        public ActionResult<List<AlphabetAttemptDto>> GetAlphabetEntryAttempts([FromRoute] int entryId)
+        {
+            return Ok(_lessonService.GetAlphabetEntryAttempts(entryId));
         }
     }
 }

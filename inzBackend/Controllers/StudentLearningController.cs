@@ -2,6 +2,7 @@
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Models.ModuleSentenceModels;
+using inzBackend.Models.StudentLearningModels.AlphabetModels;
 using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
@@ -9,6 +10,7 @@ using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Services.AiIntegrationServices;
+using inzBackend.Services.StudentLearningServices.Alphabet;
 using inzBackend.Services.StudentLearningServices.Assignment;
 using inzBackend.Services.StudentLearningServices.Flashcards;
 using inzBackend.Services.StudentLearningServices.Memories;
@@ -32,10 +34,13 @@ namespace inzBackend.Controllers
         private readonly IVocabularyService _vocabularyService;
         private readonly IStudentAssignmentService _studentAssignmentService;
         private readonly IAiPronunciationService _aiPronunciationService;
+        private readonly IAlphabetService _alphabetService;
+        private readonly IAiAlphabetService _aiAlphabetService;
 
         public StudentLearningController(ISentencesService sentencesService, IMemoriesService memoriesService,
             IPronunciationService pronunciationService, IFlashcardsService flashcardsService, IVocabularyService vocabularyService,
-            IStudentAssignmentService studentAssignmentService, IAiPronunciationService aiPronunciationService)
+            IStudentAssignmentService studentAssignmentService, IAiPronunciationService aiPronunciationService,
+            IAlphabetService alphabetService, IAiAlphabetService aiAlphabetService)
         {
             _sentencesService = sentencesService;
             _memoriesService = memoriesService;
@@ -44,6 +49,8 @@ namespace inzBackend.Controllers
             _vocabularyService = vocabularyService;
             _studentAssignmentService = studentAssignmentService;
             _aiPronunciationService = aiPronunciationService;
+            _alphabetService = alphabetService;
+            _aiAlphabetService = aiAlphabetService;
         }
 
         [HttpGet("sentences")]
@@ -168,6 +175,50 @@ namespace inzBackend.Controllers
         {
             _sentencesService.ReviewSentence(id, request);
             return Ok();
+        }
+
+        [HttpGet("alphabet")]
+        public ActionResult<List<AlphabetEntryDto>> GetAlphabetEntries()
+        {
+            return _alphabetService.GetCurrentWeekEntries();
+        }
+
+        [HttpGet("alphabet/{entryId}/attempts")]
+        public ActionResult<List<AlphabetAttemptDto>> GetAlphabetAttempts([FromRoute] int entryId)
+        {
+            return Ok(_alphabetService.GetAttempts(entryId));
+        }
+
+        [HttpPost("alphabet/generate")]
+        public ActionResult GenerateAlphabetProgram()
+        {
+            try
+            {
+                _alphabetService.GenerateWeeklyProgram();
+                return Ok();
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("alphabet/{entryId}/attempt")]
+        public async Task<ActionResult> CheckAlphabetAttempt([FromRoute] int entryId, [FromForm] IFormFile audioFile)
+        {
+            if (audioFile == null || audioFile.Length == 0)
+                return BadRequest(new { message = "Audio file is missing or empty." });
+
+            try
+            {
+                using var stream = audioFile.OpenReadStream();
+                var result = await _aiAlphabetService.ProcessUserAttemptAsync(stream, audioFile.FileName, entryId);
+                return Ok(result);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
     }
 }
