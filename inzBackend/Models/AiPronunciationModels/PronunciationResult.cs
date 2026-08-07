@@ -5,5 +5,6 @@
         public string Result { get; set; }
         public string Feedback { get; set; }
         public int Score { get; set; }
+        public List<PhonemeAssessmentDto> Phonemes { get; set; } = new();
     }
 }

@@ -72,6 +72,7 @@ namespace inzBackend.Services.AiIntegrationServices
             int finalScore = 0;
             string finalResultStatus = "Not yet";
             string feedbackMessage = "Could not evaluate pronunciation. Please try again.";
+            var phonemeList = new List<PhonemeAssessmentDto>();
 
             if (result.Reason == ResultReason.RecognizedSpeech)
             {
@@ -80,6 +81,18 @@ namespace inzBackend.Services.AiIntegrationServices
                 finalScore = (int)Math.Round(pronResult.AccuracyScore);
                 finalResultStatus = finalScore >= 75 ? "Great" : "Not yet";
                 feedbackMessage = BuildDetailedFeedback(pronResult);
+
+                foreach (var word in pronResult.Words)
+                {
+                    foreach (var phoneme in word.Phonemes)
+                    {
+                        phonemeList.Add(new PhonemeAssessmentDto
+                        {
+                            Phoneme = phoneme.Phoneme,
+                            IsCorrect = phoneme.AccuracyScore >= 60
+                        });
+                    }
+                }
             }
             else if (result.Reason == ResultReason.NoMatch)
             {
@@ -103,7 +116,8 @@ namespace inzBackend.Services.AiIntegrationServices
             {
                 Result = finalResultStatus,
                 Feedback = feedbackMessage,
-                Score = finalScore
+                Score = finalScore,
+                Phonemes = phonemeList
             };
         }
 
