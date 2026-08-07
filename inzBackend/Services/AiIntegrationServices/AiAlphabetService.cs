@@ -18,7 +18,21 @@ namespace inzBackend.Services.AiIntegrationServices
         private readonly string _azureSubscriptionKey;
         private readonly string _azureRegion;
 
-        private const int LETTER_PASS_THRESHOLD = 55;
+        private const int LETTER_PASS_THRESHOLD = 50;
+
+        private static readonly Dictionary<char, string> LetterToPhonetic = new()
+        {
+            {'A', "ay"}, {'B', "bee"}, {'C', "cee"}, {'D', "dee"}, {'E', "ee"},
+            {'F', "eff"}, {'G', "gee"}, {'H', "aitch"}, {'I', "eye"}, {'J', "jay"},
+            {'K', "kay"}, {'L', "el"}, {'M', "em"}, {'N', "en"}, {'O', "oh"},
+            {'P', "pee"}, {'Q', "cue"}, {'R', "ar"}, {'S', "ess"}, {'T', "tee"},
+            {'U', "you"}, {'V', "vee"}, {'W', "doubleyou"}, {'X', "ex"}, {'Y', "why"}, {'Z', "zee"},
+            {'0', "zero"}, {'1', "one"}, {'2', "two"}, {'3', "three"}, {'4', "four"},
+            {'5', "five"}, {'6', "six"}, {'7', "seven"}, {'8', "eight"}, {'9', "nine"}
+        };
+
+        private static readonly Dictionary<string, string> PhoneticToLetter = LetterToPhonetic
+            .ToDictionary(kvp => kvp.Value, kvp => kvp.Key.ToString(), StringComparer.OrdinalIgnoreCase);
 
         public AiAlphabetService(
             IUserContextService userContextService,
@@ -43,15 +57,19 @@ namespace inzBackend.Services.AiIntegrationServices
             if (entry == null)
                 throw new NotFoundException("Alphabet entry not found");
 
-            var letterList = entry.Content
+            var rawLetters = entry.Content
                 .Where(char.IsLetterOrDigit)
-                .Select(c => c.ToString().ToUpper())
+                .Select(c => char.ToUpper(c))
                 .ToList();
 
-            if (!letterList.Any())
+            if (!rawLetters.Any())
                 throw new InvalidOperationException("Alphabet entry contains no valid letters or digits.");
 
-            var referenceText = string.Join(", ", letterList) + ".";
+            var phoneticWords = rawLetters
+                .Select(c => LetterToPhonetic.TryGetValue(c, out var phonetic) ? phonetic : c.ToString().ToLower())
+                .ToList();
+
+            var referenceText = string.Join(", ", phoneticWords) + ".";
 
             var speechConfig = SpeechConfig.FromSubscription(_azureSubscriptionKey, _azureRegion);
             speechConfig.SpeechRecognitionLanguage = "en-US";
@@ -85,14 +103,20 @@ namespace inzBackend.Services.AiIntegrationServices
             {
                 var pronResult = PronunciationAssessmentResult.FromResult(result);
 
+                int index = 0;
                 foreach (var word in pronResult.Words)
                 {
-                    string cleanLetter = word.Word.Trim(',', '.', ' ').ToUpper();
+                    string cleanWord = word.Word.Trim(',', '.', ' ').ToLower();
+                    string originalLetter = PhoneticToLetter.TryGetValue(cleanWord, out var mappedLetter)
+                        ? mappedLetter
+                        : (index < rawLetters.Count ? rawLetters[index].ToString() : cleanWord.ToUpper());
 
                     if (word.ErrorType == "Omission" || word.AccuracyScore < LETTER_PASS_THRESHOLD)
                     {
-                        problemLetters.Add(cleanLetter);
+                        problemLetters.Add(originalLetter);
                     }
+
+                    index++;
                 }
 
                 problemLetters = problemLetters.Distinct().ToList();
@@ -103,7 +127,7 @@ namespace inzBackend.Services.AiIntegrationServices
             }
             else
             {
-                feedbackMessage = "No speech could be recognized. Please spell out each letter clearly with short pauses.";
+                feedbackMessage = "No speech could be recognized. Speak clearly, one letter at a time.";
             }
 
             var attempt = new AlphabetAttempt
