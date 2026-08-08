@@ -19,50 +19,48 @@ namespace inzBackend.Services.AiIntegrationServices
         private readonly string _azureRegion;
         private readonly IAiUsageGuardService _usageGuard;
 
-        private const int LETTER_PASS_THRESHOLD = 50;
+        private const int LETTER_PASS_THRESHOLD = 40;
+        private const double ENVIRONMENT_ISSUE_RATIO = 0.7;
 
-        private static readonly Dictionary<char, string> LetterNames = new()
+        private static readonly Dictionary<char, string[]> LetterNames = new()
         {
-            ['A'] = "Ay",
-            ['B'] = "Bee",
-            ['C'] = "See",
-            ['D'] = "Dee",
-            ['E'] = "Ee",
-            ['F'] = "Ef",
-            ['G'] = "Jee",
-            ['H'] = "Aitch",
-            ['I'] = "Eye",
-            ['J'] = "Jay",
-            ['K'] = "Kay",
-            ['L'] = "El",
-            ['M'] = "Em",
-            ['N'] = "En",
-            ['O'] = "Oh",
-            ['P'] = "Pee",
-            ['Q'] = "Cue",
-            ['R'] = "Ar",
-            ['S'] = "Ess",
-            ['T'] = "Tee",
-            ['U'] = "You",
-            ['V'] = "Vee",
-            ['W'] = "Double-you",
-            ['X'] = "Ex",
-            ['Y'] = "Why",
-            ['Z'] = "Zee",
-            ['0'] = "Zero",
-            ['1'] = "One",
-            ['2'] = "Two",
-            ['3'] = "Three",
-            ['4'] = "Four",
-            ['5'] = "Five",
-            ['6'] = "Six",
-            ['7'] = "Seven",
-            ['8'] = "Eight",
-            ['9'] = "Nine"
+            ['A'] = new[] { "Ay" },
+            ['B'] = new[] { "Bee" },
+            ['C'] = new[] { "See" },
+            ['D'] = new[] { "Dee" },
+            ['E'] = new[] { "Ee" },
+            ['F'] = new[] { "Ef" },
+            ['G'] = new[] { "Jee" },
+            ['H'] = new[] { "Aitch" },
+            ['I'] = new[] { "Eye" },
+            ['J'] = new[] { "Jay" },
+            ['K'] = new[] { "Kay" },
+            ['L'] = new[] { "El" },
+            ['M'] = new[] { "Em" },
+            ['N'] = new[] { "En" },
+            ['O'] = new[] { "Oh" },
+            ['P'] = new[] { "Pee" },
+            ['Q'] = new[] { "Cue" },
+            ['R'] = new[] { "Ar" },
+            ['S'] = new[] { "Ess" },
+            ['T'] = new[] { "Tee" },
+            ['U'] = new[] { "You" },
+            ['V'] = new[] { "Vee" },
+            ['W'] = new[] { "Double", "You" },
+            ['X'] = new[] { "Ex" },
+            ['Y'] = new[] { "Why" },
+            ['Z'] = new[] { "Zee" },
+            ['0'] = new[] { "Zero" },
+            ['1'] = new[] { "One" },
+            ['2'] = new[] { "Two" },
+            ['3'] = new[] { "Three" },
+            ['4'] = new[] { "Four" },
+            ['5'] = new[] { "Five" },
+            ['6'] = new[] { "Six" },
+            ['7'] = new[] { "Seven" },
+            ['8'] = new[] { "Eight" },
+            ['9'] = new[] { "Nine" }
         };
-
-        private static readonly Dictionary<string, char> ReverseLetterNames =
-            LetterNames.ToDictionary(kv => kv.Value, kv => kv.Key, StringComparer.OrdinalIgnoreCase);
 
         public AiAlphabetService(IUserContextService userContextService, GmitrzakEnglishAcademyDbContext dbContext,
             IConfiguration configuration, IAiUsageGuardService usageGuard)
@@ -96,7 +94,19 @@ namespace inzBackend.Services.AiIntegrationServices
             if (!rawChars.Any())
                 throw new InvalidOperationException("Alphabet entry contains no valid letters or digits.");
 
-            var referenceWords = rawChars.Select(c => LetterNames.TryGetValue(c, out var name) ? name : c.ToString());
+            var referenceWords = new List<string>();
+            var referenceLetters = new List<char>();
+
+            foreach (var ch in rawChars)
+            {
+                var words = LetterNames.TryGetValue(ch, out var names) ? names : new[] { ch.ToString() };
+                foreach (var w in words)
+                {
+                    referenceWords.Add(w);
+                    referenceLetters.Add(ch);
+                }
+            }
+
             var referenceText = string.Join(" ", referenceWords);
 
             using var memoryStream = new MemoryStream();
@@ -153,25 +163,41 @@ namespace inzBackend.Services.AiIntegrationServices
             {
                 case ResultReason.RecognizedSpeech:
                     var pronResult = PronunciationAssessmentResult.FromResult(result);
+                    int refIndex = 0;
 
                     foreach (var word in pronResult.Words)
                     {
-                        if (word.ErrorType == "Insertion") continue;
+                        if (word.ErrorType == "Insertion")
+                            continue;
 
-                        var cleanWord = word.Word.Trim(',', '.', ' ');
-                        var originalLetter = ReverseLetterNames.TryGetValue(cleanWord, out var c)
-                            ? c.ToString()
-                            : cleanWord.ToUpper();
+                        if (refIndex >= referenceLetters.Count)
+                            continue;
+
+                        var letter = referenceLetters[refIndex];
+                        refIndex++;
 
                         if (word.ErrorType == "Omission" || word.AccuracyScore < LETTER_PASS_THRESHOLD)
-                            problemLetters.Add(originalLetter);
+                            problemLetters.Add(letter.ToString());
                     }
 
                     problemLetters = problemLetters.Distinct().ToList();
 
-                    feedbackMessage = problemLetters.Count == 0
-                        ? "Great job! All letters pronounced correctly!"
-                        : $"Work on these letters: {string.Join(", ", problemLetters)}.";
+                    var distinctLettersCount = rawChars.Distinct().Count();
+                    var isLikelyEnvironmentIssue = distinctLettersCount > 0
+                        && problemLetters.Count >= Math.Max(3, (int)Math.Ceiling(distinctLettersCount * ENVIRONMENT_ISSUE_RATIO));
+
+                    if (isLikelyEnvironmentIssue)
+                    {
+                        feedbackMessage = problemLetters.Count > 0
+                            ? $"We had trouble hearing you clearly. Try a quieter spot or hold the mic closer. Unclear: {string.Join(", ", problemLetters)}."
+                            : "We had trouble hearing you clearly. Try a quieter spot or hold the mic closer.";
+                    }
+                    else
+                    {
+                        feedbackMessage = problemLetters.Count == 0
+                            ? "Great job! All letters pronounced correctly!"
+                            : $"Work on these letters: {string.Join(", ", problemLetters)}.";
+                    }
                     break;
 
                 case ResultReason.NoMatch:
