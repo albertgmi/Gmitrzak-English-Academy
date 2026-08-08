@@ -1,8 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.ModuleSentenceModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
@@ -134,6 +135,46 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             sentence.IsLeech = sentence.EaseFactor <= 150;
 
             _dbContext.SaveChanges();
+        }
+
+        public FlashcardStreakDto GetStreak()
+        {
+            var userId = _userContextService.GetUserId;
+            if (userId is null)
+                return new FlashcardStreakDto { Streak = 0, StudiedToday = false };
+
+            var today = PolandTime.Today;
+            var dates = _dbContext.SectionActivityLogs
+                .Where(x => x.UserId == userId && x.Section == "sentenceflashcards")
+                .Select(x => x.ActivityDate)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            bool studiedToday = dates.Contains(today);
+            int streak = CountConsecutiveStreak(dates, today);
+
+            return new FlashcardStreakDto
+            {
+                Streak = streak,
+                StudiedToday = studiedToday
+            };
+        }
+
+        private static int CountConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
+        {
+            if (!datesDesc.Any()) return 0;
+            var mostRecent = datesDesc.First();
+            if (mostRecent < today.AddDays(-1)) return 0;
+
+            var streak = 0;
+            var expected = mostRecent;
+            foreach (var date in datesDesc)
+            {
+                if (date == expected) { streak++; expected = expected.AddDays(-1); }
+                else break;
+            }
+            return streak;
         }
     }
 }

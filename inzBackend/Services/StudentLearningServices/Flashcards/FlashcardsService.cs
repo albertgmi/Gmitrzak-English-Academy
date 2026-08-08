@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using AutoMapper;
@@ -185,6 +185,46 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             }
 
             _dbContext.SaveChanges();
+        }
+
+        public FlashcardStreakDto GetStreak()
+        {
+            var userId = _userContextService.GetUserId;
+            if (userId is null)
+                return new FlashcardStreakDto { Streak = 0, StudiedToday = false };
+
+            var today = PolandTime.Today;
+            var dates = _dbContext.FlashcardStudyLogs
+                .Where(x => x.UserId == userId)
+                .Select(x => x.StudyDate)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            bool studiedToday = dates.Contains(today);
+            int streak = CountConsecutiveStreak(dates, today);
+
+            return new FlashcardStreakDto
+            {
+                Streak = streak,
+                StudiedToday = studiedToday
+            };
+        }
+
+        private static int CountConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
+        {
+            if (!datesDesc.Any()) return 0;
+            var mostRecent = datesDesc.First();
+            if (mostRecent < today.AddDays(-1)) return 0;
+
+            var streak = 0;
+            var expected = mostRecent;
+            foreach (var date in datesDesc)
+            {
+                if (date == expected) { streak++; expected = expected.AddDays(-1); }
+                else break;
+            }
+            return streak;
         }
     }
 }

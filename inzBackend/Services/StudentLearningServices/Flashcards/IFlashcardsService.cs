@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using inzBackend.Models.StudentLearningModels.FlashcardModels;
 
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
@@ -10,5 +10,6 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         List<FlashcardStudyLogDto> GetStudyLogs();
         List<FlashcardDto> SearchFlashcards(string query);
         void ReviewCard(int flashcardId, ReviewCardRequest request);
+        FlashcardStreakDto GetStreak();
     }
 }

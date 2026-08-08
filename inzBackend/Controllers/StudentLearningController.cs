@@ -180,6 +180,12 @@ namespace inzBackend.Controllers
             return Ok();
         }
 
+        [HttpGet("flashcards/streak")]
+        public ActionResult<FlashcardStreakDto> GetFlashcardStreak()
+        {
+            return _flashcardsService.GetStreak();
+        }
+
         [HttpGet("module/{moduleId}/sentences")]
         public ActionResult<ModuleSentenceSessionDto> GetModuleSentences([FromRoute] int moduleId)
         {
@@ -191,6 +197,12 @@ namespace inzBackend.Controllers
         {
             _sentencesService.ReviewSentence(id, request);
             return Ok();
+        }
+
+        [HttpGet("sentences/streak")]
+        public ActionResult<FlashcardStreakDto> GetSentenceStreak()
+        {
+            return _sentencesService.GetStreak();
         }
 
         [HttpGet("alphabet")]
