@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Helpers;
 using inzBackend.Models;
@@ -88,6 +88,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                         IsOverdue = isOverdue,
                         HasDeadline = false,
                         IsFromMatrix = true,
+                        MatrixId = ma.MatrixId,
                         MatrixName = ma.Matrix.Name
                     });
                 }
@@ -154,6 +155,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                             IsCompleted = true,
                             IsOverdue = false,
                             IsFromMatrix = true,
+                            MatrixId = ma.MatrixId,
                             MatrixName = ma.Matrix.Name
                         });
                     }
