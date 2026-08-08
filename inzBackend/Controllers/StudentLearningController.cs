@@ -1,4 +1,4 @@
-﻿using inzBackend.Exceptions;
+using inzBackend.Exceptions;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Models.ModuleSentenceModels;
@@ -17,6 +17,8 @@ using inzBackend.Services.StudentLearningServices.Memories;
 using inzBackend.Services.StudentLearningServices.Pronunciation;
 using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
+using inzBackend.Models.StudentLearningModels.WeeklyMoviesModels;
+using inzBackend.Services.StudentLearningServices.WeeklyMovies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,11 +38,13 @@ namespace inzBackend.Controllers
         private readonly IAiPronunciationService _aiPronunciationService;
         private readonly IAlphabetService _alphabetService;
         private readonly IAiAlphabetService _aiAlphabetService;
+        private readonly IWeeklyMoviesService _weeklyMoviesService;
 
         public StudentLearningController(ISentencesService sentencesService, IMemoriesService memoriesService,
             IPronunciationService pronunciationService, IFlashcardsService flashcardsService, IVocabularyService vocabularyService,
             IStudentAssignmentService studentAssignmentService, IAiPronunciationService aiPronunciationService,
-            IAlphabetService alphabetService, IAiAlphabetService aiAlphabetService)
+            IAlphabetService alphabetService, IAiAlphabetService aiAlphabetService,
+            IWeeklyMoviesService weeklyMoviesService)
         {
             _sentencesService = sentencesService;
             _memoriesService = memoriesService;
@@ -51,6 +55,14 @@ namespace inzBackend.Controllers
             _aiPronunciationService = aiPronunciationService;
             _alphabetService = alphabetService;
             _aiAlphabetService = aiAlphabetService;
+            _weeklyMoviesService = weeklyMoviesService;
+        }
+
+        [HttpGet("weekly-movies")]
+        [Authorize(Roles = "User,Admin")]
+        public ActionResult<WeeklyMoviesResponseDto> GetWeeklyMoviesStats()
+        {
+            return Ok(_weeklyMoviesService.GetWeeklyMoviesStats());
         }
 
         [HttpGet("sentences")]

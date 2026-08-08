@@ -44,6 +44,7 @@ using inzBackend.Services.StudentLearningServices.Memories;
 using inzBackend.Services.StudentLearningServices.Pronunciation;
 using inzBackend.Services.StudentLearningServices.Sentences;
 using inzBackend.Services.StudentLearningServices.Vocabulary;
+using inzBackend.Services.StudentLearningServices.WeeklyMovies;
 using inzBackend.Services.TheaterItemServices;
 using inzBackend.Services.UserAnswerServices;
 using inzBackend.Services.UserServices;
@@ -164,6 +165,7 @@ namespace inzBackend
             builder.Services.AddScoped<IFlashcardsService, FlashcardsService>();
             builder.Services.AddScoped<IVocabularyService, VocabularyService>();
             builder.Services.AddScoped<IStudentAssignmentService, StudentAssignmentService>();
+            builder.Services.AddScoped<IWeeklyMoviesService, WeeklyMoviesService>();
             builder.Services.AddScoped<ILessonService, LessonService>();
             builder.Services.AddScoped<ILessonPanelService, LessonPanelService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
