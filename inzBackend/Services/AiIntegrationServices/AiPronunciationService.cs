@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities.LearningMaterials;
+using inzBackend.Entities.LearningMaterials;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Models;
@@ -45,13 +45,25 @@ namespace inzBackend.Services.AiIntegrationServices
 
             var speechConfig = SpeechConfig.FromSubscription(_azureSubscriptionKey, _azureRegion);
             speechConfig.SpeechRecognitionLanguage = "en-US";
+            speechConfig.SetProperty(PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "8000");
+            speechConfig.SetProperty(PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "10000");
 
             using var memoryStream = new MemoryStream();
             await audioStream.CopyToAsync(memoryStream);
             byte[] audioBytes = memoryStream.ToArray();
 
-            using var pushStream = AudioInputStream.CreatePushStream();
-            pushStream.Write(audioBytes);
+            if (audioBytes.Length < 44)
+            {
+                throw new InvalidOperationException("Recording was too short. Please hold the button and speak clearly.");
+            }
+
+            WavAudioInfo wavInfo = ParseWavHeader(audioBytes);
+
+            var pcmFormat = AudioStreamFormat.GetWaveFormatPCM(
+                (uint)wavInfo.SampleRate, (byte)wavInfo.BitsPerSample, (byte)wavInfo.Channels);
+
+            using var pushStream = AudioInputStream.CreatePushStream(pcmFormat);
+            pushStream.Write(audioBytes[wavInfo.DataOffset..(wavInfo.DataOffset + wavInfo.DataLength)]);
             pushStream.Close();
 
             using var audioConfig = AudioConfig.FromStreamInput(pushStream);
@@ -152,6 +164,52 @@ namespace inzBackend.Services.AiIntegrationServices
             }
 
             return "Good attempt, but try to speak more clearly.";
+        }
+
+        private static WavAudioInfo ParseWavHeader(byte[] wav)
+        {
+            if (wav.Length < 44
+                || wav[0] != 'R' || wav[1] != 'I' || wav[2] != 'F' || wav[3] != 'F'
+                || wav[8] != 'W' || wav[9] != 'A' || wav[10] != 'V' || wav[11] != 'E')
+            {
+                throw new InvalidOperationException("Invalid WAV file.");
+            }
+
+            short channels = BitConverter.ToInt16(wav, 22);
+            int sampleRate = BitConverter.ToInt32(wav, 24);
+            short bitsPerSample = BitConverter.ToInt16(wav, 34);
+            short blockAlign = BitConverter.ToInt16(wav, 32);
+
+            int pos = 12;
+            int dataOffset = -1, dataLength = 0;
+
+            while (pos + 8 <= wav.Length)
+            {
+                int chunkSize = BitConverter.ToInt32(wav, pos + 4);
+                bool isData = wav[pos] == 'd' && wav[pos + 1] == 'a' && wav[pos + 2] == 't' && wav[pos + 3] == 'a';
+
+                if (isData)
+                {
+                    dataOffset = pos + 8;
+                    dataLength = Math.Min(chunkSize, wav.Length - dataOffset);
+                    break;
+                }
+
+                pos += 8 + chunkSize + (chunkSize % 2);
+            }
+
+            if (dataOffset < 0 || dataLength <= 0)
+                throw new InvalidOperationException("WAV file has no data chunk.");
+
+            return new WavAudioInfo
+            {
+                SampleRate = sampleRate,
+                Channels = channels,
+                BitsPerSample = bitsPerSample,
+                BlockAlign = blockAlign == 0 ? (short)(channels * bitsPerSample / 8) : blockAlign,
+                DataOffset = dataOffset,
+                DataLength = dataLength
+            };
         }
     }
 }
