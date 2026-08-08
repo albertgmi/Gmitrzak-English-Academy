@@ -182,6 +182,7 @@ namespace inzBackend
             builder.Services.AddScoped<IAiSpellCheckService, AiSpellCheckService>();
             builder.Services.AddScoped<IAiPronunciationService, AiPronunciationService>();
             builder.Services.AddScoped<IAiAlphabetService, AiAlphabetService>();
+            builder.Services.AddScoped<IAiUsageGuardService, AiUsageGuardService>();
             builder.Services.AddScoped<IShopActionService, ShopActionService>();
 
             // Infrastructure / cross-cutting services

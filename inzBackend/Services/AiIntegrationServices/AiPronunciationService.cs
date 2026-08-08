@@ -17,11 +17,10 @@ namespace inzBackend.Services.AiIntegrationServices
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly string _azureSubscriptionKey;
         private readonly string _azureRegion;
+        private readonly IAiUsageGuardService _usageGuard;
 
-        public AiPronunciationService(
-            IUserContextService userContextService,
-            GmitrzakEnglishAcademyDbContext dbContext,
-            IConfiguration configuration)
+        public AiPronunciationService(IUserContextService userContextService, GmitrzakEnglishAcademyDbContext dbContext,
+            IConfiguration configuration, IAiUsageGuardService usageGuard)
         {
             _userContextService = userContextService;
             _dbContext = dbContext;
@@ -29,14 +28,14 @@ namespace inzBackend.Services.AiIntegrationServices
                 ?? throw new InvalidOperationException("AzureSpeechSettings:SubscriptionKey is missing in configuration.");
             _azureRegion = configuration["AzureSpeechSettings:Region"]
                 ?? throw new InvalidOperationException("AzureSpeechSettings:Region is missing in configuration.");
+            _usageGuard = usageGuard;
         }
 
-        public async Task<PronunciationResult> ProcessUserAttemptAsync(
-            Stream audioStream,
-            string fileName,
-            int pronunciationEntryId)
+        public async Task<PronunciationResult> ProcessUserAttemptAsync(Stream audioStream, string fileName, int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
+
+            _usageGuard.EnsureCanSubmitAttempt(userId);
 
             var entry = await _dbContext.PronunciationEntries
                 .FirstOrDefaultAsync(x => x.Id == pronunciationEntryId && x.UserId == userId);

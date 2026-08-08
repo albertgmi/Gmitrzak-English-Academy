@@ -107,6 +107,10 @@ namespace inzBackend.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
+            catch (TooManyAttemptsException ex)
+            {
+                return StatusCode(429, new { message = ex.Message });
+            }
         }
 
         [HttpGet("flashcards")]
@@ -218,6 +222,10 @@ namespace inzBackend.Controllers
             catch (NotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (TooManyAttemptsException ex)
+            {
+                return StatusCode(429, new { message = ex.Message });
             }
         }
     }
