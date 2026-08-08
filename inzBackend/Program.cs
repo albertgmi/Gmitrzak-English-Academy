@@ -11,6 +11,8 @@ using inzBackend.Models.Validators;
 using inzBackend.Profiles;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
+using inzBackend.Services.AdminLearningServices.Memories;
+using inzBackend.Services.AdminLearningServices.Pronunciation;
 using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.AnnouncementsServices;
 using inzBackend.Services.AssignmentServices;
@@ -167,6 +169,8 @@ namespace inzBackend
             builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<ICatalogueService, CatalogueService>();
             builder.Services.AddScoped<ITheaterService, TheaterService>();
+            builder.Services.AddScoped<IAdminMemoriesService, AdminMemoriesService>();
+            builder.Services.AddScoped<IAdminPronunciationService, AdminPronunciationService>();
             builder.Services.AddScoped<IGlobalVocabularyService, GlobalVocabularyService>();
             builder.Services.AddScoped<IAiTranslationService, AiTranslationService>();
             builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
