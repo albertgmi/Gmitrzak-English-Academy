@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.EssayModels;
+using inzBackend.Models.EssayModels;
 using inzBackend.Services.EssayServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +58,14 @@ namespace inzBackend.Controllers
             return File(bytes,
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 $"essay_{essayId}.docx");
+        }
+
+        [HttpGet("admin/export-all-reviewed")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult ExportAllReviewed()
+        {
+            var bytes = _essayService.ExportAllReviewedEssaysToZip();
+            return File(bytes, "application/zip", "checked_essays.zip");
         }
     }
 }

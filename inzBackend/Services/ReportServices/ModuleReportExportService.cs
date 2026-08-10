@@ -1,4 +1,4 @@
-﻿using QuestPDF.Fluent;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using DocumentFormat.OpenXml;
@@ -36,17 +36,14 @@ namespace inzBackend.Services.ReportServices
                 {
                     page.Size(PageSizes.A4);
                     page.Margin(2, Unit.Centimetre);
-                    page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
+                    page.DefaultTextStyle(x => x.FontSize(12).FontFamily("Times New Roman"));
 
                     page.Header().Column(col =>
                     {
-                        col.Item().Text("Sentence Modules Report — Period Summary")
+                        col.Item().Text("Sentences")
                             .FontSize(18).Bold().FontColor(Colors.Blue.Darken2);
                         col.Item().Text($"Student: {report.StudentUsername}")
                             .FontSize(13).SemiBold();
-                        col.Item().Text(
-                            $"Period: {report.DateFrom:d MMM yyyy} — {report.DateTo:d MMM yyyy}")
-                            .FontSize(11);
                         col.Item().Text($"Generated: {report.GeneratedDate:d MMM yyyy}")
                             .FontSize(10).FontColor(Colors.Grey.Darken1);
                         col.Item().PaddingVertical(8)
@@ -148,10 +145,8 @@ namespace inzBackend.Services.ReportServices
                 mainPart.Document = new OpenXmlDocument();
                 var body = new Body();
 
-                body.Append(CreateHeading("Sentence Modules Report — Period Summary", 32));
+                body.Append(CreateHeading("Sentences", 32));
                 body.Append(CreateParagraph($"Student: {report.StudentUsername}", true));
-                body.Append(CreateParagraph(
-                    $"Period: {report.DateFrom:d MMM yyyy} — {report.DateTo:d MMM yyyy}", true));
                 body.Append(CreateParagraph($"Generated: {report.GeneratedDate:d MMM yyyy}"));
                 body.Append(CreateParagraph(" "));
                 body.Append(CreateParagraph(
@@ -161,7 +156,6 @@ namespace inzBackend.Services.ReportServices
 
                 foreach (var module in report.Modules)
                 {
-                    body.Append(CreateHeading($"Module: {module.ModuleName}", 26));
                     body.Append(CreateParagraph(
                         $"Correct: {module.CorrectCount} | Partial: {module.PartialCount} " +
                         $"| Incorrect: {module.IncorrectCount}"));
@@ -273,27 +267,33 @@ namespace inzBackend.Services.ReportServices
         private static Paragraph CreateParagraph(string text, bool bold = false)
         {
             var run = new Run();
+            var runProperties = new RunProperties();
+            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
+            runProperties.Append(new FontSize { Val = "24" });
             if (bold)
-                run.Append(new RunProperties(new Bold()));
-            run.Append(new Text(text));
+                runProperties.Append(new Bold());
+            run.Append(runProperties);
+            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
             return new Paragraph(run);
         }
 
         private static Paragraph CreateHeading(string text, int size)
         {
-            return new Paragraph(
-                new Run(
-                    new RunProperties(
-                        new Bold(),
-                        new FontSize { Val = size.ToString() }
-                    ),
-                    new Text(text)));
+            var run = new Run();
+            var runProperties = new RunProperties();
+            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
+            runProperties.Append(new Bold());
+            runProperties.Append(new FontSize { Val = size.ToString() });
+            run.Append(runProperties);
+            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
+            return new Paragraph(run);
         }
 
         private static Paragraph CreateCustomParagraph(string text, bool bold = false, bool italic = false, int? fontSize = null)
         {
             var run = new Run();
             var runProperties = new RunProperties();
+            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
 
             if (bold)
                 runProperties.Append(new Bold());
@@ -301,13 +301,10 @@ namespace inzBackend.Services.ReportServices
             if (italic)
                 runProperties.Append(new Italic());
 
-            if (fontSize.HasValue)
-                runProperties.Append(new FontSize { Val = fontSize.Value.ToString() });
+            runProperties.Append(new FontSize { Val = (fontSize ?? 24).ToString() });
 
-            if (bold || italic || fontSize.HasValue)
-                run.Append(runProperties);
-
-            run.Append(new Text(text));
+            run.Append(runProperties);
+            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
             return new Paragraph(run);
         }
     }

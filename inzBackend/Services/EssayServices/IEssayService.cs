@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.EssayModels;
+using inzBackend.Models.EssayModels;
 
 namespace inzBackend.Services.EssayServices
 {
@@ -10,5 +10,6 @@ namespace inzBackend.Services.EssayServices
         List<UserEssayDto> GetEssaysForStudent(int studentId);
         UserEssayDto ReviewEssay(int essayId, ReviewEssayRequest request);
         byte[] ExportEssayToDocx(int essayId);
+        byte[] ExportAllReviewedEssaysToZip();
     }
 }

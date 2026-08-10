@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentFormat.OpenXml;
@@ -11,6 +11,7 @@ using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using System.IO.Compression;
 using OpenXmlDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Entities.Assignments;
@@ -186,7 +187,6 @@ namespace inzBackend.Services.EssayServices
 
                 body.Append(CreateParagraph("Essay Review", bold: true, fontSize: 32));
                 body.Append(CreateParagraph($"Student: {essay.User.Username}", bold: true));
-                body.Append(CreateParagraph($"Module: {essay.Module.Name}"));
                 body.Append(CreateParagraph(
                     $"Submitted: {essay.SubmittedDate?.ToString("d MMM yyyy") ?? "—"}"));
                 body.Append(CreateEmptyLine());
@@ -197,17 +197,9 @@ namespace inzBackend.Services.EssayServices
                     italic: true));
                 body.Append(CreateEmptyLine());
 
-                body.Append(CreateSectionHeader("STUDENT'S ESSAY", "2E74B5"));
-
-                var studentText = StripHtml(essay.Content);
-                foreach (var line in SplitIntoLines(studentText))
-                    body.Append(CreateParagraph(line));
-
-                body.Append(CreateEmptyLine());
-
                 if (!string.IsNullOrWhiteSpace(essay.AdminContent))
                 {
-                    body.Append(CreateSectionHeader("TEACHER'S CORRECTIONS", "375623"));
+                    body.Append(CreateSectionHeader("CORRECTIONS", "375623"));
 
                     var adminText = StripHtml(essay.AdminContent);
                     foreach (var line in SplitIntoLines(adminText))
@@ -215,7 +207,7 @@ namespace inzBackend.Services.EssayServices
                 }
                 else
                 {
-                    body.Append(CreateSectionHeader("TEACHER'S CORRECTIONS", "7F7F7F"));
+                    body.Append(CreateSectionHeader("CORRECTIONS", "7F7F7F"));
                     body.Append(CreateParagraph("No corrections yet.", italic: true,
                         color: "7F7F7F"));
                 }
@@ -226,22 +218,54 @@ namespace inzBackend.Services.EssayServices
 
             return stream.ToArray();
         }
+
+        public byte[] ExportAllReviewedEssaysToZip()
+        {
+            var reviewedEssays = _dbContext.UserEssays
+                .Include(x => x.User)
+                .Include(x => x.Module)
+                .Where(x => x.IsSubmitted && x.IsReviewed)
+                .OrderByDescending(x => x.ReviewedDate)
+                .ToList();
+
+            using var zipStream = new MemoryStream();
+
+            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
+            {
+                foreach (var essay in reviewedEssays)
+                {
+                    var username = string.Join("_", (essay.User?.Username ?? "student").Split(Path.GetInvalidFileNameChars()));
+                    var moduleName = string.Join("_", (essay.Module?.Name ?? "module").Split(Path.GetInvalidFileNameChars()));
+                    var fileName = $"essay_{essay.Id}_{username}_{moduleName}.docx";
+
+                    var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
+                    var docxBytes = ExportEssayToDocx(essay.Id);
+
+                    using var entryStream = zipEntry.Open();
+                    entryStream.Write(docxBytes, 0, docxBytes.Length);
+                }
+            }
+
+            return zipStream.ToArray();
+        }
+
         private static Paragraph CreateParagraph(
             string text,
             bool bold = false,
             bool italic = false,
-            int fontSize = 22,
+            int fontSize = 24,
             string? color = null)
         {
             var run = new Run();
             var props = new RunProperties();
 
+            props.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
             if (bold) props.Append(new Bold());
             if (italic) props.Append(new Italic());
-            if (fontSize != 22) props.Append(new FontSize { Val = fontSize.ToString() });
+            props.Append(new FontSize { Val = fontSize.ToString() });
             if (color is not null) props.Append(new Color { Val = color });
 
-            if (props.HasChildren) run.Append(props);
+            run.Append(props);
             run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
 
             return new Paragraph(run);
@@ -251,6 +275,7 @@ namespace inzBackend.Services.EssayServices
         {
             var run = new Run();
             var props = new RunProperties();
+            props.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
             props.Append(new Bold());
             props.Append(new FontSize { Val = "26" });
             props.Append(new Color { Val = color });
@@ -348,12 +373,8 @@ namespace inzBackend.Services.EssayServices
         private static string StripHtml(string html)
         {
             if (string.IsNullOrWhiteSpace(html)) return string.Empty;
-            return Regex.Replace(html, "<.*?>", string.Empty)
-                        .Replace("&nbsp;", " ")
-                        .Replace("&amp;", "&")
-                        .Replace("&lt;", "<")
-                        .Replace("&gt;", ">")
-                        .Trim();
+            var textWithoutTags = Regex.Replace(html, "<.*?>", string.Empty);
+            return System.Net.WebUtility.HtmlDecode(textWithoutTags).Trim();
         }
     }
 }
