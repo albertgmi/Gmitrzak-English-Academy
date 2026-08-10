@@ -127,6 +127,12 @@ namespace inzBackend.Services.EssayServices
                 .ToList();
         }
 
+        public List<UserEssayDto> GetMyEssays()
+        {
+            var userId = _userContextService.GetUserId!.Value;
+            return GetEssaysForStudent(userId);
+        }
+
         public List<UserEssayDto> GetEssaysForStudent(int studentId)
         {
             return _dbContext.UserEssays

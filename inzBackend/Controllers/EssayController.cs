@@ -29,6 +29,12 @@ namespace inzBackend.Controllers
             return Ok(_essayService.SubmitEssay(request));
         }
 
+        [HttpGet("my-essays")]
+        public ActionResult<List<UserEssayDto>> GetMyEssays()
+        {
+            return Ok(_essayService.GetMyEssays());
+        }
+
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
         public ActionResult<List<UserEssayDto>> GetAll()
