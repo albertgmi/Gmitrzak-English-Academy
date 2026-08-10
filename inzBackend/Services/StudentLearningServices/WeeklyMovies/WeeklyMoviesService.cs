@@ -15,17 +15,25 @@ namespace inzBackend.Services.StudentLearningServices.WeeklyMovies
             _dbContext = dbContext;
         }
 
-        public WeeklyMoviesResponseDto GetWeeklyMoviesStats()
+        public WeeklyMoviesResponseDto GetWeeklyMoviesStats(string? timeframe = "week")
         {
             var today = PolandTime.Today;
             var weekStart = WeekHelper.GetWeekMonday(today);
             var weekEnd = weekStart.AddDays(6);
 
-            var movieReports = _dbContext.ListeningReports
+            var isAllTime = string.Equals(timeframe, "all", StringComparison.OrdinalIgnoreCase);
+
+            var query = _dbContext.ListeningReports
                 .Include(r => r.User)
                 .ThenInclude(u => u.Profile)
-                .Where(r => r.ReportDate >= weekStart && r.ReportDate <= weekEnd && r.MediaType == MediaType.Movie)
-                .ToList();
+                .Where(r => r.MediaType == MediaType.Movie);
+
+            if (!isAllTime)
+            {
+                query = query.Where(r => r.ReportDate >= weekStart && r.ReportDate <= weekEnd);
+            }
+
+            var movieReports = query.ToList();
 
             var totalEpisodesWatched = movieReports.Sum(r => r.EpisodeCount);
 

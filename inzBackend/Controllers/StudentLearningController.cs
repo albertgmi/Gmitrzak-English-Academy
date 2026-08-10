@@ -60,9 +60,9 @@ namespace inzBackend.Controllers
 
         [HttpGet("weekly-movies")]
         [Authorize(Roles = "User,Admin")]
-        public ActionResult<WeeklyMoviesResponseDto> GetWeeklyMoviesStats()
+        public ActionResult<WeeklyMoviesResponseDto> GetWeeklyMoviesStats([FromQuery] string? timeframe = "week")
         {
-            return Ok(_weeklyMoviesService.GetWeeklyMoviesStats());
+            return Ok(_weeklyMoviesService.GetWeeklyMoviesStats(timeframe));
         }
 
         [HttpGet("sentences")]

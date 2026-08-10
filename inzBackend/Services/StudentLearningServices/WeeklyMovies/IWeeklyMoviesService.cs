@@ -4,6 +4,6 @@ namespace inzBackend.Services.StudentLearningServices.WeeklyMovies
 {
     public interface IWeeklyMoviesService
     {
-        WeeklyMoviesResponseDto GetWeeklyMoviesStats();
+        WeeklyMoviesResponseDto GetWeeklyMoviesStats(string? timeframe = "week");
     }
 }
