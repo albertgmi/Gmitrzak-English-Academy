@@ -105,7 +105,7 @@ namespace inzBackend.Services.ReportServices
                                                 .Text(item.FinalResult).Bold();
                                         });
                                         c.Item().PaddingTop(2)
-                                            .Text($"Student: {item.StudentAnswer}");
+                                            .Text($"{item.StudentAnswer}");
                                         c.Item().PaddingTop(3)
                                             .Text($"{item.AiExplanation}")
                                             .FontSize(9).Italic();
@@ -174,7 +174,7 @@ namespace inzBackend.Services.ReportServices
                         body.Append(CreateCustomParagraph(
                             $"#{item.Order} {item.Polish}", bold: true, italic: false, fontSize: 24));
                         if (!string.IsNullOrWhiteSpace(item.StudentAnswer))
-                            body.Append(CreateParagraph($"Student: {item.StudentAnswer}"));
+                            body.Append(CreateParagraph($"{item.StudentAnswer}"));
                         if (!string.IsNullOrWhiteSpace(item.TeacherOverride))
                             body.Append(CreateParagraph(
                                 $"Teachers explanation: {item.TeacherOverride}" +
