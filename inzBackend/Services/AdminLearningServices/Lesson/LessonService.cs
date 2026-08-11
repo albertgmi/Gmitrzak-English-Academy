@@ -788,6 +788,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         private static readonly List<PromptTemplateItem> PromptTemplates = new()
         {
+            new() { Key = "blank", Template = "{A}" },
             new() { Key = "difference", Template = "What's the difference between {A} and {B}? Provide examples." },
             new() { Key = "comma_before", Template = "Do you put a comma before {A}? Are there any exceptions? Back it up with examples." },
             new() { Key = "position", Template = "Where do you put the word {A} in a sentence? Is there only one option? Give examples." },
@@ -804,8 +805,13 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public static string GeneratePrompts(string optionA, string? optionB = null, string? category = null)
         {
+            if (!string.IsNullOrWhiteSpace(category) && category.Trim().Equals("blank", StringComparison.OrdinalIgnoreCase))
+            {
+                return optionA.Trim();
+            }
+
             var templates = string.IsNullOrWhiteSpace(category)
-                ? PromptTemplates
+                ? PromptTemplates.Where(t => t.Key != "blank").ToList()
                 : PromptTemplates.Where(t => t.Key == category).ToList();
 
             var lines = new List<string>();
