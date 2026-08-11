@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Entities.Administration;
 using inzBackend.Entities.Assignments;
 using inzBackend.Entities.Gamification;
@@ -547,7 +547,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public void AddListeningReport(AddListeningReportRequest request)
         {
-            if (!Enum.TryParse<MediaType>(request.MediaType, out var mediaType))
+            var cleanType = (request.MediaType ?? string.Empty).Replace(" ", "");
+            if (!Enum.TryParse<MediaType>(cleanType, true, out var mediaType))
                 throw new BadRequestException($"Invalid media type: {request.MediaType}");
 
             _dbContext.ListeningReports.Add(new ListeningReport

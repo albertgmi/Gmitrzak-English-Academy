@@ -15,7 +15,7 @@ namespace inzBackend.Services.StudentLearningServices.WeeklyMovies
             _dbContext = dbContext;
         }
 
-        public WeeklyMoviesResponseDto GetWeeklyMoviesStats(string? timeframe = "week")
+        public WeeklyMoviesResponseDto GetWeeklyMoviesStats(string? timeframe = "week", string? type = "movie")
         {
             var today = PolandTime.Today;
             var weekStart = WeekHelper.GetWeekMonday(today);
@@ -23,10 +23,16 @@ namespace inzBackend.Services.StudentLearningServices.WeeklyMovies
 
             var isAllTime = string.Equals(timeframe, "all", StringComparison.OrdinalIgnoreCase);
 
+            var isTv = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(type, "tvseries", StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(type, "series", StringComparison.OrdinalIgnoreCase);
+
+            var targetMediaType = isTv ? MediaType.TvSeries : MediaType.Movie;
+
             var query = _dbContext.ListeningReports
                 .Include(r => r.User)
                 .ThenInclude(u => u.Profile)
-                .Where(r => r.MediaType == MediaType.Movie);
+                .Where(r => r.MediaType == targetMediaType);
 
             if (!isAllTime)
             {

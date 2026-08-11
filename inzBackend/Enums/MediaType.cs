@@ -1,7 +1,7 @@
-﻿namespace inzBackend.Enums
+namespace inzBackend.Enums
 {
     public enum MediaType
     {
-        Podcast, Video, Book, Article, Movie, YouTube, Other
+        Podcast, Video, Book, Article, Movie, YouTube, Other, TvSeries
     }
 }
