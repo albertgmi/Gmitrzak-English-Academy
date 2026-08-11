@@ -802,7 +802,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             new() { Key = "plural", Template = "What's the plural of the word {A}?" }
         };
 
-        private string GeneratePrompts(string optionA, string? optionB, string? category)
+        public static string GeneratePrompts(string optionA, string? optionB = null, string? category = null)
         {
             var templates = string.IsNullOrWhiteSpace(category)
                 ? PromptTemplates

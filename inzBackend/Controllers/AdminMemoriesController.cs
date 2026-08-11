@@ -36,5 +36,12 @@ namespace inzBackend.Controllers
             _adminMemoriesService.DeleteMemory(id);
             return NoContent();
         }
+
+        [HttpPost("import/{studentId}")]
+        public ActionResult<object> ImportMemories([FromRoute] int studentId, [FromForm] IFormFile file)
+        {
+            var count = _adminMemoriesService.ImportMemoriesFromExcel(studentId, file);
+            return Ok(new { count });
+        }
     }
 }

@@ -1,8 +1,8 @@
 using inzBackend.Entities;
 using inzBackend.Exceptions;
 using inzBackend.Models;
-
 using inzBackend.Models.AdminLearningModels;
+using inzBackend.Services.AdminLearningServices.Lesson;
 
 namespace inzBackend.Services.AdminLearningServices.Memories
 {
@@ -56,6 +56,65 @@ namespace inzBackend.Services.AdminLearningServices.Memories
 
             _dbContext.Memories.Remove(memory);
             _dbContext.SaveChanges();
+        }
+
+        public int ImportMemoriesFromExcel(int studentId, Microsoft.AspNetCore.Http.IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                throw new BadRequestException("No file provided.");
+
+            var studentExists = _dbContext.Users.Any(u => u.Id == studentId);
+            if (!studentExists)
+                throw new NotFoundException("Student not found.");
+
+            var importedCount = 0;
+
+            using var stream = file.OpenReadStream();
+            using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+            var worksheet = workbook.Worksheets.FirstOrDefault();
+            if (worksheet == null)
+                throw new BadRequestException("Excel worksheet is empty.");
+
+            var rows = worksheet.RowsUsed().ToList();
+            if (!rows.Any()) return 0;
+
+            var firstRowCol1 = rows[0].Cell(1).GetString().Trim();
+            var startRowIndex = 0;
+            if (firstRowCol1.Equals("memory", StringComparison.OrdinalIgnoreCase) ||
+                firstRowCol1.Equals("optiona", StringComparison.OrdinalIgnoreCase) ||
+                firstRowCol1.Equals("option a", StringComparison.OrdinalIgnoreCase) ||
+                firstRowCol1.Equals("słowo", StringComparison.OrdinalIgnoreCase) ||
+                firstRowCol1.Equals("fraza", StringComparison.OrdinalIgnoreCase))
+            {
+                startRowIndex = 1;
+            }
+
+            for (var i = startRowIndex; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                var optionA = row.Cell(1).GetString().Trim();
+                var notes = row.Cell(2).GetString().Trim();
+
+                if (string.IsNullOrWhiteSpace(optionA))
+                    continue;
+
+                var generatedContent = LessonService.GeneratePrompts(optionA, null, null);
+
+                _dbContext.Memories.Add(new Entities.SpacedRepetition.Memory
+                {
+                    UserId = studentId,
+                    OptionA = optionA,
+                    OptionB = null,
+                    Content = string.IsNullOrWhiteSpace(generatedContent) ? optionA : generatedContent,
+                    Notes = string.IsNullOrWhiteSpace(notes) ? null : notes,
+                    Category = null
+                });
+
+                importedCount++;
+            }
+
+            _dbContext.SaveChanges();
+            return importedCount;
         }
     }
 }
