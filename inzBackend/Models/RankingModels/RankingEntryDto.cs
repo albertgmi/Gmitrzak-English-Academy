@@ -1,4 +1,4 @@
-﻿namespace inzBackend.Models.RankingModels
+namespace inzBackend.Models.RankingModels
 {
     public class RankingEntryDto
     {
@@ -9,6 +9,7 @@
         public int ActivityPoints { get; set; }
         public decimal AverageGrade { get; set; }
         public int FlashcardsDone { get; set; }
+        public int Streak { get; set; }
         public int Score { get; set; }
         public string Title { get; set; } = string.Empty;
         public int PositionChange { get; set; }

@@ -1,4 +1,4 @@
-﻿using inzBackend.Enums;
+using inzBackend.Enums;
 
 namespace inzBackend.Models.UserModels
 {
@@ -9,6 +9,7 @@ namespace inzBackend.Models.UserModels
         public string? Password { get; set; }
         public UserRole Role { get; set; }
         public bool isActive { get; set; }
+        public int? StreakOverride { get; set; }
 
     }
 }

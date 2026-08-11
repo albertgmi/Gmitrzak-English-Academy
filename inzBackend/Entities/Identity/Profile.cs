@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities.Base;
+using inzBackend.Entities.Base;
 using inzBackend.Enums;
 
 namespace inzBackend.Entities.Identity
@@ -11,6 +11,7 @@ namespace inzBackend.Entities.Identity
         public string? AvatarUrl { get; set; }
         public EnglishLevel? EnglishLevel { get; set; }
         public int? CurrentSemester { get; set; }
+        public int? StreakOverride { get; set; }
 
         public bool Semester1 { get; set; }
         public bool Semester2 { get; set; }

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using CloudinaryDotNet.Actions;
 using DocumentFormat.OpenXml.Spreadsheet;
 using inzBackend.Entities;
@@ -171,6 +171,15 @@ namespace inzBackend.Services.UserServices
                 user.PasswordHash = passwordHashed;
             }
             user.IsActive = request.isActive;
+
+            var profile = _dbContext.Profiles.FirstOrDefault(p => p.UserId == userId);
+            if (profile is null)
+            {
+                profile = new Entities.Identity.Profile { UserId = userId };
+                _dbContext.Profiles.Add(profile);
+            }
+            profile.StreakOverride = request.StreakOverride;
+
             _dbContext.SaveChanges();
         }
 
@@ -216,22 +225,57 @@ namespace inzBackend.Services.UserServices
 
         private List<AppUserDto> GetUsers(bool isActive)
         {
+            var today = PolandTime.Today;
             var users = _dbContext.Users
+                .Include(u => u.Profile)
                 .Where(u => u.IsActive == isActive)
-                .Select(u => new AppUserDto
+                .ToList();
+
+            var flashcardLogs = _dbContext.FlashcardStudyLogs
+                .Select(x => new { x.UserId, x.StudyDate })
+                .Distinct()
+                .ToList();
+
+            return users.Select(u =>
+            {
+                int calculatedStreak = 0;
+                if (u.Profile?.StreakOverride.HasValue == true)
+                {
+                    calculatedStreak = u.Profile.StreakOverride.Value;
+                }
+                else
+                {
+                    var userDates = flashcardLogs
+                        .Where(x => x.UserId == u.Id)
+                        .Select(x => x.StudyDate)
+                        .OrderByDescending(x => x)
+                        .ToList();
+
+                    if (userDates.Any() && userDates.First() >= today.AddDays(-1))
+                    {
+                        var expected = userDates.First();
+                        foreach (var d in userDates)
+                        {
+                            if (d == expected) { calculatedStreak++; expected = expected.AddDays(-1); }
+                            else break;
+                        }
+                    }
+                }
+
+                return new AppUserDto
                 {
                     Id = u.Id,
                     Username = u.Username,
                     Email = u.Email,
                     Role = u.Role,
                     IsActive = u.IsActive,
-                    AvatarUrl = u.Profile != null ? u.Profile.AvatarUrl : null,
+                    Streak = calculatedStreak,
+                    StreakOverride = u.Profile?.StreakOverride,
+                    AvatarUrl = u.Profile?.AvatarUrl,
                     LastLoginAt = u.LastLoginAt,
                     LastActiveAt = u.LastActiveAt
-                })
-                .ToList();
-
-            return users;
+                };
+            }).ToList();
         }
         private int CalculateStreak(HashSet<DateOnly> loginDates, DateOnly today, HashSet<DateOnly> shieldedDates)
         {

@@ -1,4 +1,4 @@
-﻿using inzBackend.Enums;
+using inzBackend.Enums;
 using inzBackend.Helpers;
 
 namespace inzBackend.Models.UserModels
@@ -10,6 +10,8 @@ namespace inzBackend.Models.UserModels
         public string Email { get; set; } = string.Empty;
         public UserRole Role { get; set; }
         public bool IsActive { get; set; } = true;
+        public int Streak { get; set; }
+        public int? StreakOverride { get; set; }
         public string? AvatarUrl { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public DateTime? LastActiveAt { get; set; }

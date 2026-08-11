@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+using inzBackend.Entities;
 using inzBackend.Models.RankingModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
@@ -74,6 +74,11 @@ namespace inzBackend.Services.RankingServices
                 .Select(x => new { x.ToUserId, x.Emoji })
                 .ToList();
 
+            var allFlashcardLogs = _dbContext.FlashcardStudyLogs
+                .Select(x => new { x.UserId, x.StudyDate })
+                .Distinct()
+                .ToList();
+
             var entries = users.Select(u =>
             {
                 var activityScore = _lessonPanelService
@@ -90,6 +95,30 @@ namespace inzBackend.Services.RankingServices
                     .Where(r => r.ToUserId == u.Id)
                     .ToDictionary(r => r.Emoji, r => r.Count);
 
+                int streak = 0;
+                if (u.Profile?.StreakOverride.HasValue == true)
+                {
+                    streak = u.Profile.StreakOverride.Value;
+                }
+                else
+                {
+                    var userDates = allFlashcardLogs
+                        .Where(x => x.UserId == u.Id)
+                        .Select(x => x.StudyDate)
+                        .OrderByDescending(x => x)
+                        .ToList();
+
+                    if (userDates.Any() && userDates.First() >= today.AddDays(-1))
+                    {
+                        var expected = userDates.First();
+                        foreach (var d in userDates)
+                        {
+                            if (d == expected) { streak++; expected = expected.AddDays(-1); }
+                            else break;
+                        }
+                    }
+                }
+
                 return new RankingEntryDto
                 {
                     UserId = u.Id,
@@ -98,6 +127,7 @@ namespace inzBackend.Services.RankingServices
                     ActivityPoints = activityScore.TotalScore,
                     AverageGrade = Math.Round(avg, 1),
                     FlashcardsDone = activityScore.FlashcardsDone,
+                    Streak = streak,
                     Score = score,
                     Reactions = userReactions
                 };
