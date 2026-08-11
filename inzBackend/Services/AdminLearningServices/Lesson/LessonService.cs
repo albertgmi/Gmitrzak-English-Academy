@@ -160,7 +160,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 UserId = request.StudentUserId,
                 OptionA = request.OptionA,
                 OptionB = request.OptionB,
-                Content = generatedContent,
+                Content = string.IsNullOrWhiteSpace(generatedContent) ? request.OptionA.Trim() : generatedContent,
                 Notes = request.Notes,
                 Category = request.Category
             });
@@ -805,14 +805,12 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
         public static string GeneratePrompts(string optionA, string? optionB = null, string? category = null)
         {
-            if (!string.IsNullOrWhiteSpace(category) && category.Trim().Equals("blank", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(category) || category.Trim().Equals("blank", StringComparison.OrdinalIgnoreCase))
             {
                 return optionA.Trim();
             }
 
-            var templates = string.IsNullOrWhiteSpace(category)
-                ? PromptTemplates.Where(t => t.Key != "blank").ToList()
-                : PromptTemplates.Where(t => t.Key == category).ToList();
+            var templates = PromptTemplates.Where(t => t.Key == category).ToList();
 
             var lines = new List<string>();
             foreach (var promptTemplateItem in templates)
@@ -826,7 +824,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
 
                 lines.Add(prompt);
             }
-            return string.Join("\n", lines);
+            var result = string.Join("\n", lines);
+            return string.IsNullOrWhiteSpace(result) ? optionA.Trim() : result;
         }
     }
 }

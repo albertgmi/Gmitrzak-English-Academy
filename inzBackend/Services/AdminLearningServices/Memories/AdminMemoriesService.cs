@@ -78,16 +78,8 @@ namespace inzBackend.Services.AdminLearningServices.Memories
             var rows = worksheet.RowsUsed().ToList();
             if (!rows.Any()) return 0;
 
-            var firstRowCol1 = rows[0].Cell(1).GetString().Trim();
-            var startRowIndex = 0;
-            if (firstRowCol1.Equals("memory", StringComparison.OrdinalIgnoreCase) ||
-                firstRowCol1.Equals("optiona", StringComparison.OrdinalIgnoreCase) ||
-                firstRowCol1.Equals("option a", StringComparison.OrdinalIgnoreCase) ||
-                firstRowCol1.Equals("słowo", StringComparison.OrdinalIgnoreCase) ||
-                firstRowCol1.Equals("fraza", StringComparison.OrdinalIgnoreCase))
-            {
-                startRowIndex = 1;
-            }
+            // Always skip row 1 (header row containing column names e.g. memory, notes)
+            var startRowIndex = rows.Count > 1 ? 1 : 0;
 
             for (var i = startRowIndex; i < rows.Count; i++)
             {
@@ -98,16 +90,14 @@ namespace inzBackend.Services.AdminLearningServices.Memories
                 if (string.IsNullOrWhiteSpace(optionA))
                     continue;
 
-                var generatedContent = LessonService.GeneratePrompts(optionA, null, null);
-
                 _dbContext.Memories.Add(new Entities.SpacedRepetition.Memory
                 {
                     UserId = studentId,
                     OptionA = optionA,
                     OptionB = null,
-                    Content = string.IsNullOrWhiteSpace(generatedContent) ? optionA : generatedContent,
+                    Content = optionA,
                     Notes = string.IsNullOrWhiteSpace(notes) ? null : notes,
-                    Category = null
+                    Category = "blank"
                 });
 
                 importedCount++;
