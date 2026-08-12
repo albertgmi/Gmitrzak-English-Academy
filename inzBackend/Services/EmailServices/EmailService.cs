@@ -1,7 +1,7 @@
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace inzBackend.Services.EmailServices
 {
@@ -9,6 +9,7 @@ namespace inzBackend.Services.EmailServices
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
@@ -18,97 +19,62 @@ namespace inzBackend.Services.EmailServices
 
         public async Task SendEmailAsync(string toEmail, string subject, string bodyHtml)
         {
-            var host = _configuration["SmtpSettings:Host"] ?? _configuration["SMTP_HOST"] ?? "smtp.gmail.com";
-            var portString = _configuration["SmtpSettings:Port"] ?? _configuration["SMTP_PORT"] ?? "587";
-            var enableSslString = _configuration["SmtpSettings:EnableSsl"] ?? _configuration["SMTP_ENABLE_SSL"] ?? "true";
-            
-            var username = _configuration["SmtpSettings:Username"] ?? _configuration["SMTP_USERNAME"];
-            var senderEmail = _configuration["SmtpSettings:SenderEmail"] ?? _configuration["SMTP_SENDER_EMAIL"];
-            if (string.IsNullOrEmpty(senderEmail))
+            // 1. Get Brevo API Key from environment variables (BREVO_API_KEY, BrevoApiKey, SmtpSettings__BrevoApiKey)
+            var brevoApiKey = _configuration["BREVO_API_KEY"] 
+                ?? _configuration["BrevoApiKey"]
+                ?? _configuration["SmtpSettings:BrevoApiKey"]
+                ?? _configuration["SmtpSettings__BrevoApiKey"];
+
+            var senderEmail = _configuration["SmtpSettings:SenderEmail"] 
+                ?? _configuration["SMTP_SENDER_EMAIL"] 
+                ?? _configuration["SmtpSettings:Username"] 
+                ?? _configuration["SMTP_USERNAME"] 
+                ?? "piotr.gmitrzak@gmail.com";
+
+            var senderName = _configuration["SmtpSettings:SenderName"] 
+                ?? _configuration["SMTP_SENDER_NAME"] 
+                ?? "Gmitrzak English Academy";
+
+            if (string.IsNullOrEmpty(brevoApiKey))
             {
-                senderEmail = username;
-            }
-            var senderName = _configuration["SmtpSettings:SenderName"] ?? _configuration["SMTP_SENDER_NAME"] ?? "Gmitrzak English Academy";
-
-            var rawPassword = _configuration["SmtpSettings:Password"] 
-                ?? _configuration["SMTP_PASSWORD"] 
-                ?? _configuration["MY_SMTP_APP_PASSWORD"] 
-                ?? _configuration["SMTP_APP_PASSWORD"];
-
-            var password = rawPassword?.Replace(" ", "");
-
-            if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-            {
-                _logger.LogWarning("Gmail SMTP settings missing in configuration. Email not sent.");
-                throw new InvalidOperationException("Gmail SMTP credentials (SmtpSettings__Username / SmtpSettings__Password) are missing in Railway Environment Variables.");
+                _logger.LogWarning("BREVO_API_KEY environment variable is missing on Railway.");
+                throw new InvalidOperationException("BREVO_API_KEY is missing in Railway environment variables. Please add BREVO_API_KEY to enable email sending on Railway.");
             }
 
-            int primaryPort = int.TryParse(portString, out var parsedPort) ? parsedPort : 587;
-            bool enableSsl = !bool.TryParse(enableSslString, out var parsedSsl) || parsedSsl;
+            _logger.LogInformation($"Sending email to {toEmail} via Brevo HTTP API (Port 443)...");
 
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(senderName, senderEmail ?? username));
-            message.To.Add(MailboxAddress.Parse(toEmail));
-            message.Subject = subject;
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+            request.Headers.Add("accept", "application/json");
+            request.Headers.Add("api-key", brevoApiKey);
 
-            var bodyBuilder = new BodyBuilder { HtmlBody = bodyHtml };
-            message.Body = bodyBuilder.ToMessageBody();
+            var payload = new
+            {
+                sender = new { name = senderName, email = senderEmail },
+                to = new[] { new { email = toEmail } },
+                subject = subject,
+                htmlContent = bodyHtml
+            };
 
-            int[] portsToTry = primaryPort == 587 ? new[] { 587, 465 } : new[] { primaryPort, 587 };
-            Exception? lastException = null;
+            request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-            // Resolve IPv4 addresses to bypass Linux IPv6 DNS blackholes on Railway
-            IPAddress? ipv4Address = null;
             try
             {
-                var dnsAddresses = await Dns.GetHostAddressesAsync(host);
-                ipv4Address = dnsAddresses.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"DNS lookup for {host} failed: {ex.Message}");
-            }
+                var response = await _httpClient.SendAsync(request);
+                var responseText = await response.Content.ReadAsStringAsync();
 
-            foreach (var currentPort in portsToTry)
-            {
-                using var client = new SmtpClient();
-                // 20 second timeout for Gmail TLS handshake
-                client.Timeout = 20000;
-                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-                try
+                if (!response.IsSuccessStatusCode)
                 {
-                    var secureOption = enableSsl
-                        ? (currentPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls)
-                        : SecureSocketOptions.None;
-
-                    _logger.LogInformation($"Attempting Gmail SMTP connection to {host}:{currentPort} ({ipv4Address?.ToString() ?? "default"}) with option {secureOption}...");
-
-                    if (ipv4Address != null)
-                    {
-                        await client.ConnectAsync(ipv4Address.ToString(), currentPort, secureOption);
-                    }
-                    else
-                    {
-                        await client.ConnectAsync(host, currentPort, secureOption);
-                    }
-
-                    await client.AuthenticateAsync(username, password);
-                    await client.SendAsync(message);
-                    await client.DisconnectAsync(true);
-
-                    _logger.LogInformation($"Successfully sent Gmail email to {toEmail} via port {currentPort}");
-                    return;
+                    _logger.LogError($"Brevo HTTP API Error: {response.StatusCode} - {responseText}");
+                    throw new InvalidOperationException($"Brevo API Error ({response.StatusCode}): {responseText}");
                 }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                    _logger.LogWarning($"Gmail SMTP attempt failed on port {currentPort}: {ex.Message}");
-                }
+
+                _logger.LogInformation($"Successfully dispatched email to {toEmail} via Brevo HTTP API.");
             }
-
-            _logger.LogError(lastException, $"All Gmail SMTP attempts failed for {toEmail}. Check Railway variables and Google App Password.");
-            throw new InvalidOperationException($"Gmail SMTP Connection Failed: {lastException?.Message}. Check SmtpSettings__Username ({username}) and Google App Password on Railway.", lastException);
+            catch (Exception ex) when (ex is not InvalidOperationException)
+            {
+                _logger.LogError(ex, $"Failed to send email via Brevo HTTP API: {ex.Message}");
+                throw new InvalidOperationException($"Brevo HTTP API dispatch failed: {ex.Message}", ex);
+            }
         }
 
         public async Task SendFlashcardReminderEmailAsync(string toEmail, string username, string? customSubject = null, string? customBody = null)
