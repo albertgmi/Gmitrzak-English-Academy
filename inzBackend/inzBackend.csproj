@@ -15,6 +15,7 @@
     <PackageReference Include="CloudinaryDotNet" Version="1.29.2" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="Google.GenAI" Version="1.10.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.26" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.3.9" />
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.51.1" />

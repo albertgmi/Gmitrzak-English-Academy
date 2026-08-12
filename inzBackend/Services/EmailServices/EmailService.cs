@@ -1,5 +1,7 @@
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using System.Net;
-using System.Net.Mail;
 
 namespace inzBackend.Services.EmailServices
 {
@@ -37,28 +39,43 @@ namespace inzBackend.Services.EmailServices
             if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
                 _logger.LogWarning("SMTP settings are missing or incomplete in configuration. Email was not sent.");
-                return;
+                throw new InvalidOperationException("SMTP credentials (Username / Password) are missing in Railway Environment Variables.");
             }
 
             int port = int.TryParse(portString, out var parsedPort) ? parsedPort : 587;
             bool enableSsl = !bool.TryParse(enableSslString, out var parsedSsl) || parsedSsl;
 
-            using var message = new MailMessage
-            {
-                From = new MailAddress(senderEmail ?? username, senderName),
-                Subject = subject,
-                Body = bodyHtml,
-                IsBodyHtml = true
-            };
-            message.To.Add(new MailAddress(toEmail));
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(senderName, senderEmail ?? username));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = subject;
 
-            using var smtpClient = new SmtpClient(host, port)
+            var bodyBuilder = new BodyBuilder
             {
-                Credentials = new NetworkCredential(username, password),
-                EnableSsl = enableSsl
+                HtmlBody = bodyHtml
             };
+            message.Body = bodyBuilder.ToMessageBody();
 
-            await smtpClient.SendMailAsync(message);
+            using var client = new SmtpClient();
+            // Set 12 second maximum timeout for SMTP network operations
+            client.Timeout = 12000;
+
+            try
+            {
+                var secureOption = enableSsl
+                    ? (port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls)
+                    : SecureSocketOptions.None;
+
+                await client.ConnectAsync(host, port, secureOption);
+                await client.AuthenticateAsync(username, password);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"SMTP error while sending email to {toEmail}: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task SendFlashcardReminderEmailAsync(string toEmail, string username, string? customSubject = null, string? customBody = null)
