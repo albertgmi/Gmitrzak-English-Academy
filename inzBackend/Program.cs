@@ -20,6 +20,7 @@ using inzBackend.Services.CatalogueServices;
 using inzBackend.Services.CourseServices;
 using inzBackend.Services.CreditServices;
 using inzBackend.Services.DashboardServices;
+using inzBackend.Services.EmailServices;
 using inzBackend.Services.EssayServices;
 using inzBackend.Services.ExaminationServices;
 using inzBackend.Services.GlobalVocabularyServices;
@@ -190,6 +191,7 @@ namespace inzBackend
             builder.Services.AddScoped<IAiAlphabetService, AiAlphabetService>();
             builder.Services.AddScoped<IAiUsageGuardService, AiUsageGuardService>();
             builder.Services.AddScoped<IShopActionService, ShopActionService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             // Infrastructure / cross-cutting services
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
