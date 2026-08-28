@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using ClosedXML.Excel;
 using inzBackend.Entities.Administration;
 using inzBackend.Entities.Gamification;
@@ -469,6 +469,7 @@ public class LessonPanelService : ILessonPanelService
                 AvgSentences = grades.Where(x => x.Category == "Sentences").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
                 AvgMemories = grades.Where(x => x.Category == "Memories").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
                 AvgPronunciation = grades.Where(x => x.Category == "Pronunciation").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
+                AvgAlphabet = grades.Where(x => x.Category == "Alphabet").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
             }
         };
     }

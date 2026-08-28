@@ -1,4 +1,4 @@
-﻿namespace inzBackend.Models.AdminLearningModels
+namespace inzBackend.Models.AdminLearningModels
 {
     public class LessonCategoryBreakdownDto
     {
@@ -6,5 +6,6 @@
         public decimal AvgSentences { get; set; }
         public decimal AvgMemories { get; set; }
         public decimal AvgPronunciation { get; set; }
+        public decimal AvgAlphabet { get; set; }
     }
 }

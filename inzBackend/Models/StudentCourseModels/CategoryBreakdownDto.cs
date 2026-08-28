@@ -1,4 +1,4 @@
-﻿namespace inzBackend.Models.StudentCourseModels
+namespace inzBackend.Models.StudentCourseModels
 {
     public class CategoryBreakdownDto
     {
@@ -6,5 +6,6 @@
         public decimal AvgSentences { get; set; }
         public decimal AvgMemories { get; set; }
         public decimal AvgPronunciation { get; set; }
+        public decimal AvgAlphabet { get; set; }
     }
 }
