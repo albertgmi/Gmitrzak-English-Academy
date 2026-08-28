@@ -91,7 +91,7 @@ namespace inzBackend.Services.UserAnswerServices
                 {
                     UserId = userId,
                     Content = sentence.Polish,
-                    Translation = isCorrectOrPartial ? request.UserAnswer : sentence.EnglishTranslation,
+                    Translation = sentence.EnglishTranslation,
                     NextReviewDate = isCorrectOrPartial ? PolandTime.Today.AddDays(3) : PolandTime.Today,
                     CreatedBy = "System",
                     LastModifiedAt = PolandTime.Now,
