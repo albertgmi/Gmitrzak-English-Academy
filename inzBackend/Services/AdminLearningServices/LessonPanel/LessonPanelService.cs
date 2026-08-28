@@ -642,15 +642,21 @@ public class LessonPanelService : ILessonPanelService
 
         double watchingScore = (watchingDone + watchingFromMatrix) > 0 ? 100 : 0;
 
-        var flashcardDays = _dbContext.FlashcardStudyLogs
+        var fcDays = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId
                      && x.StudyDate >= weekStart
                      && x.StudyDate <= weekEnd)
-            .Select(x => x.StudyDate)
-            .Distinct()
-            .Count();
+            .Select(x => x.StudyDate);
 
-        double regularityScore = Math.Min(100, flashcardDays / 3.0 * 100);
+        var sectionDays = _dbContext.SectionActivityLogs
+            .Where(x => x.UserId == studentUserId
+                     && x.ActivityDate >= weekStart
+                     && x.ActivityDate <= weekEnd)
+            .Select(x => x.ActivityDate);
+
+        var activeLearningDays = fcDays.Concat(sectionDays).Distinct().Count();
+
+        double regularityScore = Math.Min(100, activeLearningDays / 3.0 * 100);
 
         var agenda = _dbContext.Agendas.FirstOrDefault(x => x.UserId == studentUserId);
         var fcTarget = agenda?.FlashcardTarget ?? 50;
@@ -692,7 +698,7 @@ public class LessonPanelService : ILessonPanelService
             HomeworkDone = dueModules.Count(x => x.IsCompleted),
             HomeworkTotal = dueModules.Count,
             AttendanceCount = attendanceCount,
-            FlashcardDays = flashcardDays,
+            FlashcardDays = activeLearningDays,
             FlashcardsDone = fcDone,
             FlashcardTarget = fcTarget
         };

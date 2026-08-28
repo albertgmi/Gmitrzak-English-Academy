@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+using inzBackend.Entities;
 using inzBackend.Entities.Assignments;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
@@ -31,7 +31,7 @@ namespace inzBackend.Services.SectionActivityServices
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
 
-            var validSections = new[] { "memories", "pronunciation", "sentenceflashcards", "flashcards" };
+            var validSections = new[] { "memories", "pronunciation", "alphabet", "sentenceflashcards", "flashcards" };
             if (!validSections.Contains(request.Section.ToLower()))
                 throw new BadRequestException("No valid sections");
 
@@ -53,6 +53,7 @@ namespace inzBackend.Services.SectionActivityServices
                 {
                     "memories" => 3,
                     "pronunciation" => 3,
+                    "alphabet" => 3,
                     "sentenceflashcards" => 2,
                     "flashcards" => 2,
                     _ => 1
