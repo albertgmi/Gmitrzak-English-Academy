@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities.Administration;
+using inzBackend.Entities.Administration;
 using inzBackend.Entities.Assignments;
 using inzBackend.Entities.Base;
 using inzBackend.Entities.Curriculum;
@@ -64,6 +64,7 @@ namespace inzBackend.Models
         public DbSet<ShopItem> ShopItems { get; set; }
         public DbSet<ShopPurchase> ShopPurchases { get; set; }
         public DbSet<UserEssay> UserEssays { get; set; }
+        public DbSet<EssayComment> EssayComments { get; set; }
         public DbSet<PronunciationAttempt> PronunciationAttempts { get; set; }
         public DbSet<UserMatrixModuleDueDateOverride> UserMatrixModuleDueDateOverrides { get; set; }
         public DbSet<UserStreakShield> UserStreakShields { get; set; }

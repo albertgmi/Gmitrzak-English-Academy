@@ -73,5 +73,24 @@ namespace inzBackend.Controllers
             var bytes = _essayService.ExportAllReviewedEssaysToZip();
             return File(bytes, "application/zip", "checked_essays.zip");
         }
+
+        [HttpGet("{essayId}/comments")]
+        public ActionResult<List<EssayCommentDto>> GetComments(int essayId)
+        {
+            return Ok(_essayService.GetCommentsForEssay(essayId));
+        }
+
+        [HttpPost("{essayId}/comments")]
+        public ActionResult<EssayCommentDto> AddComment(int essayId, [FromBody] CreateEssayCommentRequest request)
+        {
+            return Ok(_essayService.AddComment(essayId, request));
+        }
+
+        [HttpPut("comments/{commentId}/archive")]
+        public ActionResult ArchiveComment(int commentId)
+        {
+            _essayService.ArchiveComment(commentId);
+            return NoContent();
+        }
     }
 }

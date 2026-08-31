@@ -12,5 +12,8 @@ namespace inzBackend.Services.EssayServices
         UserEssayDto ReviewEssay(int essayId, ReviewEssayRequest request);
         byte[] ExportEssayToDocx(int essayId);
         byte[] ExportAllReviewedEssaysToZip();
+        List<EssayCommentDto> GetCommentsForEssay(int essayId);
+        EssayCommentDto AddComment(int essayId, CreateEssayCommentRequest request);
+        void ArchiveComment(int commentId);
     }
 }

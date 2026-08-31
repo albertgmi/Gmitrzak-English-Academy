@@ -169,8 +169,6 @@ namespace inzBackend.Services.EssayServices
                 ?? throw new NotFoundException("Essay not found");
 
             essay.AdminContent = request.AdminContent;
-            essay.IsReviewed = true;
-            essay.ReviewedDate = PolandTime.Today;
 
             _dbContext.SaveChanges();
 
@@ -320,6 +318,77 @@ namespace inzBackend.Services.EssayServices
             ReviewedDate = x.ReviewedDate,
             Username = string.Empty
         };
+
+        public List<EssayCommentDto> GetCommentsForEssay(int essayId)
+        {
+            return _dbContext.EssayComments
+                .Include(c => c.Author).ThenInclude(a => a.Profile)
+                .Where(c => c.UserEssayId == essayId)
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new EssayCommentDto
+                {
+                    Id = c.Id,
+                    NoteId = $"note_{c.Id}",
+                    UserEssayId = c.UserEssayId,
+                    AuthorId = c.AuthorId,
+                    Author = c.Author.Username,
+                    AvatarUrl = c.Author.Profile != null ? c.Author.Profile.AvatarUrl : null,
+                    SelectedText = c.SelectedText,
+                    NoteContent = c.NoteContent,
+                    Category = c.Category,
+                    IsArchived = c.IsArchived,
+                    Timestamp = c.CreatedAt
+                })
+                .ToList();
+        }
+
+        public EssayCommentDto AddComment(int essayId, CreateEssayCommentRequest request)
+        {
+            var userId = _userContextService.GetUserId!.Value;
+
+            var essay = _dbContext.UserEssays.FirstOrDefault(e => e.Id == essayId)
+                ?? throw new NotFoundException("Essay not found");
+
+            var comment = new EssayComment
+            {
+                UserEssayId = essayId,
+                AuthorId = userId,
+                SelectedText = request.SelectedText,
+                NoteContent = request.NoteContent,
+                Category = request.Category,
+                IsArchived = false,
+                CreatedAt = PolandTime.DateTimeNow
+            };
+
+            _dbContext.EssayComments.Add(comment);
+            _dbContext.SaveChanges();
+
+            var author = _dbContext.Users.Include(u => u.Profile).FirstOrDefault(u => u.Id == userId);
+
+            return new EssayCommentDto
+            {
+                Id = comment.Id,
+                NoteId = $"note_{comment.Id}",
+                UserEssayId = comment.UserEssayId,
+                AuthorId = comment.AuthorId,
+                Author = author?.Username ?? "User",
+                AvatarUrl = author?.Profile?.AvatarUrl,
+                SelectedText = comment.SelectedText,
+                NoteContent = comment.NoteContent,
+                Category = comment.Category,
+                IsArchived = comment.IsArchived,
+                Timestamp = comment.CreatedAt
+            };
+        }
+
+        public void ArchiveComment(int commentId)
+        {
+            var comment = _dbContext.EssayComments.FirstOrDefault(c => c.Id == commentId)
+                ?? throw new NotFoundException("Comment not found");
+
+            comment.IsArchived = true;
+            _dbContext.SaveChanges();
+        }
 
         private static string StripHtml(string html)
         {

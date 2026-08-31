@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities.Base;
+using inzBackend.Entities.Base;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Entities.Identity;
 
@@ -16,5 +16,7 @@ namespace inzBackend.Entities.Assignments
         public bool IsReviewed { get; set; } = false;
         public DateOnly? SubmittedDate { get; set; }
         public DateOnly? ReviewedDate { get; set; }
+
+        public ICollection<EssayComment> Comments { get; set; } = new List<EssayComment>();
     }
 }
