@@ -15,6 +15,7 @@ using System.IO.Compression;
 using OpenXmlDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Entities.Assignments;
+using inzBackend.Services.ReportServices;
 
 namespace inzBackend.Services.EssayServices
 {
@@ -187,36 +188,32 @@ namespace inzBackend.Services.EssayServices
             using (var doc = WordprocessingDocument.Create(
                 stream, WordprocessingDocumentType.Document, true))
             {
-                var mainPart = doc.AddMainDocumentPart();
-                mainPart.Document = new OpenXmlDocument();
+                var mainPart = DocxHelper.InitDocument(doc);
                 var body = new Body();
 
-                body.Append(CreateParagraph("Essay Review", bold: true, fontSize: 32));
-                body.Append(CreateParagraph($"Student: {essay.User.Username}", bold: true));
-                body.Append(CreateParagraph(
-                    $"Submitted: {essay.SubmittedDate?.ToString("d MMM yyyy") ?? "—"}"));
-                body.Append(CreateEmptyLine());
+                body.Append(DocxHelper.CreateParagraph("Essay Review", bold: true, fontSize: 32, spaceAfter: 160));
+                body.Append(DocxHelper.CreateParagraph($"Student: {essay.User.Username}", bold: true, spaceAfter: 60));
+                body.Append(DocxHelper.CreateParagraph(
+                    $"Submitted: {essay.SubmittedDate?.ToString("d MMM yyyy") ?? "—"}", spaceAfter: 200));
 
-                body.Append(CreateParagraph("Essay Prompt", bold: true, fontSize: 24,
-                    color: "2E74B5"));
-                body.Append(CreateParagraph(essay.Module.EssayPrompt ?? string.Empty,
-                    italic: true));
-                body.Append(CreateEmptyLine());
+                body.Append(DocxHelper.CreateSectionHeader("Essay Prompt", "2E74B5"));
+                body.Append(DocxHelper.CreateParagraph(essay.Module.EssayPrompt ?? string.Empty, italic: true, spaceAfter: 200));
 
                 if (!string.IsNullOrWhiteSpace(essay.AdminContent))
                 {
-                    body.Append(CreateSectionHeader("CORRECTIONS", "375623"));
+                    body.Append(DocxHelper.CreateSectionHeader("CORRECTIONS", "375623"));
 
                     var adminText = StripHtml(essay.AdminContent);
                     foreach (var line in SplitIntoLines(adminText))
-                        body.Append(CreateParagraph(line, color: "375623"));
+                        body.Append(DocxHelper.CreateParagraph(line, color: "375623", spaceAfter: 120));
                 }
                 else
                 {
-                    body.Append(CreateSectionHeader("CORRECTIONS", "7F7F7F"));
-                    body.Append(CreateParagraph("No corrections yet.", italic: true,
-                        color: "7F7F7F"));
+                    body.Append(DocxHelper.CreateSectionHeader("CORRECTIONS", "7F7F7F"));
+                    body.Append(DocxHelper.CreateParagraph("No corrections yet.", italic: true, color: "7F7F7F", spaceAfter: 120));
                 }
+
+                body.Append(DocxHelper.CreateSectionProperties());
 
                 mainPart.Document.Append(body);
                 mainPart.Document.Save();
@@ -254,60 +251,6 @@ namespace inzBackend.Services.EssayServices
 
             return zipStream.ToArray();
         }
-
-        private static Paragraph CreateParagraph(
-            string text,
-            bool bold = false,
-            bool italic = false,
-            int fontSize = 24,
-            string? color = null)
-        {
-            var run = new Run();
-            var props = new RunProperties();
-
-            props.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-            if (bold) props.Append(new Bold());
-            if (italic) props.Append(new Italic());
-            props.Append(new FontSize { Val = fontSize.ToString() });
-            if (color is not null) props.Append(new Color { Val = color });
-
-            run.Append(props);
-            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
-
-            return new Paragraph(run);
-        }
-
-        private static Paragraph CreateSectionHeader(string text, string color)
-        {
-            var run = new Run();
-            var props = new RunProperties();
-            props.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-            props.Append(new Bold());
-            props.Append(new FontSize { Val = "26" });
-            props.Append(new Color { Val = color });
-            run.Append(props);
-            run.Append(new Text(text));
-
-            var para = new Paragraph(run);
-            var pPr = new ParagraphProperties();
-            var pBdr = new ParagraphBorders();
-
-            pBdr.Append(new BottomBorder
-            {
-                Val = BorderValues.Single,
-                Size = 6,
-                Space = 1,
-                Color = color
-            });
-            pPr.Append(pBdr);
-            pPr.Append(new SpacingBetweenLines
-            { Before = "200", After = "120" });
-            para.InsertAt(pPr, 0);
-
-            return para;
-        }
-
-        private static Paragraph CreateEmptyLine() => new Paragraph(new Run(new Text(string.Empty)));
 
         private static IEnumerable<string> SplitIntoLines(string text)
         {

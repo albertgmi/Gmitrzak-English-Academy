@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using inzBackend.Models;
 using inzBackend.Services.UserAnswerServices;
 using inzBackend.Enums;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.ReportServices
 {
@@ -141,45 +142,48 @@ namespace inzBackend.Services.ReportServices
             using (var document = WordprocessingDocument.Create(
                 stream, WordprocessingDocumentType.Document, true))
             {
-                var mainPart = document.AddMainDocumentPart();
-                mainPart.Document = new OpenXmlDocument();
+                var mainPart = DocxHelper.InitDocument(document);
                 var body = new Body();
 
-                body.Append(CreateHeading("Sentences", 32));
-                body.Append(CreateParagraph($"Student: {report.StudentUsername}", true));
-                body.Append(CreateParagraph($"Generated: {report.GeneratedDate:d MMM yyyy}"));
-                body.Append(CreateParagraph(" "));
-                body.Append(CreateParagraph(
-                    $"Total: {report.TotalSentences} | Correct: {report.TotalCorrect} " +
-                    $"| Partial: {report.TotalPartial} | Incorrect: {report.TotalIncorrect}", true));
-                body.Append(CreateParagraph(" "));
+                body.Append(DocxHelper.CreateParagraph("Sentences Report", bold: true, fontSize: 32, spaceAfter: 160));
+                body.Append(DocxHelper.CreateParagraph($"Student: {report.StudentUsername}", bold: true, spaceAfter: 60));
+                body.Append(DocxHelper.CreateParagraph($"Generated: {report.GeneratedDate:d MMM yyyy}", spaceAfter: 120));
+                body.Append(DocxHelper.CreateParagraph(
+                    $"Total: {report.TotalSentences} | Correct: {report.TotalCorrect} | Partial: {report.TotalPartial} | Incorrect: {report.TotalIncorrect}",
+                    bold: true, spaceAfter: 200));
 
                 foreach (var module in report.Modules)
                 {
-                    body.Append(CreateParagraph(
-                        $"Correct: {module.CorrectCount} | Partial: {module.PartialCount} " +
-                        $"| Incorrect: {module.IncorrectCount}"));
-                    body.Append(CreateParagraph(" "));
+                    body.Append(DocxHelper.CreateSectionHeader(module.ModuleName, "2E74B5"));
+                    body.Append(DocxHelper.CreateParagraph(
+                        $"Correct: {module.CorrectCount} | Partial: {module.PartialCount} | Incorrect: {module.IncorrectCount}",
+                        italic: true, spaceAfter: 160));
 
                     foreach (var item in module.Items)
                     {
                         var result = item.FinalResult == "Correct" ? "Correct" : "Incorrect";
-                        body.Append(CreateCustomParagraph(result, bold: false, italic: true, fontSize: 18));
-                        body.Append(CreateCustomParagraph(
-                            $"#{item.Order} {item.Polish}", bold: true, italic: false, fontSize: 24));
+                        var resultColor = item.FinalResult == "Correct" ? "2E7D32" : "C62828";
+
+                        body.Append(DocxHelper.CreateParagraph(result, italic: true, fontSize: 18, color: resultColor, spaceAfter: 40));
+                        body.Append(DocxHelper.CreateParagraph($"#{item.Order} {item.Polish}", bold: true, fontSize: 24, spaceAfter: 60));
+
                         if (!string.IsNullOrWhiteSpace(item.StudentAnswer))
-                            body.Append(CreateParagraph($"{item.StudentAnswer}"));
+                            body.Append(DocxHelper.CreateParagraph($"Student answer: {item.StudentAnswer}", spaceAfter: 60));
+
                         if (!string.IsNullOrWhiteSpace(item.TeacherOverride))
-                            body.Append(CreateParagraph(
-                                $"Teachers explanation: {item.TeacherOverride}" +
-                                (string.IsNullOrWhiteSpace(item.TeacherExplanation)
-                                    ? "" : $" — {item.TeacherExplanation}"), true));
-                        body.Append(CreateParagraph(" "));
+                        {
+                            var overrideText = $"Teacher's explanation: {item.TeacherOverride}" +
+                                (string.IsNullOrWhiteSpace(item.TeacherExplanation) ? "" : $" — {item.TeacherExplanation}");
+                            body.Append(DocxHelper.CreateParagraph(overrideText, bold: true, color: "E65100", spaceAfter: 60));
+                        }
+
+                        body.Append(DocxHelper.CreateEmptyLine());
                     }
 
-                    body.Append(CreateParagraph("─────────────────────────────────────────────────────────────"));
-                    body.Append(CreateParagraph(" "));
+                    body.Append(DocxHelper.CreateDividerParagraph("D3D3D3"));
                 }
+
+                body.Append(DocxHelper.CreateSectionProperties());
 
                 mainPart.Document.Append(body);
                 mainPart.Document.Save();
@@ -262,50 +266,6 @@ namespace inzBackend.Services.ReportServices
                         .Text(label)
                         .FontColor(textColor);
                 });
-        }
-
-        private static Paragraph CreateParagraph(string text, bool bold = false)
-        {
-            var run = new Run();
-            var runProperties = new RunProperties();
-            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-            runProperties.Append(new FontSize { Val = "24" });
-            if (bold)
-                runProperties.Append(new Bold());
-            run.Append(runProperties);
-            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
-            return new Paragraph(run);
-        }
-
-        private static Paragraph CreateHeading(string text, int size)
-        {
-            var run = new Run();
-            var runProperties = new RunProperties();
-            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-            runProperties.Append(new Bold());
-            runProperties.Append(new FontSize { Val = size.ToString() });
-            run.Append(runProperties);
-            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
-            return new Paragraph(run);
-        }
-
-        private static Paragraph CreateCustomParagraph(string text, bool bold = false, bool italic = false, int? fontSize = null)
-        {
-            var run = new Run();
-            var runProperties = new RunProperties();
-            runProperties.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman" });
-
-            if (bold)
-                runProperties.Append(new Bold());
-
-            if (italic)
-                runProperties.Append(new Italic());
-
-            runProperties.Append(new FontSize { Val = (fontSize ?? 24).ToString() });
-
-            run.Append(runProperties);
-            run.Append(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
-            return new Paragraph(run);
         }
     }
 }
