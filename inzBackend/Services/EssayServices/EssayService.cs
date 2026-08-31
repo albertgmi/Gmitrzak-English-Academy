@@ -107,7 +107,7 @@ namespace inzBackend.Services.EssayServices
         public List<UserEssayDto> GetAllEssaysForAdmin()
         {
             return _dbContext.UserEssays
-                .Include(x => x.User)
+                .Include(x => x.User).ThenInclude(u => u.Profile)
                 .Include(x => x.Module)
                 .Where(x => x.IsSubmitted)
                 .OrderByDescending(x => x.SubmittedDate)
@@ -123,7 +123,8 @@ namespace inzBackend.Services.EssayServices
                     IsReviewed = x.IsReviewed,
                     SubmittedDate = x.SubmittedDate,
                     ReviewedDate = x.ReviewedDate,
-                    Username = x.User.Username
+                    Username = x.User.Username,
+                    AvatarUrl = x.User.Profile != null ? x.User.Profile.AvatarUrl : null
                 })
                 .ToList();
         }
@@ -137,7 +138,7 @@ namespace inzBackend.Services.EssayServices
         public List<UserEssayDto> GetEssaysForStudent(int studentId)
         {
             return _dbContext.UserEssays
-                .Include(x => x.User)
+                .Include(x => x.User).ThenInclude(u => u.Profile)
                 .Include(x => x.Module)
                 .Where(x => x.UserId == studentId && x.IsSubmitted)
                 .OrderByDescending(x => x.SubmittedDate)
@@ -153,7 +154,8 @@ namespace inzBackend.Services.EssayServices
                     IsReviewed = x.IsReviewed,
                     SubmittedDate = x.SubmittedDate,
                     ReviewedDate = x.ReviewedDate,
-                    Username = x.User.Username
+                    Username = x.User.Username,
+                    AvatarUrl = x.User.Profile != null ? x.User.Profile.AvatarUrl : null
                 })
                 .ToList();
         }

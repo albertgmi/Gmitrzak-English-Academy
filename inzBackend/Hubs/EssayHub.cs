@@ -9,7 +9,7 @@ namespace inzBackend.Hubs
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<string, CollaborativeUserDto>> _rooms 
             = new ConcurrentDictionary<int, ConcurrentDictionary<string, CollaborativeUserDto>>();
 
-        public async Task JoinEssayRoom(int essayId, string username, string role)
+        public async Task JoinEssayRoom(int essayId, string username, string role, string? avatarUrl = null)
         {
             var groupName = GetGroupName(essayId);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
@@ -19,6 +19,7 @@ namespace inzBackend.Hubs
                 ConnectionId = Context.ConnectionId,
                 Username = username,
                 Role = role,
+                AvatarUrl = avatarUrl,
                 JoinedAt = DateTime.UtcNow
             };
 

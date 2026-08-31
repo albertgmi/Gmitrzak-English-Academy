@@ -1,4 +1,4 @@
-﻿namespace inzBackend.Models.EssayModels
+namespace inzBackend.Models.EssayModels
 {
     public class UserEssayDto
     {
@@ -13,5 +13,6 @@
         public DateOnly? SubmittedDate { get; set; }
         public DateOnly? ReviewedDate { get; set; }
         public string Username { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
     }
 }
