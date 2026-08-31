@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Entities;
 using inzBackend.Entities.Assignments;
 using inzBackend.Entities.Curriculum;
@@ -296,7 +296,7 @@ namespace inzBackend.Services.ModuleServices
                 var activityStatus1 = GetActivityStatus(userId, direct.Module.Category, today, assignedDate);
 
                 if (!activityStatus1.CanComplete)
-                    throw new BadRequestException(activityStatus1.BlockReason ?? "Not enough consecutive days.");
+                    throw new BadRequestException(activityStatus1.BlockReason ?? "Not enough activity days.");
 
                 direct.IsCompleted = true;
                 _dbContext.SaveChanges();
@@ -325,7 +325,7 @@ namespace inzBackend.Services.ModuleServices
             var activityStatus = GetActivityStatus(userId, mm.Module.Category, today, unlockDate);
 
             if (!activityStatus.CanComplete)
-                throw new BadRequestException(activityStatus.BlockReason ?? "Not enough consecutive days.");
+                throw new BadRequestException(activityStatus.BlockReason ?? "Not enough activity days.");
 
             _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
             {
@@ -401,16 +401,15 @@ namespace inzBackend.Services.ModuleServices
                             .Where(x => x.UserId == userId && x.StudyDate >= countFrom)
                             .Select(x => x.StudyDate)
                             .Distinct()
-                            .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = CountConsecutiveStreak(dates, today);
+                        var daysCount = dates.Count;
                         return new ActivityStatus
                         {
-                            Streak = streak,
+                            Streak = daysCount,
                             Required = REQUIRED,
-                            CanComplete = streak >= REQUIRED,
-                            BlockReason = streak >= REQUIRED ? null : $"Study flashcards for {REQUIRED - streak} more consecutive day(s)."
+                            CanComplete = daysCount >= REQUIRED,
+                            BlockReason = daysCount >= REQUIRED ? null : $"Study flashcards for {REQUIRED - daysCount} more day(s)."
                         };
                     }
 
@@ -422,16 +421,15 @@ namespace inzBackend.Services.ModuleServices
                                      && x.ActivityDate >= countFrom)
                             .Select(x => x.ActivityDate)
                             .Distinct()
-                            .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = CountConsecutiveStreak(dates, today);
+                        var daysCount = dates.Count;
                         return new ActivityStatus
                         {
-                            Streak = streak,
+                            Streak = daysCount,
                             Required = REQUIRED,
-                            CanComplete = streak >= REQUIRED,
-                            BlockReason = streak >= REQUIRED ? null : $"Practice sentence flashcards for {REQUIRED - streak} more consecutive day(s)."
+                            CanComplete = daysCount >= REQUIRED,
+                            BlockReason = daysCount >= REQUIRED ? null : $"Practice sentence flashcards for {REQUIRED - daysCount} more day(s)."
                         };
                     }
 
@@ -443,16 +441,15 @@ namespace inzBackend.Services.ModuleServices
                                      && x.ActivityDate >= countFrom)
                             .Select(x => x.ActivityDate)
                             .Distinct()
-                            .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = CountConsecutiveStreak(dates, today);
+                        var daysCount = dates.Count;
                         return new ActivityStatus
                         {
-                            Streak = streak,
+                            Streak = daysCount,
                             Required = REQUIRED,
-                            CanComplete = streak >= REQUIRED,
-                            BlockReason = streak >= REQUIRED ? null : $"Visit Memories for {REQUIRED - streak} more consecutive day(s)."
+                            CanComplete = daysCount >= REQUIRED,
+                            BlockReason = daysCount >= REQUIRED ? null : $"Visit Memories for {REQUIRED - daysCount} more day(s)."
                         };
                     }
 
@@ -464,16 +461,15 @@ namespace inzBackend.Services.ModuleServices
                                      && x.ActivityDate >= countFrom)
                             .Select(x => x.ActivityDate)
                             .Distinct()
-                            .OrderByDescending(x => x)
                             .ToList();
 
-                        var streak = CountConsecutiveStreak(dates, today);
+                        var daysCount = dates.Count;
                         return new ActivityStatus
                         {
-                            Streak = streak,
+                            Streak = daysCount,
                             Required = REQUIRED,
-                            CanComplete = streak >= REQUIRED,
-                            BlockReason = streak >= REQUIRED ? null : $"Practice pronunciation for {REQUIRED - streak} more consecutive day(s)."
+                            CanComplete = daysCount >= REQUIRED,
+                            BlockReason = daysCount >= REQUIRED ? null : $"Practice pronunciation for {REQUIRED - daysCount} more day(s)."
                         };
                     }
 
@@ -489,32 +485,6 @@ namespace inzBackend.Services.ModuleServices
                         BlockReason = null
                     };
             }
-        }
-
-        private static int CountConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
-        {
-            if (!datesDesc.Any()) return 0;
-
-            var mostRecent = datesDesc.First();
-            if (mostRecent < today.AddDays(-1)) return 0;
-
-            var streak = 0;
-            var expected = mostRecent;
-
-            foreach (var date in datesDesc)
-            {
-                if (date == expected)
-                {
-                    streak++;
-                    expected = expected.AddDays(-1);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return streak;
         }
     }
 }
