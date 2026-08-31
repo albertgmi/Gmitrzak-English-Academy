@@ -71,15 +71,16 @@ namespace inzBackend.Hubs
             });
         }
 
-        public async Task SendLiveGrade(int essayId, int grammarScore, int vocabScore, int structureScore, string feedbackNotes)
+        public async Task SendTeacherNote(int essayId, string noteId, string selectedText, string noteContent, string category, string author)
         {
             var groupName = GetGroupName(essayId);
-            await Clients.Group(groupName).SendAsync("ReceiveLiveGrade", new
+            await Clients.Group(groupName).SendAsync("ReceiveTeacherNote", new
             {
-                GrammarScore = grammarScore,
-                VocabScore = vocabScore,
-                StructureScore = structureScore,
-                FeedbackNotes = feedbackNotes,
+                NoteId = noteId,
+                SelectedText = selectedText,
+                NoteContent = noteContent,
+                Category = category,
+                Author = author,
                 Timestamp = DateTime.UtcNow
             });
         }
@@ -92,20 +93,6 @@ namespace inzBackend.Hubs
                 IsTyping = isTyping,
                 SenderUsername = senderUsername
             });
-        }
-
-        public async Task SendChatMessage(int essayId, string message, string senderUsername, string senderRole)
-        {
-            var groupName = GetGroupName(essayId);
-            var chatMsg = new ChatMessageDto
-            {
-                SenderUsername = senderUsername,
-                SenderRole = senderRole,
-                Message = message,
-                Timestamp = DateTime.UtcNow
-            };
-
-            await Clients.Group(groupName).SendAsync("ReceiveChatMessage", chatMsg);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
