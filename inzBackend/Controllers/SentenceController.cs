@@ -40,6 +40,13 @@ namespace inzBackend.Controllers
             return NoContent();
         }
 
+        [HttpPut("stock-english/{sentenceId}")]
+        public ActionResult UpdateEnglishSentence([FromRoute] int sentenceId, [FromBody] UpdateSentenceRequest request)
+        {
+            _sentenceService.UpdateSentenceFromStock(sentenceId, request);
+            return NoContent();
+        }
+
         [HttpPost("stock/upload")]
         public async Task<ActionResult> UploadStock(IFormFile file)
         {

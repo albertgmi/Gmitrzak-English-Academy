@@ -23,5 +23,6 @@ namespace inzBackend.Services.SentenceServices
         void UpdateStock(int id, UpdateSentenceStockRequest request);
         Task<List<SearchSentenceResultDto>> SearchSentence(string query, int studentId);
         void AssignSentenceSetToUser(AssignSentenceSetToStudentRequest request);
+        void UpdateSentenceFromStock(int sentenceId, UpdateSentenceRequest request);
     }
 }

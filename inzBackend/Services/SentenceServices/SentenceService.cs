@@ -57,6 +57,17 @@ namespace inzBackend.Services.SentenceServices
             _dbContext.SaveChanges();
         }
 
+        public void UpdateSentenceFromStock(int sentenceId, UpdateSentenceRequest request)
+        {
+            var sentence = _dbContext
+                .SentenceStocks
+                .FirstOrDefault(s => s.Id == sentenceId)
+            ?? throw new NotFoundException("Sentence not found");
+
+            sentence.EnglishTranslation = request.NewEnglish;
+            _dbContext.SaveChanges();
+        }
+
         public async Task<SentenceSetDto> UploadStockFromExcel(IFormFile file)
         {
             using var stream = new MemoryStream();
