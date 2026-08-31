@@ -75,7 +75,7 @@ namespace inzBackend.Hubs
         public async Task SendTeacherNote(int essayId, string noteId, string selectedText, string noteContent, string category, string author)
         {
             var groupName = GetGroupName(essayId);
-            await Clients.Group(groupName).SendAsync("ReceiveTeacherNote", new
+            await Clients.OthersInGroup(groupName).SendAsync("ReceiveTeacherNote", new
             {
                 NoteId = noteId,
                 SelectedText = selectedText,
