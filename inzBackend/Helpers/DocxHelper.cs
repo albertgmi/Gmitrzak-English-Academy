@@ -21,7 +21,6 @@ namespace inzBackend.Helpers
         {
             var sectionProps = new SectionProperties();
 
-            // A4 page size: 11906 x 16838 dxa (twips)
             var pageSize = new PageSize
             {
                 Width = 11906U,
@@ -29,7 +28,6 @@ namespace inzBackend.Helpers
                 Orient = PageOrientationValues.Portrait
             };
 
-            // Standard 1 inch margins = 1440 dxa
             var pageMargin = new PageMargin
             {
                 Top = 1440,
@@ -50,7 +48,7 @@ namespace inzBackend.Helpers
             string text,
             bool bold = false,
             bool italic = false,
-            int fontSize = 24, // 24 half-points = 12pt
+            int fontSize = 24,
             string? color = null,
             int spaceAfter = 100)
         {
@@ -99,7 +97,7 @@ namespace inzBackend.Helpers
             var rPr = new RunProperties();
             rPr.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman", ComplexScript = "Times New Roman" });
             rPr.Append(new Bold());
-            rPr.Append(new FontSize { Val = "26" }); // 13pt
+            rPr.Append(new FontSize { Val = "26" });
             rPr.Append(new Color { Val = color });
 
             run.Append(rPr);
@@ -161,7 +159,7 @@ namespace inzBackend.Helpers
 
             var rPr = new StyleRunProperties();
             rPr.Append(new RunFonts { Ascii = "Times New Roman", HighAnsi = "Times New Roman", ComplexScript = "Times New Roman" });
-            rPr.Append(new FontSize { Val = "24" }); // 12pt
+            rPr.Append(new FontSize { Val = "24" });
             rPr.Append(new Languages { Val = "pl-PL" });
             normalStyle.Append(rPr);
 
@@ -180,7 +178,7 @@ namespace inzBackend.Helpers
             {
                 Name = CompatSettingNameValues.CompatibilityMode,
                 Uri = "http://schemas.microsoft.com/office/word",
-                Val = "15" // Word 2013+ compatibility
+                Val = "15"
             });
             settings.Append(compat);
 

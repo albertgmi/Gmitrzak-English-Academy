@@ -6,6 +6,7 @@ using inzBackend.Entities.Identity;
 using inzBackend.Helpers;
 using inzBackend.Middlewares;
 using inzBackend.Models;
+using inzBackend.Hubs;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
@@ -200,6 +201,7 @@ namespace inzBackend
             builder.Services.AddScoped<IUserContextService, UserContextService>();
 
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddSignalR();
 
             // CORS
             builder.Services.AddCors(options =>
@@ -207,9 +209,10 @@ namespace inzBackend
                 options.AddPolicy("AngularCorsPolicy", policy =>
                 {
                     var frontendUrl = builder.Configuration["FrontendUrl"] ?? "http://localhost:4200";
-                    policy.WithOrigins(frontendUrl)
+                    policy.WithOrigins(frontendUrl, "http://localhost:4200", "https://localhost:4200")
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowCredentials();
                 });
             });
 
@@ -231,6 +234,7 @@ namespace inzBackend
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHub<EssayHub>("/hubs/essay");
 
             // Apply pending EF Core migrations
             using (var scope = app.Services.CreateScope())
