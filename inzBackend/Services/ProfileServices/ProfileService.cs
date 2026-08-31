@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Exceptions;
 using inzBackend.Models.ProfileModels;
 using inzBackend.Models;
@@ -6,6 +6,7 @@ using inzBackend.Enums;
 using Microsoft.EntityFrameworkCore;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
+using UserProfile = inzBackend.Entities.Identity.Profile;
 
 namespace inzBackend.Services.ProfileServices
 {
@@ -24,23 +25,13 @@ namespace inzBackend.Services.ProfileServices
 
         public ProfileDto GetProfile(int userId)
         {
-            var profile = _dbContext.Profiles
-                .Include(x => x.User)
-                .FirstOrDefault(x => x.UserId == userId);
-
-            if (profile is null)
-                throw new NotFoundException("Profile not found");
-
+            var profile = GetOrCreateProfile(userId);
             return _mapper.Map<ProfileDto>(profile);
         }
 
         public void UpdateProfile(int userId, UpdateProfileRequest request)
         {
-            var profile = _dbContext.Profiles
-                .FirstOrDefault(x => x.UserId == userId);
-
-            if (profile is null)
-                throw new NotFoundException("Profile not found");
+            var profile = GetOrCreateProfile(userId);
 
             if (Enum.TryParse<EnglishLevel>(request.EnglishLevel, out var level))
                 profile.EnglishLevel = level;
@@ -79,9 +70,7 @@ namespace inzBackend.Services.ProfileServices
             if (!allowedExtensions.Contains(extension))
                 throw new BadRequestException("Only .jpg, .jpeg and .png files are allowed");
 
-            var profile = _dbContext.Profiles.FirstOrDefault(x => x.UserId == userId);
-            if (profile is null)
-                throw new NotFoundException("Profile not found");
+            var profile = GetOrCreateProfile(userId);
 
             using var stream = file.OpenReadStream();
 
@@ -102,6 +91,35 @@ namespace inzBackend.Services.ProfileServices
             _dbContext.SaveChanges();
 
             return profile.AvatarUrl;
+        }
+
+        private UserProfile GetOrCreateProfile(int userId)
+        {
+            var profile = _dbContext.Profiles
+                .Include(x => x.User)
+                .FirstOrDefault(x => x.UserId == userId);
+
+            if (profile is null)
+            {
+                var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+                if (user is null)
+                    throw new NotFoundException("User not found");
+
+                profile = new UserProfile
+                {
+                    UserId = userId,
+                    EnglishLevel = EnglishLevel.Basic,
+                    AvatarUrl = string.Empty
+                };
+                _dbContext.Profiles.Add(profile);
+                _dbContext.SaveChanges();
+
+                profile = _dbContext.Profiles
+                    .Include(x => x.User)
+                    .FirstOrDefault(x => x.UserId == userId);
+            }
+
+            return profile!;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.ProfileModels;
+using inzBackend.Models.ProfileModels;
 using inzBackend.Services.ProfileServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,7 @@ namespace inzBackend.Controllers
         }
 
         [HttpPut("{userId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,User")]
         public ActionResult UpdateProfile([FromRoute] int userId, [FromBody] UpdateProfileRequest request)
         {
             _profileService.UpdateProfile(userId, request);
