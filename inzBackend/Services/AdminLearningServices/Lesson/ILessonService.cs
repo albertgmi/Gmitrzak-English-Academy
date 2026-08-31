@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+using inzBackend.Entities;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.StudentLearningModels.AlphabetModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
@@ -15,8 +15,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         void AddMemory(AddMemoryRequest request);
         void AddPronunciation(AddPronunciationRequest request);
         List<HomeworkItemDto> GetHomeworkForWeek(int studentUserId);
-        void CheckHomework(int assignmentId);
-        void UncheckHomework(int assignmentId);
+        void CheckHomework(int studentUserId, int assignmentId);
+        void UncheckHomework(int studentUserId, int assignmentId);
         List<PronunciationTestItemDto> GetPronunciationList(int studentUserId);
         void CheckPronunciationWord(int entryId);
         void UncheckPronunciationWord(int entryId);

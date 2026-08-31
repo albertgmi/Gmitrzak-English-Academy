@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using inzBackend.Models.EssayModels;
+using inzBackend.Helpers;
 
 namespace inzBackend.Hubs
 {
@@ -20,7 +21,7 @@ namespace inzBackend.Hubs
                 Username = username,
                 Role = role,
                 AvatarUrl = avatarUrl,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = PolandTime.DateTimeNow
             };
 
             var roomUsers = _rooms.GetOrAdd(essayId, _ => new ConcurrentDictionary<string, CollaborativeUserDto>());
@@ -82,7 +83,7 @@ namespace inzBackend.Hubs
                 NoteContent = noteContent,
                 Category = category,
                 Author = author,
-                Timestamp = DateTime.UtcNow
+                Timestamp = PolandTime.DateTimeNow
             });
         }
 

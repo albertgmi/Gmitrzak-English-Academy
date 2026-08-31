@@ -266,52 +266,50 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             return result.OrderByDescending(x => x.IsOverdue).ThenBy(x => x.DueDate).ToList();
         }
 
-        public void CheckHomework(int assignmentId)
+        public void CheckHomework(int studentUserId, int assignmentId)
         {
             if (assignmentId < 0)
             {
                 int realMatrixModuleId = Math.Abs(assignmentId);
 
                 var matrixAssignment = _dbContext.UserMatrixAssignments
-                    .FirstOrDefault(x => x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
+                    .FirstOrDefault(x => x.UserId == studentUserId
+                                      && x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
 
                 if (matrixAssignment is null) return;
 
-                var exists = _dbContext.UserMatrixModuleCompletions
-                    .Any(x => x.UserId == matrixAssignment.UserId && x.MatrixModuleId == realMatrixModuleId);
+                var completion = _dbContext.UserMatrixModuleCompletions
+                    .FirstOrDefault(x => x.UserId == studentUserId && x.MatrixModuleId == realMatrixModuleId);
 
-                if (!exists)
+                if (completion is null)
                 {
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
                     {
-                        UserId = matrixAssignment.UserId,
-                        MatrixModuleId = realMatrixModuleId
+                        UserId = studentUserId,
+                        MatrixModuleId = realMatrixModuleId,
+                        CompletedDate = PolandTime.Today
                     });
                     _dbContext.SaveChanges();
                 }
             }
             else
             {
-                var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
+                var a = _dbContext.UserModuleAssignments
+                    .FirstOrDefault(x => x.Id == assignmentId && x.UserId == studentUserId);
                 if (a is null) return;
                 a.IsCompleted = true;
                 _dbContext.SaveChanges();
             }
         }
 
-        public void UncheckHomework(int assignmentId)
+        public void UncheckHomework(int studentUserId, int assignmentId)
         {
             if (assignmentId < 0)
             {
                 int realMatrixModuleId = Math.Abs(assignmentId);
 
-                var matrixAssignment = _dbContext.UserMatrixAssignments
-                    .FirstOrDefault(x => x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
-
-                if (matrixAssignment is null) return;
-
                 var completion = _dbContext.UserMatrixModuleCompletions
-                    .FirstOrDefault(x => x.UserId == matrixAssignment.UserId && x.MatrixModuleId == realMatrixModuleId);
+                    .FirstOrDefault(x => x.UserId == studentUserId && x.MatrixModuleId == realMatrixModuleId);
 
                 if (completion != null)
                 {
@@ -321,7 +319,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             }
             else
             {
-                var a = _dbContext.UserModuleAssignments.FirstOrDefault(x => x.Id == assignmentId);
+                var a = _dbContext.UserModuleAssignments
+                    .FirstOrDefault(x => x.Id == assignmentId && x.UserId == studentUserId);
                 if (a is null) return;
                 a.IsCompleted = false;
                 _dbContext.SaveChanges();

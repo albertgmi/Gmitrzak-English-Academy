@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AiSpellCheckingModels;
 using inzBackend.Models.StudentLearningModels.AlphabetModels;
 using inzBackend.Models.StudentLearningModels.MemoryModels;
@@ -51,17 +51,17 @@ namespace inzBackend.Controllers
             return Ok(result);
         }
 
-        [HttpPatch("homework/{id}/check")]
-        public ActionResult CheckHomework([FromRoute] int id)
+        [HttpPatch("homework/{studentUserId}/{id}/check")]
+        public ActionResult CheckHomework([FromRoute] int studentUserId, [FromRoute] int id)
         {
-            _lessonService.CheckHomework(id);
+            _lessonService.CheckHomework(studentUserId, id);
             return Ok();
         }
 
-        [HttpPatch("homework/{id}/uncheck")]
-        public ActionResult UncheckHomework([FromRoute] int id)
+        [HttpPatch("homework/{studentUserId}/{id}/uncheck")]
+        public ActionResult UncheckHomework([FromRoute] int studentUserId, [FromRoute] int id)
         {
-            _lessonService.UncheckHomework(id);
+            _lessonService.UncheckHomework(studentUserId, id);
             return Ok();
         }
 
