@@ -7,6 +7,7 @@ using inzBackend.Helpers;
 using inzBackend.Middlewares;
 using inzBackend.Models;
 using inzBackend.Hubs;
+using inzBackend.Services.LiveNotepadServices;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
@@ -180,6 +181,7 @@ namespace inzBackend
             builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
             builder.Services.AddScoped<ISentenceService, SentenceService>();
             builder.Services.AddScoped<IUserAnswerService, UserAnswerService>();
+            builder.Services.AddScoped<ILiveNotepadService, inzBackend.Services.LiveNotepadServices.LiveNotepadService>();
             builder.Services.AddScoped<IAiSentenceCheckerService, AiSentenceCheckerService>();
             builder.Services.AddScoped<IModuleReportExportService, ModuleReportExportService>();
             builder.Services.AddScoped<IRankingService, RankingService>();
@@ -236,6 +238,7 @@ namespace inzBackend
             app.MapControllers();
             app.MapHub<EssayHub>("/hubs/essay");
             app.MapHub<SentenceCollaborationHub>("/hubs/sentence-collaboration");
+            app.MapHub<LiveNotepadHub>("/hubs/live-notepad");
 
             // Apply pending EF Core migrations
             using (var scope = app.Services.CreateScope())
