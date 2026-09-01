@@ -24,6 +24,7 @@ namespace inzBackend.Models.SentenceModels
         public int PartialCount { get; set; }
         public int IncorrectCount { get; set; }
         public bool IsReviewed { get; set; }
+        public int UnresolvedStudentCommentsCount { get; set; }
         public DateTime? LastAnswerDate { get; set; }
     }
 

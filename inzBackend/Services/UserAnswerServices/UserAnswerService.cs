@@ -62,7 +62,7 @@ namespace inzBackend.Services.UserAnswerServices
                 existingAnswer.AiExplanation = sentenceCheckResult.Explanation;
                 existingAnswer.TeacherOverride = null;
                 existingAnswer.TeacherExplanation = null;
-                existingAnswer.TeacherReviewed = false;
+                existingAnswer.TeacherReviewed = sentenceCheckResult.Result == "Correct";
             }
             else
             {
@@ -74,7 +74,7 @@ namespace inzBackend.Services.UserAnswerServices
                     UserAnswer = request.UserAnswer,
                     AiResult = sentenceCheckResult.Result,
                     AiExplanation = sentenceCheckResult.Explanation,
-                    TeacherReviewed = false
+                    TeacherReviewed = sentenceCheckResult.Result == "Correct"
                 };
                 _dbContext.UserSentenceAnswers.Add(existingAnswer);
             }
@@ -463,10 +463,21 @@ namespace inzBackend.Services.UserAnswerServices
 
                     if (totalInModule == 0) totalInModule = g.Count();
 
+                    var answerIds = g.Select(x => x.Id).ToList();
+                    var studentUsername = first.User?.Username;
+                    int unresolvedCommentsCount = 0;
+                    if (!string.IsNullOrEmpty(studentUsername) && answerIds.Any())
+                    {
+                        unresolvedCommentsCount = _dbContext.UserSentenceAnswerComments
+                            .Count(c => answerIds.Contains(c.UserSentenceAnswerId)
+                                     && !c.IsArchived
+                                     && c.Author == studentUsername);
+                    }
+
                     int correct = g.Count(x => (x.TeacherOverride ?? x.AiResult) == "Correct");
                     int partial = g.Count(x => (x.TeacherOverride ?? x.AiResult) == "Partial");
                     int incorrect = g.Count(x => (x.TeacherOverride ?? x.AiResult) == "Incorrect");
-                    bool allReviewed = g.All(x => x.TeacherReviewed);
+                    bool allReviewed = g.All(x => x.TeacherReviewed || (x.TeacherOverride ?? x.AiResult) == "Correct");
 
                     var maxDate = g.Max(x => x.LastModifiedAt);
 
@@ -483,6 +494,7 @@ namespace inzBackend.Services.UserAnswerServices
                         PartialCount = partial,
                         IncorrectCount = incorrect,
                         IsReviewed = allReviewed,
+                        UnresolvedStudentCommentsCount = unresolvedCommentsCount,
                         LastAnswerDate = maxDate.HasValue ? maxDate.Value.DateTime : null
                     };
                 })
@@ -541,7 +553,7 @@ namespace inzBackend.Services.UserAnswerServices
                         AiExplanation = ans.AiExplanation,
                         TeacherOverride = ans.TeacherOverride,
                         TeacherExplanation = ans.TeacherExplanation,
-                        TeacherReviewed = ans.TeacherReviewed,
+                        TeacherReviewed = ans.TeacherReviewed || (ans.TeacherOverride ?? ans.AiResult) == "Correct",
                         StudentUsername = ans.User?.Username ?? "",
                         StudentAvatarUrl = ans.User?.Profile?.AvatarUrl
                     });
@@ -574,7 +586,7 @@ namespace inzBackend.Services.UserAnswerServices
                 AiExplanation = ans.AiExplanation,
                 TeacherOverride = ans.TeacherOverride,
                 TeacherExplanation = ans.TeacherExplanation,
-                TeacherReviewed = ans.TeacherReviewed,
+                TeacherReviewed = ans.TeacherReviewed || (ans.TeacherOverride ?? ans.AiResult) == "Correct",
                 StudentUsername = ans.User?.Username ?? "",
                 StudentAvatarUrl = ans.User?.Profile?.AvatarUrl
             };
