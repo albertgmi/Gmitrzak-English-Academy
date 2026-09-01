@@ -169,6 +169,8 @@ namespace inzBackend.Services.EssayServices
                 ?? throw new NotFoundException("Essay not found");
 
             essay.AdminContent = request.AdminContent;
+            essay.IsReviewed = true;
+            essay.ReviewedDate = PolandTime.Today;
 
             _dbContext.SaveChanges();
 
