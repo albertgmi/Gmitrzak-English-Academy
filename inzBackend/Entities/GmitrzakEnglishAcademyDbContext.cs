@@ -54,6 +54,7 @@ namespace inzBackend.Models
         public DbSet<SentenceSetItem> SentenceSetItems { get; set; }
         public DbSet<UserSentenceAssignment> UserSentenceAssignments { get; set; }
         public DbSet<UserSentenceAnswer> UserSentenceAnswers { get; set; }
+        public DbSet<UserSentenceAnswerComment> UserSentenceAnswerComments { get; set; }
         public DbSet<ModuleSentenceSet> ModuleSentenceSets { get; set; }
         public DbSet<UserLoginLog> UserLoginLogs { get; set; }
         public DbSet<RankingReaction> RankingReactions { get; set; }

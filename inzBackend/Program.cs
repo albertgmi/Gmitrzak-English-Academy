@@ -235,6 +235,7 @@ namespace inzBackend
             app.UseAuthorization();
             app.MapControllers();
             app.MapHub<EssayHub>("/hubs/essay");
+            app.MapHub<SentenceCollaborationHub>("/hubs/sentence-collaboration");
 
             // Apply pending EF Core migrations
             using (var scope = app.Services.CreateScope())

@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities.Base;
+using inzBackend.Entities.Base;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Entities.Identity;
 using inzBackend.Entities.LearningMaterials;
@@ -18,6 +18,8 @@ namespace inzBackend.Entities.Assignments
         public string AiExplanation { get; set; } = string.Empty;
         public string? TeacherOverride { get; set; }
         public string? TeacherExplanation { get; set; }
+        public string? AdminCorrection { get; set; }
         public bool TeacherReviewed { get; set; }
+        public List<UserSentenceAnswerComment> Comments { get; set; } = new();
     }
 }

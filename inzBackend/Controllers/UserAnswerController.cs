@@ -1,4 +1,4 @@
-﻿using inzBackend.Helpers;
+using inzBackend.Helpers;
 using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.ModuleReportModels;
 using inzBackend.Services.ReportServices;
@@ -99,6 +99,49 @@ namespace inzBackend.Controllers
 
             var fileName = $"Reports_Active_Users_{dateFrom:yyyyMMdd}-{dateTo:yyyyMMdd}.zip";
             return File(zipFileBytes, "application/zip", fileName);
+        }
+
+        [HttpGet("live-room/modules")]
+        public ActionResult<List<inzBackend.Models.SentenceModels.SentenceModuleLiveDto>> GetLiveRoomModules([FromQuery] int? studentId = null)
+        {
+            return Ok(_service.GetSentenceModulesForLiveRoom(studentId));
+        }
+
+        [HttpGet("live-room/module/{moduleId}")]
+        public ActionResult<List<inzBackend.Models.SentenceModels.SentenceAnswerLiveDto>> GetLiveRoomModuleAnswers([FromRoute] int moduleId, [FromQuery] int? studentId = null)
+        {
+            return Ok(_service.GetSentenceAnswersForLiveRoom(moduleId, studentId));
+        }
+
+        [HttpGet("live-room/sentence/{answerId}")]
+        public ActionResult<inzBackend.Models.SentenceModels.SentenceAnswerLiveDto> GetLiveRoomSentenceDetail([FromRoute] int answerId)
+        {
+            return Ok(_service.GetSentenceAnswerDetailForLiveRoom(answerId));
+        }
+
+        [HttpPut("live-room/sentence/{answerId}/review")]
+        public ActionResult<inzBackend.Models.SentenceModels.SentenceAnswerLiveDto> SaveSentenceReview([FromRoute] int answerId, [FromBody] inzBackend.Models.SentenceModels.SaveSentenceReviewRequest request)
+        {
+            return Ok(_service.SaveSentenceReview(answerId, request));
+        }
+
+        [HttpGet("live-room/sentence/{answerId}/comments")]
+        public ActionResult<List<inzBackend.Models.SentenceModels.SentenceAnswerCommentDto>> GetSentenceComments([FromRoute] int answerId)
+        {
+            return Ok(_service.GetCommentsForSentenceAnswer(answerId));
+        }
+
+        [HttpPost("live-room/sentence/{answerId}/comments")]
+        public ActionResult<inzBackend.Models.SentenceModels.SentenceAnswerCommentDto> AddSentenceComment([FromRoute] int answerId, [FromBody] inzBackend.Models.SentenceModels.CreateSentenceAnswerCommentRequest request)
+        {
+            return Ok(_service.AddCommentToSentenceAnswer(answerId, request));
+        }
+
+        [HttpPut("live-room/comments/{commentId}/archive")]
+        public ActionResult ArchiveSentenceComment([FromRoute] int commentId)
+        {
+            _service.ArchiveSentenceAnswerComment(commentId);
+            return NoContent();
         }
     }
 }
