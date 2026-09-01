@@ -151,6 +151,14 @@ namespace inzBackend.Services.LiveNotepadServices
                 .FirstOrDefault(x => x.Id == noteId)
                 ?? throw new NotFoundException($"Note {noteId} not found");
 
+            var currentUserId = _userContextService.GetUserId!.Value;
+            var role = _userContextService.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (role != "Admin" && note.StudentId != currentUserId)
+            {
+                throw new UnauthorizedAccessException("You do not have access to save this note.");
+            }
+
             if (!string.IsNullOrWhiteSpace(request.Title))
             {
                 note.Title = request.Title.Trim();
@@ -178,6 +186,12 @@ namespace inzBackend.Services.LiveNotepadServices
 
         public void DeleteLiveNote(int noteId)
         {
+            var role = _userContextService.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (role != "Admin")
+            {
+                throw new UnauthorizedAccessException("Only administrators can delete live notes.");
+            }
+
             var note = _dbContext.UserLiveNotes
                 .FirstOrDefault(x => x.Id == noteId)
                 ?? throw new NotFoundException($"Note {noteId} not found");

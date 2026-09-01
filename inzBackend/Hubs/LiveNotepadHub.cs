@@ -52,7 +52,7 @@ namespace inzBackend.Hubs
             }
         }
 
-        public async Task SendContentChange(int noteId, string content, string senderUsername)
+        public async Task SendContentChange(int noteId, string content, string senderUsername, string? deltaJson = null)
         {
             var roomName = GetRoomName(noteId);
             await Clients.OthersInGroup(roomName).SendAsync("ContentChanged", new
@@ -60,6 +60,7 @@ namespace inzBackend.Hubs
                 noteId,
                 content,
                 senderUsername,
+                deltaJson,
                 timestamp = DateTime.UtcNow
             });
         }
