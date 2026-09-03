@@ -12,6 +12,7 @@ namespace inzBackend.Entities.Identity
         public EnglishLevel? EnglishLevel { get; set; }
         public int? CurrentSemester { get; set; }
         public int? StreakOverride { get; set; }
+        public DateOnly? StreakOverrideDate { get; set; }
 
         public bool Semester1 { get; set; }
         public bool Semester2 { get; set; }

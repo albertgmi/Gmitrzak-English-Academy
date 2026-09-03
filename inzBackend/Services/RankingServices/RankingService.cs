@@ -5,6 +5,7 @@ using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Entities.Gamification;
+using inzBackend.Helpers;
 
 namespace inzBackend.Services.RankingServices
 {
@@ -39,7 +40,7 @@ namespace inzBackend.Services.RankingServices
         public RankingDto GetRanking(string period)
         {
             var currentUserId = _userContextService.GetUserId!.Value;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
             var (dateFrom, dateTo) = GetDateRange(period, today);
 
             var dow = ((int)today.DayOfWeek + 6) % 7;
@@ -95,29 +96,16 @@ namespace inzBackend.Services.RankingServices
                     .Where(r => r.ToUserId == u.Id)
                     .ToDictionary(r => r.Emoji, r => r.Count);
 
-                int streak = 0;
-                if (u.Profile?.StreakOverride.HasValue == true)
-                {
-                    streak = u.Profile.StreakOverride.Value;
-                }
-                else
-                {
-                    var userDates = allFlashcardLogs
-                        .Where(x => x.UserId == u.Id)
-                        .Select(x => x.StudyDate)
-                        .OrderByDescending(x => x)
-                        .ToList();
+                var userDates = allFlashcardLogs
+                    .Where(x => x.UserId == u.Id)
+                    .Select(x => x.StudyDate)
+                    .ToList();
 
-                    if (userDates.Any() && userDates.First() >= today.AddDays(-1))
-                    {
-                        var expected = userDates.First();
-                        foreach (var d in userDates)
-                        {
-                            if (d == expected) { streak++; expected = expected.AddDays(-1); }
-                            else break;
-                        }
-                    }
-                }
+                int streak = StreakHelper.CalculateDynamicStreak(
+                    userDates,
+                    u.Profile?.StreakOverride,
+                    u.Profile?.StreakOverrideDate,
+                    today);
 
                 return new RankingEntryDto
                 {
@@ -179,7 +167,7 @@ namespace inzBackend.Services.RankingServices
             if (!validEmojis.Contains(request.Emoji)) return;
             if (userId == request.ToUserId) return;
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = PolandTime.Today;
 
             var exists = _dbContext.RankingReactions.Any(x =>
                 x.FromUserId == userId &&

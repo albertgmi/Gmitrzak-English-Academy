@@ -178,7 +178,11 @@ namespace inzBackend.Services.UserServices
                 profile = new Entities.Identity.Profile { UserId = userId };
                 _dbContext.Profiles.Add(profile);
             }
-            profile.StreakOverride = request.StreakOverride;
+            if (profile.StreakOverride != request.StreakOverride)
+            {
+                profile.StreakOverride = request.StreakOverride;
+                profile.StreakOverrideDate = request.StreakOverride.HasValue ? PolandTime.Today : null;
+            }
 
             _dbContext.SaveChanges();
         }
@@ -238,29 +242,16 @@ namespace inzBackend.Services.UserServices
 
             return users.Select(u =>
             {
-                int calculatedStreak = 0;
-                if (u.Profile?.StreakOverride.HasValue == true)
-                {
-                    calculatedStreak = u.Profile.StreakOverride.Value;
-                }
-                else
-                {
-                    var userDates = flashcardLogs
-                        .Where(x => x.UserId == u.Id)
-                        .Select(x => x.StudyDate)
-                        .OrderByDescending(x => x)
-                        .ToList();
+                var userDates = flashcardLogs
+                    .Where(x => x.UserId == u.Id)
+                    .Select(x => x.StudyDate)
+                    .ToList();
 
-                    if (userDates.Any() && userDates.First() >= today.AddDays(-1))
-                    {
-                        var expected = userDates.First();
-                        foreach (var d in userDates)
-                        {
-                            if (d == expected) { calculatedStreak++; expected = expected.AddDays(-1); }
-                            else break;
-                        }
-                    }
-                }
+                int calculatedStreak = StreakHelper.CalculateDynamicStreak(
+                    userDates,
+                    u.Profile?.StreakOverride,
+                    u.Profile?.StreakOverrideDate,
+                    today);
 
                 return new AppUserDto
                 {
