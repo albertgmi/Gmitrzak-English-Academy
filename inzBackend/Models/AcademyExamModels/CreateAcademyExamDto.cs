@@ -16,6 +16,7 @@ namespace inzBackend.Models.AcademyExamModels
         public ExamLevel Level { get; set; }
 
         public string? MaterialsUrl { get; set; }
+        public List<ExamMaterialDto> Materials { get; set; } = new();
 
         [Range(0, 100000)]
         public int RewardCredits { get; set; }

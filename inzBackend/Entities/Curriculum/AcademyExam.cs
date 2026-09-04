@@ -9,6 +9,7 @@ namespace inzBackend.Entities.Curriculum
         public string Description { get; set; } = string.Empty;
         public ExamLevel Level { get; set; }
         public string? MaterialsUrl { get; set; }
+        public string? MaterialsJson { get; set; }
         public int RewardCredits { get; set; }
         public string PassingThreshold { get; set; } = string.Empty;
         public DateTime SignupDeadline { get; set; }

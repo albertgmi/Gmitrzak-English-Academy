@@ -6,6 +6,7 @@ using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.AcademyExamModels;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace inzBackend.Services.AcademyExamServices
 {
@@ -129,12 +130,17 @@ namespace inzBackend.Services.AcademyExamServices
 
         public int CreateExam(CreateAcademyExamDto dto)
         {
+            var materialsJson = dto.Materials != null && dto.Materials.Any()
+                ? JsonSerializer.Serialize(dto.Materials)
+                : null;
+
             var exam = new AcademyExam
             {
                 Title = dto.Title,
                 Description = dto.Description,
                 Level = dto.Level,
                 MaterialsUrl = dto.MaterialsUrl,
+                MaterialsJson = materialsJson,
                 RewardCredits = dto.RewardCredits,
                 PassingThreshold = dto.PassingThreshold,
                 SignupDeadline = dto.SignupDeadline,
@@ -155,10 +161,15 @@ namespace inzBackend.Services.AcademyExamServices
                 throw new NotFoundException("Exam not found.");
             }
 
+            var materialsJson = dto.Materials != null && dto.Materials.Any()
+                ? JsonSerializer.Serialize(dto.Materials)
+                : null;
+
             exam.Title = dto.Title;
             exam.Description = dto.Description;
             exam.Level = dto.Level;
             exam.MaterialsUrl = dto.MaterialsUrl;
+            exam.MaterialsJson = materialsJson;
             exam.RewardCredits = dto.RewardCredits;
             exam.PassingThreshold = dto.PassingThreshold;
             exam.SignupDeadline = dto.SignupDeadline;
@@ -237,6 +248,24 @@ namespace inzBackend.Services.AcademyExamServices
                 })
                 .ToList();
 
+            var materials = new List<ExamMaterialDto>();
+            if (!string.IsNullOrWhiteSpace(exam.MaterialsJson))
+            {
+                try
+                {
+                    materials = JsonSerializer.Deserialize<List<ExamMaterialDto>>(exam.MaterialsJson) ?? new();
+                }
+                catch
+                {
+                    materials = new();
+                }
+            }
+
+            if (!materials.Any() && !string.IsNullOrWhiteSpace(exam.MaterialsUrl))
+            {
+                materials.Add(new ExamMaterialDto { Title = "Study Materials", Url = exam.MaterialsUrl });
+            }
+
             return new AcademyExamDto
             {
                 Id = exam.Id,
@@ -244,6 +273,7 @@ namespace inzBackend.Services.AcademyExamServices
                 Description = exam.Description,
                 Level = exam.Level,
                 MaterialsUrl = exam.MaterialsUrl,
+                Materials = materials,
                 RewardCredits = exam.RewardCredits,
                 PassingThreshold = exam.PassingThreshold,
                 SignupDeadline = exam.SignupDeadline,

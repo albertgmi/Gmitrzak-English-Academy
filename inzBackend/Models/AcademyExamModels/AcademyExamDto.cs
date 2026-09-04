@@ -9,6 +9,7 @@ namespace inzBackend.Models.AcademyExamModels
         public string Description { get; set; } = string.Empty;
         public ExamLevel Level { get; set; }
         public string? MaterialsUrl { get; set; }
+        public List<ExamMaterialDto> Materials { get; set; } = new();
         public int RewardCredits { get; set; }
         public string PassingThreshold { get; set; } = string.Empty;
         public DateTime SignupDeadline { get; set; }
