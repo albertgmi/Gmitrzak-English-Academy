@@ -73,6 +73,8 @@ namespace inzBackend.Models
         public DbSet<AlphabetAbbreviation> AlphabetAbbreviations { get; set; }
         public DbSet<AlphabetEntry> AlphabetEntries { get; set; }
         public DbSet<AlphabetAttempt> AlphabetAttempts { get; set; }
+        public DbSet<AcademyExam> AcademyExams { get; set; }
+        public DbSet<AcademyExamSignup> AcademyExamSignups { get; set; }
 
         public override int SaveChanges()
         {

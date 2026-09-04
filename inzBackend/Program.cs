@@ -11,6 +11,7 @@ using inzBackend.Services.LiveNotepadServices;
 using inzBackend.Models.UserModels;
 using inzBackend.Models.Validators;
 using inzBackend.Profiles;
+using inzBackend.Services.AcademyExamServices;
 using inzBackend.Services.AdminLearningServices.Lesson;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.AdminLearningServices.Memories;
@@ -187,6 +188,7 @@ namespace inzBackend
             builder.Services.AddScoped<IRankingService, RankingService>();
             builder.Services.AddScoped<ISectionActivityService, SectionActivityService>();
             builder.Services.AddScoped<IExaminationService, ExaminationService>();
+            builder.Services.AddScoped<IAcademyExamService, AcademyExamService>();
             builder.Services.AddScoped<ICreditService, CreditService>();
             builder.Services.AddScoped<IEssayService, EssayService>();
             builder.Services.AddScoped<IAiSpellCheckService, AiSpellCheckService>();
