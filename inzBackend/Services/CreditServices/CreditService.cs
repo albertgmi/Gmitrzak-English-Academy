@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities;
+using inzBackend.Entities;
 using inzBackend.Entities.Gamification;
 using inzBackend.Exceptions;
 using inzBackend.Helpers;
@@ -97,8 +97,9 @@ namespace inzBackend.Services.CreditServices
                 .OrderByDescending(x => x.PurchaseDate)
                 .ToList();
 
-            var earned = credits.Sum(x => x.Amount);
-            var spent = purchases.Sum(x => x.CreditCost);
+            var earned = credits.Where(x => x.Amount > 0).Sum(x => x.Amount);
+            var revoked = credits.Where(x => x.Amount < 0).Sum(x => Math.Abs(x.Amount));
+            var spent = purchases.Sum(x => x.CreditCost) + revoked;
 
             var history = credits.Select(x => new CreditHistoryItemDto
             {
@@ -106,7 +107,7 @@ namespace inzBackend.Services.CreditServices
                 Amount = x.Amount,
                 Reason = x.Reason,
                 Date = x.Date,
-                Type = "earned"
+                Type = x.Amount < 0 ? "spent" : "earned"
             }).ToList();
 
             var spendHistory = purchases.Select(x => new CreditHistoryItemDto
