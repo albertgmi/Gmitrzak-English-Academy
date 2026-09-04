@@ -209,7 +209,6 @@ namespace inzBackend.Services.AcademyExamServices
             var previousStatus = signup.Status;
             signup.Status = status;
 
-            // Award credits if status changed to Passed and wasn't Passed before
             if (status == ExamSignupStatus.Passed && previousStatus != ExamSignupStatus.Passed && exam.RewardCredits > 0)
             {
                 var credit = new Credit
@@ -217,6 +216,18 @@ namespace inzBackend.Services.AcademyExamServices
                     UserId = targetUserId,
                     Amount = exam.RewardCredits,
                     Reason = $"Passed exam: {exam.Title}",
+                    Date = DateOnly.FromDateTime(PolandTime.DateTimeNow)
+                };
+
+                _dbContext.Credits.Add(credit);
+            }
+            else if (previousStatus == ExamSignupStatus.Passed && status != ExamSignupStatus.Passed && exam.RewardCredits > 0)
+            {
+                var credit = new Credit
+                {
+                    UserId = targetUserId,
+                    Amount = -exam.RewardCredits,
+                    Reason = $"Revoked credits for exam: {exam.Title}",
                     Date = DateOnly.FromDateTime(PolandTime.DateTimeNow)
                 };
 

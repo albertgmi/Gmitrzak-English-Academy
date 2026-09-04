@@ -1,9 +1,20 @@
-﻿namespace inzBackend.Helpers
+namespace inzBackend.Helpers
 {
     public static class PolandTime
     {
-        private static readonly TimeZoneInfo PolishZone =
-            TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        private static readonly TimeZoneInfo PolishZone = GetPolishTimeZone();
+
+        private static TimeZoneInfo GetPolishTimeZone()
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            }
+            catch
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw");
+            }
+        }
         public static DateTimeOffset Now => TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, PolishZone);
         public static DateTime DateTimeNow => TimeZoneInfo.ConvertTime(DateTime.UtcNow, PolishZone);
         public static DateOnly Today => DateOnly.FromDateTime(DateTimeNow);
