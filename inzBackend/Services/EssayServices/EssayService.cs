@@ -43,8 +43,25 @@ namespace inzBackend.Services.EssayServices
                 .FirstOrDefault(x => x.Id == moduleId && x.Category == "Essay")
                 ?? throw new NotFoundException("Essay module not found");
 
-            var existing = _dbContext.UserEssays
-                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
+            var activeAssignment = _dbContext.UserModuleAssignments
+                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId && !x.IsCompleted);
+
+            UserEssay? existing = null;
+
+            if (activeAssignment != null)
+            {
+                existing = _dbContext.UserEssays
+                    .FirstOrDefault(x => x.UserId == userId
+                                      && x.ModuleId == moduleId
+                                      && x.UserModuleAssignmentId == activeAssignment.Id);
+            }
+            else
+            {
+                existing = _dbContext.UserEssays
+                    .Where(x => x.UserId == userId && x.ModuleId == moduleId)
+                    .OrderByDescending(x => x.Id)
+                    .FirstOrDefault();
+            }
 
             return new EssayModuleDto
             {
@@ -60,30 +77,40 @@ namespace inzBackend.Services.EssayServices
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
 
-            var alreadySubmitted = _dbContext.UserEssays
-                .Any(x => x.UserId == userId
-                       && x.ModuleId == request.ModuleId
-                       && x.IsSubmitted);
-
-            if (alreadySubmitted)
-                throw new BadRequestException("Essay already submitted.");
-
             var module = _dbContext.Modules
                 .FirstOrDefault(x => x.Id == request.ModuleId)
                 ?? throw new NotFoundException("Module not found");
 
-            var existing = _dbContext.UserEssays
-                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == request.ModuleId);
+            var activeAssignment = _dbContext.UserModuleAssignments
+                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == request.ModuleId && !x.IsCompleted);
 
-            if (existing is not null)
+            UserEssay newOrExistingEssay;
+
+            if (activeAssignment != null)
             {
-                existing.Content = request.Content;
-                existing.IsSubmitted = true;
-                existing.SubmittedDate = today;
+                var alreadySubmitted = _dbContext.UserEssays
+                    .Any(x => x.UserId == userId
+                           && x.ModuleId == request.ModuleId
+                           && x.UserModuleAssignmentId == activeAssignment.Id
+                           && x.IsSubmitted);
+
+                if (alreadySubmitted)
+                    throw new BadRequestException("Essay already submitted for this assignment.");
+
+                newOrExistingEssay = new UserEssay
+                {
+                    UserId = userId,
+                    ModuleId = request.ModuleId,
+                    UserModuleAssignmentId = activeAssignment.Id,
+                    Content = request.Content,
+                    IsSubmitted = true,
+                    SubmittedDate = today
+                };
+                _dbContext.UserEssays.Add(newOrExistingEssay);
             }
             else
             {
-                existing = new UserEssay
+                newOrExistingEssay = new UserEssay
                 {
                     UserId = userId,
                     ModuleId = request.ModuleId,
@@ -91,7 +118,7 @@ namespace inzBackend.Services.EssayServices
                     IsSubmitted = true,
                     SubmittedDate = today
                 };
-                _dbContext.UserEssays.Add(existing);
+                _dbContext.UserEssays.Add(newOrExistingEssay);
             }
 
             _dbContext.SaveChanges();
@@ -101,7 +128,7 @@ namespace inzBackend.Services.EssayServices
             _lessonPanelService.AddActivityPoints(
                 userId, 15, $"Essay submitted: {module.Name}");
 
-            return MapToDto(existing, module);
+            return MapToDto(newOrExistingEssay, module);
         }
 
         public List<UserEssayDto> GetAllEssaysForAdmin()

@@ -10,6 +10,8 @@ namespace inzBackend.Entities.Assignments
         public AppUser User { get; set; } = null!;
         public int ModuleId { get; set; }
         public Module Module { get; set; } = null!;
+        public int? UserModuleAssignmentId { get; set; }
+        public UserModuleAssignment? UserModuleAssignment { get; set; }
         public string Content { get; set; } = string.Empty;
         public string? AdminContent { get; set; }
         public bool IsSubmitted { get; set; } = false;
