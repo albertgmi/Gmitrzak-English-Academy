@@ -1,3 +1,5 @@
+using inzBackend.Helpers;
+
 namespace inzBackend.Models.RankingModels
 {
     public class RankingEntryDto
@@ -5,6 +7,9 @@ namespace inzBackend.Models.RankingModels
         public int UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
+        public DateTime? LastActiveAt { get; set; }
+        public bool IsOnline => LastActiveAt.HasValue &&
+            PolandTime.DateTimeNow - LastActiveAt.Value < TimeSpan.FromMinutes(2);
         public int Position { get; set; }
         public int ActivityPoints { get; set; }
         public decimal AverageGrade { get; set; }

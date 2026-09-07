@@ -112,6 +112,7 @@ namespace inzBackend.Services.RankingServices
                     UserId = u.Id,
                     Username = u.Username,
                     AvatarUrl = u.Profile?.AvatarUrl,
+                    LastActiveAt = u.LastActiveAt,
                     ActivityPoints = activityScore.TotalScore,
                     AverageGrade = Math.Round(avg, 1),
                     FlashcardsDone = activityScore.FlashcardsDone,
