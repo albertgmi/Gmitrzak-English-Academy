@@ -25,6 +25,34 @@ namespace inzBackend.Controllers
             return Ok(result);
         }
 
+        [HttpGet("all")]
+        public ActionResult<List<IrregularVerbDto>> GetAllIrregularVerbs()
+        {
+            var result = _irregularVerbsService.GetAllIrregularVerbs();
+            return Ok(result);
+        }
+
+        [HttpGet("leeches")]
+        public ActionResult<List<IrregularVerbDto>> GetLeeches()
+        {
+            var result = _irregularVerbsService.GetLeeches();
+            return Ok(result);
+        }
+
+        [HttpGet("studied-today")]
+        public ActionResult<List<IrregularVerbDto>> GetStudiedToday()
+        {
+            var result = _irregularVerbsService.GetStudiedToday();
+            return Ok(result);
+        }
+
+        [HttpGet("search")]
+        public ActionResult<List<IrregularVerbDto>> SearchIrregularVerbs([FromQuery] string q)
+        {
+            var result = _irregularVerbsService.SearchIrregularVerbs(q);
+            return Ok(result);
+        }
+
         [HttpPatch("{id}/review")]
         public ActionResult ReviewIrregularVerb([FromRoute] int id, [FromBody] ReviewIrregularVerbRequest request)
         {

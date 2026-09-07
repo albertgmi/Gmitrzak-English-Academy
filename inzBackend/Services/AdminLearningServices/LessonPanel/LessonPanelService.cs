@@ -10,7 +10,9 @@ using inzBackend.Models;
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.CreditModels;
+using inzBackend.Entities.LearningMaterials;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
@@ -724,6 +726,237 @@ public class LessonPanelService : ILessonPanelService
             FlashcardTarget = fcTarget
         };
     }
+
+    public LessonIrregularVerbSummaryDto GetIrregularVerbSummary(int studentUserId)
+    {
+        var today = PolandTime.Today;
+        var verbs = GetAllIrregularVerbsForUser(studentUserId);
+
+        var leeches = verbs.Where(x => x.IsLeech || x.EaseFactor <= 150).ToList();
+        var studiedToday = verbs.Where(x => x.NextReviewDate > today).ToList();
+        var dueCount = verbs.Count(x => x.NextReviewDate <= today);
+
+        return new LessonIrregularVerbSummaryDto
+        {
+            TotalCards = verbs.Count,
+            DueCount = dueCount,
+            StudiedTodayCount = studiedToday.Count,
+            LeechCount = leeches.Count,
+            Leeches = leeches
+        };
+    }
+
+    public List<IrregularVerbDto> GetAllIrregularVerbsForUser(int studentUserId)
+    {
+        EnsureDefaultIrregularVerbsExist(studentUserId, IrregularVerbLevel.Basic);
+        EnsureDefaultIrregularVerbsExist(studentUserId, IrregularVerbLevel.Advanced);
+
+        var verbs = _dbContext.IrregularVerbs
+            .Where(x => x.UserId == studentUserId)
+            .OrderBy(x => x.Level)
+            .ThenBy(x => x.PolishTranslation)
+            .ToList();
+
+        return _mapper.Map<List<IrregularVerbDto>>(verbs);
+    }
+
+    public void UpdateIrregularVerbInterval(int studentUserId, int verbId, int newInterval)
+    {
+        var verb = _dbContext.IrregularVerbs
+            .FirstOrDefault(x => x.Id == verbId && x.UserId == studentUserId);
+
+        if (verb is null) throw new NotFoundException($"Irregular verb with id {verbId} for user {studentUserId} not found.");
+
+        verb.Interval = Math.Max(0, newInterval);
+        verb.NextReviewDate = PolandTime.Today.AddDays(verb.Interval);
+
+        _dbContext.SaveChanges();
+    }
+
+    private void EnsureDefaultIrregularVerbsExist(int userId, IrregularVerbLevel level)
+    {
+        bool exists = _dbContext.IrregularVerbs.Any(x => x.UserId == userId && x.Level == level);
+        if (exists) return;
+
+        List<(string Polish, string English)> seedData = level == IrregularVerbLevel.Basic
+            ? GetBasicDefaultVerbs()
+            : GetAdvancedDefaultVerbs();
+
+        var entities = seedData.Select(x => new IrregularVerb
+        {
+            UserId = userId,
+            Level = level,
+            PolishTranslation = x.Polish,
+            EnglishForms = x.English,
+            EaseFactor = 250,
+            Interval = 0,
+            IsLeech = false,
+            NextReviewDate = PolandTime.Today
+        }).ToList();
+
+        _dbContext.IrregularVerbs.AddRange(entities);
+        _dbContext.SaveChanges();
+    }
+
+    private static List<(string Polish, string English)> GetBasicDefaultVerbs() => new()
+    {
+        ("jechać", "drive - drove - driven"),
+        ("wypić", "drink - drank - drunk"),
+        ("jeść", "eat - ate - eaten"),
+        ("spadać", "fall - fell - fallen"),
+        ("czuć", "feel - felt - felt"),
+        ("walczyć", "fight - fought - fought"),
+        ("znaleźć", "find - found - found"),
+        ("latać", "fly - flew - flown"),
+        ("zapomnieć", "forget - forgot - forgotten"),
+        ("przebaczyć", "forgive - forgave - forgiven"),
+        ("zamarznąć", "freeze - froze - frozen"),
+        ("dostać", "get - got - got (sometimes gotten)"),
+        ("dać", "give - gave - given"),
+        ("iść", "go - went - gone"),
+        ("rosnąć", "grow - grew - grown"),
+        ("powiesić", "hang - hung - hung"),
+        ("mieć", "have - had - had"),
+        ("usłyszeć", "hear - heard - heard"),
+        ("chować", "hide - hid - hidden"),
+        ("uderzyć", "hit - hit - hit"),
+        ("trzymać", "hold - held - held"),
+        ("boleć", "hurt - hurt - hurt"),
+        ("trzymać", "keep - kept - kept"),
+        ("wiedzieć", "know - knew - known"),
+        ("kłaść", "lay - laid - laid"),
+        ("prowadzić", "lead - led - led"),
+        ("uczyć się", "learn - learned or learnt - learned or learnt"),
+        ("opuścić", "leave - left - left"),
+        ("pożyczać komuś", "lend - lent - lent"),
+        ("pozwalać", "let - let - let"),
+        ("leżeć", "lie - lay - lain"),
+        ("stracić", "lose - lost - lost"),
+        ("zrobić", "make - made - made"),
+        ("oznaczać", "mean - meant - meant"),
+        ("spotkać się", "meet - met - met"),
+        ("zapłacić", "pay - paid - paid"),
+        ("umieścić", "put - put - put"),
+        ("czytać", "read - read - read"),
+        ("jeździć", "ride - rode - ridden"),
+        ("dzwonić", "ring - rang - rung"),
+        ("biegać", "run - ran - run"),
+        ("powiedzieć", "say - said - said"),
+        ("zobaczyć", "see - saw - seen"),
+        ("sprzedać", "sell - sold - sold"),
+        ("wysłać", "send - sent - sent"),
+        ("ustawić", "set - set - set"),
+        ("trząść", "shake - shook - shaken"),
+        ("świecić", "shine - shone - shone"),
+        ("strzelać", "shoot - shot - shot"),
+        ("pokazać", "show - showed - shown"),
+        ("zamknąć", "shut - shut - shut"),
+        ("śpiewać", "sing - sang - sung"),
+        ("siedzieć", "sit - sat - sat"),
+        ("spać", "sleep - slept - slept"),
+        ("mówić", "speak - spoke - spoken"),
+        ("spędzać / wydawać", "spend - spent - spent"),
+        ("stać", "stand - stood - stood"),
+        ("prać", "wash - washed - washed"),
+        ("pływać", "swim - swam - swum"),
+        ("wziąć", "take - took - taken"),
+        ("uczyć kogoś", "teach - taught - taught"),
+        ("mówić komuś", "tell - told - told"),
+        ("myśleć", "think - thought - thought"),
+        ("rzucać", "throw - threw - thrown"),
+        ("rozumieć", "understand - understood - understood"),
+        ("budzić się", "wake - woke - woken"),
+        ("nosić", "wear - wore - worn"),
+        ("wygrać", "win - won - won"),
+        ("pisać", "write - wrote - written")
+    };
+
+    private static List<(string Polish, string English)> GetAdvancedDefaultVerbs() => new()
+    {
+        ("powstać / pojawić się", "arise - arose - arisen"),
+        ("być", "be - was/were - been"),
+        ("znosić / rodzić", "bear - bore - borne"),
+        ("bić / pokonać", "beat - beat - beaten"),
+        ("stawać się", "become - became - become"),
+        ("zaczynać", "begin - began - begun"),
+        ("ginać / zginać", "bend - bent - bent"),
+        ("założyć się", "bet - bet - bet"),
+        ("licytować / rozkazywać", "bid - bid - bid"),
+        ("wiązać", "bind - bound - bound"),
+        ("gryźć", "bite - bit - bitten"),
+        ("krwawić", "bleed - bled - bled"),
+        ("dąć / dmuchać", "blow - blew - blown"),
+        ("łamać / tłuc", "break - broke - broken"),
+        ("hodować / rozmnażać", "breed - bred - bred"),
+        ("przyprowadzać / przynosić", "bring - brought - brought"),
+        ("nadawać (program)", "broadcast - broadcast - broadcast"),
+        ("budować", "build - built - built"),
+        ("płonąć / palić", "burn - burned or burnt - burned or burnt"),
+        ("pękać / wybuchać", "burst - burst - burst"),
+        ("kupować", "buy - bought - bought"),
+        ("rzucać / przydzielać role", "cast - cast - cast"),
+        ("łapać", "catch - caught - caught"),
+        ("wybierać", "choose - chose - chosen"),
+        ("trzymać się kurczowo", "cling - clung - clung"),
+        ("przychodzić", "come - came - come"),
+        ("kosztować", "cost - cost - cost"),
+        ("czołgać się / skradać", "creep - crept - crept"),
+        ("ciąć / kroić", "cut - cut - cut"),
+        ("postępować / rozdawać", "deal - dealt - dealt"),
+        ("kopać (w ziemi)", "dig - dug - dug"),
+        ("robić", "do - did - done"),
+        ("rysować / ciągnąć", "draw - drew - drawn"),
+        ("śnić / marzyć", "dream - dreamed or dreamt - dreamed or dreamt"),
+        ("uciekać", "flee - fled - fled"),
+        ("przepowiadać", "forecast - forecast - forecast"),
+        ("zabraniać", "forbid - forbade - forbidden"),
+        ("porzucić / zaniechać", "forsake - forsook - forsaken"),
+        ("przebaczać", "forgive - forgave - forgiven"),
+        ("leżeć / przebywać", "lie - lay - lain"),
+        ("kłamać", "lie - lied - lied"),
+        ("zapalić / oświetlić", "light - lit - lit"),
+        ("mielić / zgrzytać", "grind - ground - ground"),
+        ("wisieć / wieszać", "hang - hung - hung"),
+        ("skakać / sususzyć", "leap - leaped or leapt - leaped or leapt"),
+        ("pożyczać", "lend - lent - lent"),
+        ("topić się / topnieć", "melt - melted - molten or melted"),
+        ("pomyłkowo wziąć", "mistake - mistook - mistaken"),
+        ("przegapić / przeoczyć", "overlook - overlooked - overlooked"),
+        ("wyprzedzać / pokonywać", "overtake - overtook - overtaken"),
+        ("udowodnić", "prove - proved - proven or proved"),
+        ("szukać / dążyć do", "seek - sought - sought"),
+        ("szyć", "sew - sewed - sewn or sewed"),
+        ("golić się", "shave - shaved - shaved or shaven"),
+        ("strzyc", "shear - sheared - shorn or sheared"),
+        ("rzucić / zrzucić", "shed - shed - shed"),
+        ("skurczyć się", "shrink - shrank - shrunk"),
+        ("zatonąć / tonąć", "sink - sank - sunk"),
+        ("ślizgać się", "slide - slid - slid"),
+        ("strzelać / rzucać", "sling - slung - slung"),
+        ("skradać się", "slink - slunk - slunk"),
+        ("rozłupać / rozdzielić", "split - split - split"),
+        ("zepsuć / rozpieścić", "spoil - spoiled or spoilt - spoiled or spoilt"),
+        ("rozprzestrzeniać się", "spread - spread - spread"),
+        ("skakać / odbijać się", "spring - sprang - sprung"),
+        ("kraść", "steal - stole - stolen"),
+        ("przyklejać / wtykać", "stick - stuck - stuck"),
+        ("udlić / kłuć", "sting - stung - stung"),
+        ("śmierdzieć", "stink - stank - stunk"),
+        ("dusić / dusić się", "choke - choked - choked"),
+        ("przysięgać / przeklinać", "swear - swore - sworn"),
+        ("zamiatać", "sweep - swept - swept"),
+        ("puchnąć", "swell - swelled - swollen"),
+        ("kołysać się", "swing - swung - swung"),
+        ("podczepić / zakręcić", "twist - twisted - twisted"),
+        ("przejść (proces)", "undergo - underwent - undergone"),
+        ("podjąć się", "undertake - undertook - undertaken"),
+        ("odwrócić (efekt)", "undo - undid - undone"),
+        ("płakać / szlochać", "weep - wept - wept"),
+        ("nawijać / nakręcać", "wind - wound - wound"),
+        ("wycofać się / wypłacić", "withdraw - withdrew - withdrawn"),
+        ("znieść / wytrzymać", "withstand - withstood - withstood"),
+        ("wykręcać / ściskać", "wring - wrung - wrung")
+    };
 
     private static LessonFlashcardDto MapFlashcard(Flashcard x)
     {

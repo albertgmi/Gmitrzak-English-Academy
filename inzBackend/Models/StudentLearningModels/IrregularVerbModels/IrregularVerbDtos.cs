@@ -19,4 +19,13 @@ namespace inzBackend.Models.StudentLearningModels.IrregularVerbModels
         public string Quality { get; set; } = string.Empty;
         public int TimeSpentSeconds { get; set; }
     }
+
+    public class LessonIrregularVerbSummaryDto
+    {
+        public int TotalCards { get; set; }
+        public int DueCount { get; set; }
+        public int StudiedTodayCount { get; set; }
+        public int LeechCount { get; set; }
+        public List<IrregularVerbDto> Leeches { get; set; } = new();
+    }
 }

@@ -2,6 +2,7 @@ using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.CreditModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
+using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
 
 namespace inzBackend.Services.AdminLearningServices.LessonPanel
 {
@@ -23,6 +24,9 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         List<AttendanceDto> GetAttendanceHistory(int studentId);
         List<FlashcardDto> GetAllFlashcardsForUser(int userId);
         void UpdateFlashcardInterval(int studentUserId, int flashcardId, int newInterval);
+        LessonIrregularVerbSummaryDto GetIrregularVerbSummary(int studentUserId);
+        List<IrregularVerbDto> GetAllIrregularVerbsForUser(int studentUserId);
+        void UpdateIrregularVerbInterval(int studentUserId, int verbId, int newInterval);
         ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
         byte[] ExportFlashcardsToPdf(int userId);
         byte[] ExportFlashcardsToExcel(int userId);

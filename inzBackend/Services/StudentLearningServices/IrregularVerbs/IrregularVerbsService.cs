@@ -48,6 +48,65 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
         }
 
+        public List<IrregularVerbDto> GetAllIrregularVerbs()
+        {
+            var userId = _userContextService.GetUserId;
+            if (userId is null) return new List<IrregularVerbDto>();
+
+            EnsureDefaultVerbsExist(userId.Value, IrregularVerbLevel.Basic);
+            EnsureDefaultVerbsExist(userId.Value, IrregularVerbLevel.Advanced);
+
+            var verbs = _dbContext.IrregularVerbs
+                .Where(x => x.UserId == userId.Value)
+                .OrderBy(x => x.Level)
+                .ThenBy(x => x.PolishTranslation)
+                .ToList();
+
+            return _mapper.Map<List<IrregularVerbDto>>(verbs);
+        }
+
+        public List<IrregularVerbDto> GetLeeches()
+        {
+            var userId = _userContextService.GetUserId;
+            if (userId is null) return new List<IrregularVerbDto>();
+
+            var verbs = _dbContext.IrregularVerbs
+                .Where(x => x.UserId == userId.Value && (x.IsLeech || x.EaseFactor <= 150))
+                .OrderBy(x => x.EaseFactor)
+                .ToList();
+
+            return _mapper.Map<List<IrregularVerbDto>>(verbs);
+        }
+
+        public List<IrregularVerbDto> GetStudiedToday()
+        {
+            var userId = _userContextService.GetUserId;
+            if (userId is null) return new List<IrregularVerbDto>();
+
+            var today = PolandTime.Today;
+            var verbs = _dbContext.IrregularVerbs
+                .Where(x => x.UserId == userId.Value && x.NextReviewDate > today)
+                .OrderByDescending(x => x.NextReviewDate)
+                .ToList();
+
+            return _mapper.Map<List<IrregularVerbDto>>(verbs);
+        }
+
+        public List<IrregularVerbDto> SearchIrregularVerbs(string query)
+        {
+            var userId = _userContextService.GetUserId;
+            if (userId is null || string.IsNullOrWhiteSpace(query)) return new List<IrregularVerbDto>();
+
+            var q = query.Trim().ToLower();
+            var verbs = _dbContext.IrregularVerbs
+                .Where(x => x.UserId == userId.Value &&
+                            (x.PolishTranslation.ToLower().Contains(q) || x.EnglishForms.ToLower().Contains(q)))
+                .OrderBy(x => x.PolishTranslation)
+                .ToList();
+
+            return _mapper.Map<List<IrregularVerbDto>>(verbs);
+        }
+
         public void ReviewIrregularVerb(int id, ReviewIrregularVerbRequest request)
         {
             var userId = _userContextService.GetUserId;
