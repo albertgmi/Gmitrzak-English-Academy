@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.CreditModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
@@ -17,6 +17,7 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         LessonLastWeekDto GetLastWeek(int studentUserId);
         LessonStatsDto GetStats(int studentUserId);
         List<AttendanceDto> GetAttendance(int studentId);
+        List<AttendanceDto> GetAllAttendance();
         AttendanceDto AddAttendance(CreateAttendanceDto dto);
         bool DeleteAttendance(int id);
         List<AttendanceDto> GetAttendanceHistory(int studentId);

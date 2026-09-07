@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.AdminLearningModels;
+using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
@@ -93,6 +93,13 @@ namespace inzBackend.Controllers
         public ActionResult<LessonStatsDto> GetStats([FromRoute] int studentUserId)
         {
             return _service.GetStats(studentUserId);
+        }
+
+        [HttpGet("attendance/all")]
+        public ActionResult<IEnumerable<AttendanceDto>> GetAllAttendance()
+        {
+            var records = _service.GetAllAttendance();
+            return Ok(records);
         }
 
         [HttpGet("attendance/{studentUserId}")]

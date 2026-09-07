@@ -506,6 +506,27 @@ public class LessonPanelService : ILessonPanelService
         return records;
     }
 
+    public List<AttendanceDto> GetAllAttendance()
+    {
+        var records = _dbContext.Attendance
+            .Include(a => a.User)
+            .ThenInclude(u => u.Profile)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new AttendanceDto
+            {
+                Id = a.Id,
+                UserId = a.UserId,
+                Username = a.User != null ? a.User.Username : null,
+                AvatarUrl = a.User != null && a.User.Profile != null ? a.User.Profile.AvatarUrl : null,
+                Type = a.Type.ToString(),
+                Duration = a.DurationInMinutes,
+                CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
+            })
+            .ToList();
+
+        return records;
+    }
+
     public List<AttendanceDto> GetAttendanceHistory(int studentId)
     {
         var now = PolandTime.Now;
