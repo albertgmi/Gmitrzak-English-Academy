@@ -753,7 +753,7 @@ public class LessonPanelService : ILessonPanelService
 
         var verbs = _dbContext.IrregularVerbs
             .Where(x => x.UserId == studentUserId)
-            .OrderBy(x => x.Level)
+            .OrderBy(x => x.NextReviewDate)
             .ThenBy(x => x.PolishTranslation)
             .ToList();
 

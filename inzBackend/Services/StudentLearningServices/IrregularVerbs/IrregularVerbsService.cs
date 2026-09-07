@@ -43,6 +43,7 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value && x.Level == level)
                 .OrderBy(x => x.NextReviewDate)
+                .ThenBy(x => x.PolishTranslation)
                 .ToList();
 
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
@@ -58,7 +59,7 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
 
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value)
-                .OrderBy(x => x.Level)
+                .OrderBy(x => x.NextReviewDate)
                 .ThenBy(x => x.PolishTranslation)
                 .ToList();
 
