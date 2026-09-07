@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixModels;
 using inzBackend.Models.ModuleModels;
@@ -88,6 +88,7 @@ namespace inzBackend.Profiles
 
             CreateMap<Vocabulary, VocabularyDto>();
             CreateMap<Vocabulary, GlobalVocabularyDto>();
+            CreateMap<IrregularVerb, inzBackend.Models.StudentLearningModels.IrregularVerbModels.IrregularVerbDto>();
 
             CreateMap<Catalogue, CatalogueDto>()
                 .ForMember(dest => dest.UploadedBy, opt => opt.MapFrom(src =>

@@ -75,6 +75,7 @@ namespace inzBackend.Models
         public DbSet<AlphabetAttempt> AlphabetAttempts { get; set; }
         public DbSet<AcademyExam> AcademyExams { get; set; }
         public DbSet<AcademyExamSignup> AcademyExamSignups { get; set; }
+        public DbSet<IrregularVerb> IrregularVerbs { get; set; }
 
         public override int SaveChanges()
         {
