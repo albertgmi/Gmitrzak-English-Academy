@@ -12,6 +12,7 @@ namespace inzBackend.Models.StudentLearningModels.IrregularVerbModels
         public int Interval { get; set; }
         public bool IsLeech { get; set; }
         public DateOnly NextReviewDate { get; set; }
+        public DateOnly? LastReviewDate { get; set; }
     }
 
     public class ReviewIrregularVerbRequest

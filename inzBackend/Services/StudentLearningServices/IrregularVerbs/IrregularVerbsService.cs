@@ -86,7 +86,7 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
 
             var today = PolandTime.Today;
             var verbs = _dbContext.IrregularVerbs
-                .Where(x => x.UserId == userId.Value && x.NextReviewDate > today)
+                .Where(x => x.UserId == userId.Value && x.LastReviewDate == today)
                 .OrderByDescending(x => x.NextReviewDate)
                 .ToList();
 
@@ -119,6 +119,7 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
             if (card is null) return;
 
             var today = PolandTime.Today;
+            card.LastReviewDate = today;
 
             switch (request.Quality.ToLower())
             {

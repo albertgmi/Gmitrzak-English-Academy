@@ -733,7 +733,7 @@ public class LessonPanelService : ILessonPanelService
         var verbs = GetAllIrregularVerbsForUser(studentUserId);
 
         var leeches = verbs.Where(x => x.IsLeech || x.EaseFactor <= 150).ToList();
-        var studiedToday = verbs.Where(x => x.NextReviewDate > today).ToList();
+        var studiedToday = verbs.Where(x => x.LastReviewDate == today).ToList();
         var dueCount = verbs.Count(x => x.NextReviewDate <= today);
 
         return new LessonIrregularVerbSummaryDto

@@ -16,5 +16,6 @@ namespace inzBackend.Entities.LearningMaterials
         public int Interval { get; set; } = 0;
         public bool IsLeech { get; set; } = false;
         public DateOnly NextReviewDate { get; set; } = PolandTime.Today;
+        public DateOnly? LastReviewDate { get; set; }
     }
 }
