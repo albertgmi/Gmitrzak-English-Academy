@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Exceptions;
 using inzBackend.Models;
 using inzBackend.Models.GlobalVocabularyModels;
@@ -155,9 +155,17 @@ namespace inzBackend.Services.GlobalVocabularyServices
             if (!catalogueExists)
                 throw new NotFoundException("Catalogue not found");
 
+            var catalogueEntries = _dbContext.CatalogueEntries
+                .Where(c => c.CatalogueId == request.CatalogueId)
+                .Select(c => c.Entry.Trim().ToLower())
+                .Distinct()
+                .ToList();
+
             var vocabularyIds = _dbContext.Vocabulary
-                .Where(v => v.CatalogueId == request.CatalogueId)
+                .Where(v => (v.CatalogueId != null && v.CatalogueId == request.CatalogueId) ||
+                            (catalogueEntries.Count > 0 && catalogueEntries.Contains(v.Front.Trim().ToLower())))
                 .Select(v => v.Id)
+                .Distinct()
                 .ToList();
 
             if (!vocabularyIds.Any())
@@ -168,28 +176,42 @@ namespace inzBackend.Services.GlobalVocabularyServices
 
         private void AssignVocabularyIdsToStudent(int studentUserId, List<int> vocabularyIds)
         {
-            var validVocabularyIds = _dbContext.Vocabulary
+            var validVocabularies = _dbContext.Vocabulary
                 .Where(x => vocabularyIds.Contains(x.Id))
-                .Select(x => x.Id)
                 .ToList();
 
-            if (!validVocabularyIds.Any())
+            if (!validVocabularies.Any())
                 throw new NotFoundException("None of the specified vocabulary entries were found in global database");
 
-            var alreadyAssignedIds = _dbContext.Flashcards
-                .Where(x => x.UserId == studentUserId && validVocabularyIds.Contains(x.VocabularyId))
-                .Select(x => x.VocabularyId)
+            var existingUserFlashcardVocab = _dbContext.Flashcards
+                .Include(f => f.Vocabulary)
+                .Where(f => f.UserId == studentUserId)
                 .ToList();
 
-            var idsToAssign = validVocabularyIds.Except(alreadyAssignedIds).ToList();
-            if (!idsToAssign.Any())
+            var existingAssignedVocabIds = existingUserFlashcardVocab
+                .Select(f => f.VocabularyId)
+                .ToHashSet();
+
+            var existingUserFrontTexts = existingUserFlashcardVocab
+                .Where(f => f.Vocabulary != null && !string.IsNullOrWhiteSpace(f.Vocabulary.Front))
+                .Select(f => f.Vocabulary.Front.Trim().ToLower())
+                .ToHashSet();
+
+            var vocabulariesToAssign = validVocabularies
+                .Where(v => !existingAssignedVocabIds.Contains(v.Id) &&
+                            !existingUserFrontTexts.Contains(v.Front.Trim().ToLower()))
+                .GroupBy(v => v.Front.Trim().ToLower())
+                .Select(g => g.First())
+                .ToList();
+
+            if (!vocabulariesToAssign.Any())
                 return;
 
             var today = PolandTime.Today;
-            var flashcardsToAdd = idsToAssign.Select(vocabId => new Flashcard
+            var flashcardsToAdd = vocabulariesToAssign.Select(v => new Flashcard
             {
                 UserId = studentUserId,
-                VocabularyId = vocabId,
+                VocabularyId = v.Id,
                 EaseFactor = 250,
                 Interval = 0,
                 IsLeech = false,
