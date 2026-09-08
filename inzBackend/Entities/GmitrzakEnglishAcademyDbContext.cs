@@ -40,6 +40,8 @@ namespace inzBackend.Models
         public DbSet<ActivityPoint> ActivityPoints { get; set; }
         public DbSet<Catalogue> Catalogues { get; set; }
         public DbSet<CatalogueEntry> CatalogueEntries { get; set; }
+        public DbSet<WordfinderCatalogue> WordfinderCatalogues { get; set; }
+        public DbSet<WordfinderCatalogueEntry> WordfinderCatalogueEntries { get; set; }
         public DbSet<Profile> Profiles { get; set; }
         public DbSet<UserModuleAssignment> UserModuleAssignments { get; set; }
         public DbSet<UserMatrixModuleCompletion> UserMatrixModuleCompletions { get; set; }

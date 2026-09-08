@@ -20,6 +20,7 @@ using inzBackend.Services.AiIntegrationServices;
 using inzBackend.Services.AnnouncementsServices;
 using inzBackend.Services.AssignmentServices;
 using inzBackend.Services.CatalogueServices;
+using inzBackend.Services.WordfinderServices;
 using inzBackend.Services.CourseServices;
 using inzBackend.Services.CreditServices;
 using inzBackend.Services.DashboardServices;
@@ -176,6 +177,7 @@ namespace inzBackend
             builder.Services.AddScoped<ILessonPanelService, LessonPanelService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<ICatalogueService, CatalogueService>();
+            builder.Services.AddScoped<IWordfinderService, WordfinderService>();
             builder.Services.AddScoped<ITheaterService, TheaterService>();
             builder.Services.AddScoped<IAdminMemoriesService, AdminMemoriesService>();
             builder.Services.AddScoped<IAdminPronunciationService, AdminPronunciationService>();

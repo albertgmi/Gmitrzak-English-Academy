@@ -1,0 +1,9 @@
+namespace inzBackend.Models.WordfinderModels
+{
+    public class WordfinderCatalogueEntryDto
+    {
+        public int Id { get; set; }
+        public string Front { get; set; } = string.Empty;
+        public string Back { get; set; } = string.Empty;
+    }
+}
