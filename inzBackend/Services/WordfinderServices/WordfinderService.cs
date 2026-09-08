@@ -46,6 +46,20 @@ namespace inzBackend.Services.WordfinderServices
                 CreatedAt = PolandTime.DateTimeNow
             };
 
+            if (dto.Entries != null && dto.Entries.Any())
+            {
+                var validEntries = dto.Entries
+                    .Where(e => !string.IsNullOrWhiteSpace(e.Front))
+                    .Select(e => new WordfinderCatalogueEntry
+                    {
+                        Front = e.Front.Trim(),
+                        Back = (e.Back ?? string.Empty).Trim()
+                    })
+                    .ToList();
+
+                wordfinder.Entries = validEntries;
+            }
+
             _dbContext.WordfinderCatalogues.Add(wordfinder);
             await _dbContext.SaveChangesAsync();
 
