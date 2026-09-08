@@ -108,8 +108,8 @@ namespace inzBackend.Services.WordfinderServices
             if (wordfinder.StudentUserId != studentUserId)
                 throw new ForbiddenException("You do not have access to update this catalogue");
 
-            if (wordfinder.Status != WordfinderCatalogueStatus.Draft && wordfinder.Status != WordfinderCatalogueStatus.Rejected)
-                throw new BadRequestException("Only catalogues in Draft or Rejected status can be modified");
+            if (wordfinder.Status == WordfinderCatalogueStatus.Approved)
+                throw new BadRequestException("Approved catalogues cannot be modified");
 
             if (string.IsNullOrWhiteSpace(dto.Name))
                 throw new BadRequestException("Catalogue name cannot be empty");
@@ -151,8 +151,8 @@ namespace inzBackend.Services.WordfinderServices
             if (wordfinder.StudentUserId != studentUserId)
                 throw new ForbiddenException("You do not have access to delete this catalogue");
 
-            if (wordfinder.Status != WordfinderCatalogueStatus.Draft && wordfinder.Status != WordfinderCatalogueStatus.Rejected)
-                throw new BadRequestException("Only catalogues in Draft or Rejected status can be deleted");
+            if (wordfinder.Status == WordfinderCatalogueStatus.Approved)
+                throw new BadRequestException("Approved catalogues cannot be deleted");
 
             _dbContext.WordfinderCatalogueEntries.RemoveRange(wordfinder.Entries);
             _dbContext.WordfinderCatalogues.Remove(wordfinder);
@@ -171,8 +171,8 @@ namespace inzBackend.Services.WordfinderServices
             if (wordfinder.StudentUserId != studentUserId)
                 throw new ForbiddenException("You do not have access to submit this catalogue");
 
-            if (wordfinder.Status != WordfinderCatalogueStatus.Draft && wordfinder.Status != WordfinderCatalogueStatus.Rejected)
-                throw new BadRequestException("Only catalogues in Draft or Rejected status can be submitted for review");
+            if (wordfinder.Status == WordfinderCatalogueStatus.Approved)
+                throw new BadRequestException("Approved catalogues cannot be submitted for review");
 
             if (!wordfinder.Entries.Any(e => !string.IsNullOrWhiteSpace(e.Front)))
                 throw new BadRequestException("Cannot submit an empty catalogue. Please add at least one vocabulary entry.");
