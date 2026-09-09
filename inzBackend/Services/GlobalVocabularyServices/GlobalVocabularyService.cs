@@ -151,8 +151,8 @@ namespace inzBackend.Services.GlobalVocabularyServices
 
         public void AssignCatalogueToStudent(AssignCatalogueToStudentRequest request)
         {
-            var catalogueExists = _dbContext.Catalogues.Any(x => x.Id == request.CatalogueId);
-            if (!catalogueExists)
+            var catalogue = _dbContext.Catalogues.FirstOrDefault(x => x.Id == request.CatalogueId);
+            if (catalogue == null)
                 throw new NotFoundException("Catalogue not found");
 
             var catalogueEntries = _dbContext.CatalogueEntries
@@ -161,17 +161,24 @@ namespace inzBackend.Services.GlobalVocabularyServices
                 .Distinct()
                 .ToList();
 
-            var vocabularyIds = _dbContext.Vocabulary
+            var vocabularyItems = _dbContext.Vocabulary
                 .Where(v => (v.CatalogueId != null && v.CatalogueId == request.CatalogueId) ||
                             (catalogueEntries.Count > 0 && catalogueEntries.Contains(v.Front.Trim().ToLower())))
-                .Select(v => v.Id)
-                .Distinct()
                 .ToList();
 
-            if (!vocabularyIds.Any())
+            if (!vocabularyItems.Any())
                 throw new BadRequestException("This catalogue has no vocabulary entries to assign.");
 
-            AssignVocabularyIdsToStudent(request.StudentUserId, vocabularyIds);
+            if (!string.IsNullOrWhiteSpace(catalogue.Name))
+            {
+                foreach (var v in vocabularyItems)
+                {
+                    v.Category = catalogue.Name;
+                    v.CatalogueId = catalogue.Id;
+                }
+            }
+
+            AssignVocabularyIdsToStudent(request.StudentUserId, vocabularyItems.Select(v => v.Id).ToList());
         }
 
         private void AssignVocabularyIdsToStudent(int studentUserId, List<int> vocabularyIds)
