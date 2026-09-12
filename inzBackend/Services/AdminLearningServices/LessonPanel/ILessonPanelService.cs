@@ -28,6 +28,7 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         List<IrregularVerbDto> GetAllIrregularVerbsForUser(int studentUserId);
         void UpdateIrregularVerbInterval(int studentUserId, int verbId, int newInterval);
         ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
+        void DeleteFlashcardsBulk(int studentUserId, List<int> flashcardIds);
         byte[] ExportFlashcardsToPdf(int userId);
         byte[] ExportFlashcardsToExcel(int userId);
     }

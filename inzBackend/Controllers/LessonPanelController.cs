@@ -78,6 +78,13 @@ namespace inzBackend.Controllers
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"flashcards_{studentUserId}.xlsx");
         }
 
+        [HttpPost("flashcards/{studentUserId}/delete-bulk")]
+        public ActionResult DeleteFlashcardsBulk([FromRoute] int studentUserId, [FromBody] BulkDeleteFlashcardsRequest request)
+        {
+            _service.DeleteFlashcardsBulk(studentUserId, request.FlashcardIds);
+            return Ok();
+        }
+
         [HttpGet("study-time/{studentUserId}")]
         public ActionResult<StudentStudyTimeDto> GetStudyTime([FromRoute] int studentUserId)
         {

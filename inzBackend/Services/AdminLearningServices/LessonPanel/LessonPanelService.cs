@@ -320,6 +320,33 @@ public class LessonPanelService : ILessonPanelService
         return stream.ToArray();
     }
 
+    public void DeleteFlashcardsBulk(int studentUserId, List<int> flashcardIds)
+    {
+        if (flashcardIds == null || !flashcardIds.Any())
+            return;
+
+        var flashcardsToDelete = _dbContext.Flashcards
+            .Where(f => f.UserId == studentUserId && flashcardIds.Contains(f.Id))
+            .ToList();
+
+        if (!flashcardsToDelete.Any())
+            return;
+
+        var validIds = flashcardsToDelete.Select(f => f.Id).ToList();
+
+        var logsToDelete = _dbContext.FlashcardStudyLogs
+            .Where(l => l.UserId == studentUserId && validIds.Contains(l.FlashcardId))
+            .ToList();
+
+        if (logsToDelete.Any())
+        {
+            _dbContext.FlashcardStudyLogs.RemoveRange(logsToDelete);
+        }
+
+        _dbContext.Flashcards.RemoveRange(flashcardsToDelete);
+        _dbContext.SaveChanges();
+    }
+
     public StudentStudyTimeDto GetStudyTime(int studentUserId)
     {
         var logs = _dbContext.FlashcardStudyLogs
