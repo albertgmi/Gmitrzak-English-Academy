@@ -2,7 +2,6 @@ using inzBackend.Models.EssayModels;
 using inzBackend.Services.EssayServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/essay")]
@@ -11,51 +10,43 @@ namespace inzBackend.Controllers
     public class EssayController : ControllerBase
     {
         private readonly IEssayService _essayService;
-
         public EssayController(IEssayService essayService)
         {
             _essayService = essayService;
         }
-
         [HttpGet("module/{moduleId}")]
         public ActionResult<EssayModuleDto> GetModule(int moduleId)
         {
             return Ok(_essayService.GetEssayModule(moduleId));
         }
-        
         [HttpPost("submit")]
         public ActionResult<UserEssayDto> Submit([FromBody] SubmitEssayRequest request)
         {
             return Ok(_essayService.SubmitEssay(request));
         }
-
         [HttpGet("my-essays")]
         public ActionResult<List<UserEssayDto>> GetMyEssays()
         {
             return Ok(_essayService.GetMyEssays());
         }
-
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
         public ActionResult<List<UserEssayDto>> GetAll()
         {
             return Ok(_essayService.GetAllEssaysForAdmin());
         }
-
         [HttpGet("admin/student/{studentId}")]
         [Authorize(Roles = "Admin")]
         public ActionResult<List<UserEssayDto>> GetForStudent(int studentId)
         {
             return Ok(_essayService.GetEssaysForStudent(studentId));
         }
-
         [HttpPut("admin/review/{essayId}")]
         [Authorize(Roles = "Admin")]
         public ActionResult<UserEssayDto> Review(int essayId, [FromBody] ReviewEssayRequest request)
         {
             return Ok(_essayService.ReviewEssay(essayId, request));
         }
-
         [HttpGet("admin/export/{essayId}")]
         [Authorize(Roles = "Admin")]
         public ActionResult Export(int essayId)
@@ -65,7 +56,6 @@ namespace inzBackend.Controllers
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 $"essay_{essayId}.docx");
         }
-
         [HttpGet("admin/export-all-reviewed")]
         [Authorize(Roles = "Admin")]
         public ActionResult ExportAllReviewed()
@@ -73,19 +63,16 @@ namespace inzBackend.Controllers
             var bytes = _essayService.ExportAllReviewedEssaysToZip();
             return File(bytes, "application/zip", "checked_essays.zip");
         }
-
         [HttpGet("{essayId}/comments")]
         public ActionResult<List<EssayCommentDto>> GetComments(int essayId)
         {
             return Ok(_essayService.GetCommentsForEssay(essayId));
         }
-
         [HttpPost("{essayId}/comments")]
         public ActionResult<EssayCommentDto> AddComment(int essayId, [FromBody] CreateEssayCommentRequest request)
         {
             return Ok(_essayService.AddComment(essayId, request));
         }
-
         [HttpPut("comments/{commentId}/archive")]
         public ActionResult ArchiveComment(int commentId)
         {

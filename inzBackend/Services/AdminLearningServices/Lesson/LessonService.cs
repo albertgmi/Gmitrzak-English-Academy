@@ -16,7 +16,6 @@ using inzBackend.Models.StudentLearningModels.VocabularyModels;
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.AdminLearningServices.Lesson
 {
     public class LessonService : ILessonService
@@ -26,21 +25,17 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
         private readonly IMapper _mapper;
         private const int SESSION_SIZE = 20;
         private const int CORRECT_EXPIRY_DAYS = 30;
-
         public LessonService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService, IMapper mapper)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
             _mapper = mapper;
         }
-
         public SearchGlobalFlashcardResult SearchGlobalFlashcard(string query, int studentUserId)
         {
             var q = query.ToLower().Trim();
-
             var vocabulary = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower().Contains(q) || x.Back.ToLower().Contains(q));
-
             if (vocabulary is null)
             {
                 return new SearchGlobalFlashcardResult
@@ -52,10 +47,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     AlreadyAssignedToStudent = false
                 };
             }
-
             var alreadyAssigned = _dbContext.Flashcards
                 .Any(x => x.UserId == studentUserId && x.VocabularyId == vocabulary.Id);
-
             return new SearchGlobalFlashcardResult
             {
                 Id = vocabulary.Id,
@@ -66,12 +59,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 AlreadyAssignedToStudent = alreadyAssigned
             };
         }
-
         public VocabularyDto AddTranslation(AddTranslationRequest request)
         {
             var existing = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Front.ToLower() == request.Front.ToLower());
-
             if (existing is not null)
                 return new VocabularyDto
                 {
@@ -80,35 +71,26 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     Back = existing.Back,
                     Category = existing.Category
                 };
-
             var vocabulary = new Vocabulary
             {
                 Front = request.Front,
                 Back = request.Back,
                 Category = request.Category
             };
-
             _dbContext.Vocabulary.Add(vocabulary);
             _dbContext.SaveChanges();
-
             return _mapper.Map<VocabularyDto>(vocabulary);
         }
-
         public void AssignFlashcardToStudent(AssignFlashcardToStudentRequest request)
         {
             var vocabulary = _dbContext.Vocabulary
                 .FirstOrDefault(x => x.Id == request.GlobalFlashcardId);
-
             if (vocabulary is null)
                 throw new NotFoundException("Vocabulary word not found in global database");
-
             var alreadyExists = _dbContext.Flashcards
                 .Any(x => x.UserId == request.StudentUserId && x.VocabularyId == vocabulary.Id);
-
             if (alreadyExists) return;
-
             var today = PolandTime.Today;
-
             var flashcard = new Flashcard
             {
                 UserId = request.StudentUserId,
@@ -118,22 +100,17 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 IsLeech = false,
                 NextReviewDate = today
             };
-
             _dbContext.Flashcards.Add(flashcard);
             _dbContext.SaveChanges();
         }
-
         public void AddSentence(AddSentenceRequest request)
         {
             var normalizedContent = request.Content.Trim().ToLower();
-
             var alreadyExists = _dbContext.Sentences
                 .Any(x => x.UserId == request.StudentUserId
                        && x.Content.ToLower() == normalizedContent);
-
             if (alreadyExists)
                 return;
-
             _dbContext.Sentences.Add(new Sentence
             {
                 UserId = request.StudentUserId,
@@ -141,20 +118,16 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 Translation = request.Content,
                 Notes = request.Notes
             });
-
             _dbContext.SentenceStocks.Add(new SentenceStock {
                 Polish = request.Translation,
                 EnglishTranslation = request.Content,
                 Category = string.Empty
             });
-
             _dbContext.SaveChanges();
         }
-
         public void AddMemory(AddMemoryRequest request)
         {
             var generatedContent = GeneratePrompts(request.OptionA, request.OptionB, request.Category);
-
             _dbContext.Memories.Add(new Memory
             {
                 UserId = request.StudentUserId,
@@ -166,20 +139,16 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
         }
-
         public void AddPronunciation(AddPronunciationRequest request)
         {
             var alreadyExists = _dbContext.PronunciationEntries
                 .Any(x => x.UserId == request.StudentUserId
                        && x.Word.ToLower() == request.Word.ToLower().Trim());
-
             if (alreadyExists) return;
-
             var maxOrder = _dbContext.PronunciationEntries
                 .Where(x => x.UserId == request.StudentUserId)
                 .Select(x => (int?)x.SortOrder)
                 .Max() ?? 0;
-
             _dbContext.PronunciationEntries.Add(new PronunciationEntry
             {
                 UserId = request.StudentUserId,
@@ -189,25 +158,20 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 IsInCurrentSession = false
             });
             _dbContext.SaveChanges();
-
             RefreshSession(request.StudentUserId);
         }
-
         public List<HomeworkItemDto> GetHomeworkForWeek(int studentUserId)
         {
             var today = PolandTime.Today;
             var weekStart = WeekHelper.GetWeekMonday(today);
             var weekEnd = weekStart.AddDays(6);
-
             var result = new List<HomeworkItemDto>();
-
             var directAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == studentUserId
                          && x.DueDate <= weekEnd
                          && (x.DueDate >= weekStart || !x.IsCompleted))
                 .ToList();
-
             var directDtos = directAssignments.Select(x => new HomeworkItemDto
             {
                 Id = x.Id,
@@ -218,38 +182,29 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 IsOverdue = x.DueDate < today && !x.IsCompleted
             });
             result.AddRange(directDtos);
-
             var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
                 .Where(x => x.UserId == studentUserId)
                 .Select(x => x.MatrixModuleId)
                 .ToHashSet();
-
             var dueDateOverrides = _dbContext.UserMatrixModuleDueDateOverrides
                 .Where(x => x.UserId == studentUserId)
                 .ToDictionary(x => x.MatrixModuleId, x => x.NewDeadline);
-
             var matrixAssignments = _dbContext.UserMatrixAssignments
                 .Include(x => x.Matrix)
                     .ThenInclude(m => m.MatrixModules)
                         .ThenInclude(mm => mm.Module)
                 .Where(x => x.UserId == studentUserId)
                 .ToList();
-
             foreach (var ma in matrixAssignments)
             {
                 foreach (var mm in ma.Matrix.MatrixModules)
                 {
                     var unlockDate = MatrixModuleDateHelper.ComputeDeadline(
                         ma.StartDate, mm.WeekNumber, mm.DayOfWeek, ma.Matrix.RefreshIntervalDays);
-
                     if (unlockDate > weekEnd) continue;
-
                     var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
-
                     if (unlockDate < weekStart && isCompleted) continue;
-
                     var deadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : unlockDate;
-
                     result.Add(new HomeworkItemDto
                     {
                         Id = -mm.Id,
@@ -262,25 +217,19 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     });
                 }
             }
-
             return result.OrderByDescending(x => x.IsOverdue).ThenBy(x => x.DueDate).ToList();
         }
-
         public void CheckHomework(int studentUserId, int assignmentId)
         {
             if (assignmentId < 0)
             {
                 int realMatrixModuleId = Math.Abs(assignmentId);
-
                 var matrixAssignment = _dbContext.UserMatrixAssignments
                     .FirstOrDefault(x => x.UserId == studentUserId
                                       && x.Matrix.MatrixModules.Any(mm => mm.Id == realMatrixModuleId));
-
                 if (matrixAssignment is null) return;
-
                 var completion = _dbContext.UserMatrixModuleCompletions
                     .FirstOrDefault(x => x.UserId == studentUserId && x.MatrixModuleId == realMatrixModuleId);
-
                 if (completion is null)
                 {
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
@@ -301,16 +250,13 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 _dbContext.SaveChanges();
             }
         }
-
         public void UncheckHomework(int studentUserId, int assignmentId)
         {
             if (assignmentId < 0)
             {
                 int realMatrixModuleId = Math.Abs(assignmentId);
-
                 var completion = _dbContext.UserMatrixModuleCompletions
                     .FirstOrDefault(x => x.UserId == studentUserId && x.MatrixModuleId == realMatrixModuleId);
-
                 if (completion != null)
                 {
                     _dbContext.UserMatrixModuleCompletions.Remove(completion);
@@ -326,11 +272,9 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 _dbContext.SaveChanges();
             }
         }
-
         public List<PronunciationTestItemDto> GetPronunciationList(int studentUserId)
         {
             RefreshSession(studentUserId);
-
             return _dbContext.PronunciationEntries
                 .Where(x => x.UserId == studentUserId
                          && x.IsInCurrentSession)
@@ -346,11 +290,9 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public List<PronunciationTestItemDto> GetCorrectEntries(int studentUserId)
         {
             var today = PolandTime.Today;
-
             return _dbContext.PronunciationEntries
                 .Where(x => x.UserId == studentUserId
                          && x.Status == PronunciationStatus.Correct)
@@ -369,41 +311,32 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public void CheckPronunciationWord(int entryId)
         {
             var entry = _dbContext.PronunciationEntries
                 .FirstOrDefault(x => x.Id == entryId);
             if (entry is null) return;
-
             entry.Status = PronunciationStatus.Correct;
             entry.MarkedCorrectAt = PolandTime.Today;
             entry.IsInCurrentSession = false;
-
             _dbContext.SaveChanges();
-
             RefreshSession(entry.UserId);
         }
-
         public void UncheckPronunciationWord(int entryId)
         {
             var entry = _dbContext.PronunciationEntries
                 .FirstOrDefault(x => x.Id == entryId);
             if (entry is null) return;
-
             entry.Status = PronunciationStatus.Pending;
             entry.MarkedCorrectAt = null;
             entry.IsInCurrentSession = true;
-
             _dbContext.SaveChanges();
         }
-
         public void MarkPronunciationResult(MarkPronunciationRequest request)
         {
             var entry = _dbContext.PronunciationEntries
                 .FirstOrDefault(x => x.Id == request.EntryId)
                 ?? throw new NotFoundException("Entry not found");
-
             if (request.Result.ToLower() == "correct")
             {
                 entry.Status = PronunciationStatus.Correct;
@@ -416,15 +349,12 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 entry.MarkedCorrectAt = null;
                 entry.IsInCurrentSession = true;
             }
-
             _dbContext.SaveChanges();
             RefreshSession(entry.UserId);
         }
-
         private void RefreshSession(int userId)
         {
             var today = PolandTime.Today;
-
             var expiredCorrect = _dbContext.PronunciationEntries
                 .Where(x => x.UserId == userId
                          && x.IsInCurrentSession
@@ -432,29 +362,24 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                          && x.MarkedCorrectAt.HasValue
                          && x.MarkedCorrectAt.Value.AddDays(CORRECT_EXPIRY_DAYS) < today)
                 .ToList();
-
             foreach (var e in expiredCorrect)
                 e.IsInCurrentSession = false;
-
             var currentSessionCount = _dbContext.PronunciationEntries
                 .Count(x => x.UserId == userId
                          && x.IsInCurrentSession
                          && !(x.Status == PronunciationStatus.Correct
                               && x.MarkedCorrectAt.HasValue
                               && x.MarkedCorrectAt.Value.AddDays(CORRECT_EXPIRY_DAYS) < today));
-
             var needed = SESSION_SIZE - currentSessionCount;
             if (needed <= 0)
             {
                 _dbContext.SaveChanges();
                 return;
             }
-
             var inSessionIds = _dbContext.PronunciationEntries
                 .Where(x => x.UserId == userId && x.IsInCurrentSession)
                 .Select(x => x.Id)
                 .ToList();
-
             var toAdd = _dbContext.PronunciationEntries
                 .Where(x => x.UserId == userId
                          && !x.IsInCurrentSession
@@ -464,13 +389,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .ThenBy(x => x.SortOrder)
                 .Take(needed)
                 .ToList();
-
             foreach (var e in toAdd)
                 e.IsInCurrentSession = true;
-
             _dbContext.SaveChanges();
         }
-
         public void AddGrade(AddGradeRequest request)
         {
             _dbContext.Grades.Add(new Grade
@@ -483,7 +405,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
         }
-
         public List<GradeListDto> GetGrades(int studentUserId)
         {
             return _dbContext.Grades
@@ -499,7 +420,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public void RemoveGrade(int gradeId)
         {
             var grade = _dbContext.Grades.FirstOrDefault(x => x.Id == gradeId);
@@ -507,7 +427,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.Grades.Remove(grade);
             _dbContext.SaveChanges();
         }
-
         public List<TeacherNoteDto> GetNotes(int studentUserId)
         {
             var teacherId = _userContextService.GetUserId;
@@ -522,7 +441,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public void SaveNote(SaveNoteRequest request)
         {
             var teacherId = _userContextService.GetUserId;
@@ -535,7 +453,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
         }
-
         public void DeleteNote(int noteId)
         {
             var note = _dbContext.TeacherNotes.FirstOrDefault(x => x.Id == noteId);
@@ -543,13 +460,11 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.TeacherNotes.Remove(note);
             _dbContext.SaveChanges();
         }
-
         public void AddListeningReport(AddListeningReportRequest request)
         {
             var cleanType = (request.MediaType ?? string.Empty).Replace(" ", "");
             if (!Enum.TryParse<MediaType>(cleanType, true, out var mediaType))
                 throw new BadRequestException($"Invalid media type: {request.MediaType}");
-
             _dbContext.ListeningReports.Add(new ListeningReport
             {
                 UserId = request.StudentUserId,
@@ -560,7 +475,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             });
             _dbContext.SaveChanges();
         }
-
         public List<ListeningReportDto> GetListeningReports(int studentUserId)
         {
             var listeningReports = _dbContext.ListeningReports
@@ -574,7 +488,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                     EpisodeCount = x.EpisodeCount
                 })
                 .ToList();
-
             var singleModules = _dbContext.UserModuleAssignments
                 .Include(ua => ua.Module)
                     .ThenInclude(m => m.TheaterItem)
@@ -584,17 +497,14 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 {
                     Id = ua.Module.Id,
                     ReportDate = DateOnly.FromDateTime(ua.CreatedAt.DateTime),
-
                     Title = ua.Module.TheaterItem != null
                         ? $"{ua.Module.TheaterItem.Title} | (From watching module)"
                         : ua.Module.Name,
-
                     MediaType = ua.Module.TheaterItem != null
                         ? ua.Module.TheaterItem.MediaType.ToString()
                         : "Video",
                     EpisodeCount = 0
                 });
-
             var matrixModules = _dbContext.UserMatrixModuleCompletions
                 .Include(mc => mc.MatrixModule)
                     .ThenInclude(mm => mm.Module)
@@ -605,24 +515,20 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 {
                     Id = mc.MatrixModule.Id,
                     ReportDate = DateOnly.FromDateTime(mc.CreatedAt.DateTime),
-
                     Title = mc.MatrixModule.Module.TheaterItem != null
                         ? $"{mc.MatrixModule.Module.TheaterItem.Title} | (From watching module)"
                         : mc.MatrixModule.Module.Name,
-
                     MediaType = mc.MatrixModule.Module.TheaterItem != null
                         ? mc.MatrixModule.Module.TheaterItem.MediaType.ToString()
                         : "Video",
                     EpisodeCount = 0
                 });
-
             return listeningReports
                 .Concat(singleModules)
                 .Concat(matrixModules)
                 .OrderByDescending(x => x.ReportDate)
                 .ToList();
         }
-
         public AdminStudentStudySummaryDto GetStudyLogsReport(int studentUserId)
         {
             var report = _dbContext
@@ -639,13 +545,10 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                         : null
                 })
                 .FirstOrDefault();
-
             if (report is null)
                 throw new NotFoundException("Student not found");
-
             return report;
         }
-
         public List<MemoryDto> GetMemories(int studentUserId)
         {
             return _dbContext.Memories
@@ -662,19 +565,15 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public void AddAlphabetAbbreviation(AddAlphabetAbbreviationRequest request)
         {
             var text = request.Text.Trim();
             var alreadyExists = _dbContext.AlphabetAbbreviations
                 .Any(x => x.Text.ToLower() == text.ToLower());
-
             if (alreadyExists) return;
-
             _dbContext.AlphabetAbbreviations.Add(new AlphabetAbbreviation { Text = text });
             _dbContext.SaveChanges();
         }
-
         public List<AlphabetAbbreviationDto> GetAlphabetPool()
         {
             return _dbContext.AlphabetAbbreviations
@@ -682,7 +581,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .Select(x => new AlphabetAbbreviationDto { Id = x.Id, Text = x.Text })
                 .ToList();
         }
-
         public void DeleteAlphabetAbbreviation(int id)
         {
             var item = _dbContext.AlphabetAbbreviations.FirstOrDefault(x => x.Id == id);
@@ -690,7 +588,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             _dbContext.AlphabetAbbreviations.Remove(item);
             _dbContext.SaveChanges();
         }
-
         public List<AlphabetTestItemDto> GetAlphabetTestList(int studentUserId)
         {
             var latestWeek = _dbContext.AlphabetEntries
@@ -698,9 +595,7 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 .OrderByDescending(x => x.WeekStartDate)
                 .Select(x => (DateOnly?)x.WeekStartDate)
                 .FirstOrDefault();
-
             if (latestWeek is null) return new List<AlphabetTestItemDto>();
-
             return _dbContext.AlphabetEntries
                 .Where(x => x.UserId == studentUserId && x.WeekStartDate == latestWeek)
                 .OrderBy(x => x.Status == PronunciationStatus.Incorrect ? 0
@@ -718,7 +613,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public List<AlphabetHistoryItemDto> GetAlphabetHistory(int studentUserId)
         {
             return _dbContext.AlphabetEntries
@@ -749,13 +643,11 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         public void MarkAlphabetResult(MarkAlphabetRequest request)
         {
             var entry = _dbContext.AlphabetEntries
                 .FirstOrDefault(x => x.Id == request.EntryId)
                 ?? throw new NotFoundException("Entry not found");
-
             if (request.Result.ToLower() == "correct")
             {
                 entry.Status = PronunciationStatus.Correct;
@@ -766,10 +658,8 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 entry.Status = PronunciationStatus.Incorrect;
                 entry.MarkedCorrectAt = null;
             }
-
             _dbContext.SaveChanges();
         }
-
         public List<AlphabetAttemptDto> GetAlphabetEntryAttempts(int entryId)
         {
             return _dbContext.AlphabetAttempts
@@ -784,7 +674,6 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 })
                 .ToList();
         }
-
         private static readonly List<PromptTemplateItem> PromptTemplates = new()
         {
             new() { Key = "blank", Template = "{A}" },
@@ -801,26 +690,21 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
             new() { Key = "grammar", Template = "Explain the grammar rules for using {A}. What are the most common mistakes?" },
             new() { Key = "plural", Template = "What's the plural of the word {A}?" }
         };
-
         public static string GeneratePrompts(string optionA, string? optionB = null, string? category = null)
         {
             if (string.IsNullOrWhiteSpace(category) || category.Trim().Equals("blank", StringComparison.OrdinalIgnoreCase))
             {
                 return optionA.Trim();
             }
-
             var templates = PromptTemplates.Where(t => t.Key == category).ToList();
-
             var lines = new List<string>();
             foreach (var promptTemplateItem in templates)
             {
                 if (promptTemplateItem.Template.Contains("{B}") && string.IsNullOrWhiteSpace(optionB))
                     continue;
-
                 var prompt = promptTemplateItem.Template.Trim()
                     .Replace("{A}", optionA.Trim())
                     .Replace("{B}", optionB?.Trim() ?? string.Empty);
-
                 lines.Add(prompt);
             }
             var result = string.Join("\n", lines);

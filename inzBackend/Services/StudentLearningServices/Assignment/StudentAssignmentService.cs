@@ -5,7 +5,6 @@ using inzBackend.Models;
 using inzBackend.Models.StudentLearningModels.AssignmentStudentModels;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.StudentLearningServices.Assignment
 {
     public class StudentAssignmentService : IStudentAssignmentService
@@ -13,7 +12,6 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
-
         public StudentAssignmentService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
             IMapper mapper)
         {
@@ -26,13 +24,11 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
             var result = new List<AssignmentStudentDto>();
-
             var directAssignments = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == userId && !x.IsCompleted)
                 .OrderBy(x => x.DueDate)
                 .ToList();
-
             var directDtos = _mapper.Map<List<AssignmentStudentDto>>(directAssignments);
             directDtos.ForEach(d =>
             {
@@ -40,42 +36,33 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                 d.HasDeadline = true;
             });
             result.AddRange(directDtos);
-
             var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
                 .Where(x => x.UserId == userId)
                 .Select(x => x.MatrixModuleId)
                 .ToList();
-
             var dueDateOverrides = _dbContext.UserMatrixModuleDueDateOverrides
                 .Where(x => x.UserId == userId)
                 .ToDictionary(x => x.MatrixModuleId, x => x.NewDeadline);
-
             var matrixAssignments = _dbContext.UserMatrixAssignments
                 .Include(x => x.Matrix)
                     .ThenInclude(m => m.MatrixModules)
                         .ThenInclude(mm => mm.Module)
                 .Where(x => x.UserId == userId)
                 .ToList();
-
             var weekStart = WeekHelper.GetWeekMonday(today);
             var weekEnd = weekStart.AddDays(6);
-
             foreach (var ma in matrixAssignments)
             {
                 foreach (var mm in ma.Matrix.MatrixModules)
                 {
                     if (completedMatrixModuleIds.Contains(mm.Id))
                         continue;
-
                     var unlockDate = MatrixModuleDateHelper.ComputeDeadline(
                         ma.StartDate, mm.WeekNumber, mm.DayOfWeek, ma.Matrix.RefreshIntervalDays);
-
                     if (unlockDate > weekEnd)
                         continue;
-
                     var deadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : unlockDate;
                     var isOverdue = deadline < today;
-
                     result.Add(new AssignmentStudentDto
                     {
                         Id = mm.Id,
@@ -93,47 +80,38 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                     });
                 }
             }
-
             return result
                 .OrderByDescending(x => x.IsOverdue)
                 .ThenBy(x => x.HasDeadline ? x.DueDate : DateOnly.MaxValue)
                 .ToList();
         }
-
         public List<AssignmentStudentDto> GetAssignmentHistory()
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
-
             var directCompleted = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == userId && x.IsCompleted)
                 .OrderByDescending(x => x.DueDate)
                 .ToList();
-
             var directDtos = _mapper.Map<List<AssignmentStudentDto>>(directCompleted);
             directDtos.ForEach(d => d.IsOverdue = false);
-
             var completedMatrixModuleIds = _dbContext.UserMatrixModuleCompletions
                 .Where(x => x.UserId == userId)
                 .Select(x => x.MatrixModuleId)
                 .ToList();
-
             var matrixCompleted = new List<AssignmentStudentDto>();
-
             if (completedMatrixModuleIds.Any())
             {
                 var dueDateOverrides = _dbContext.UserMatrixModuleDueDateOverrides
                     .Where(x => x.UserId == userId)
                     .ToDictionary(x => x.MatrixModuleId, x => x.NewDeadline);
-
                 var matrixAssignments = _dbContext.UserMatrixAssignments
                     .Include(x => x.Matrix)
                         .ThenInclude(m => m.MatrixModules)
                             .ThenInclude(mm => mm.Module)
                     .Where(x => x.UserId == userId)
                     .ToList();
-
                 foreach (var ma in matrixAssignments)
                 {
                     foreach (var mm in ma.Matrix.MatrixModules
@@ -141,9 +119,7 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                     {
                         var unlockDate = MatrixModuleDateHelper.ComputeDeadline(
                             ma.StartDate, mm.WeekNumber, mm.DayOfWeek, ma.Matrix.RefreshIntervalDays);
-
                         var deadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : unlockDate;
-
                         matrixCompleted.Add(new AssignmentStudentDto
                         {
                             Id = mm.Id,
@@ -161,7 +137,6 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                     }
                 }
             }
-
             return directDtos
                 .Concat(matrixCompleted)
                 .OrderByDescending(x => x.DueDate)

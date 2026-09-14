@@ -5,7 +5,6 @@
         public string? AvatarUrl { get; set; }
         public string? EnglishLevel { get; set; }
         public int? CurrentSemester { get; set; }
-
         public bool Semester1 { get; set; }
         public bool Semester2 { get; set; }
         public bool Semester3 { get; set; }

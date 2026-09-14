@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-
 namespace inzBackend.Models.AdminLearningModels
 {
     public class BulkDeleteFlashcardsRequest

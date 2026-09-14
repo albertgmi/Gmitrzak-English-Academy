@@ -7,7 +7,6 @@ using inzBackend.Services.EmailServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Controllers
 {
     [Route("api/email-reminder")]
@@ -18,7 +17,6 @@ namespace inzBackend.Controllers
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IEmailService _emailService;
         private readonly ILogger<EmailReminderController> _logger;
-
         public EmailReminderController(
             GmitrzakEnglishAcademyDbContext dbContext,
             IEmailService emailService,
@@ -28,18 +26,14 @@ namespace inzBackend.Controllers
             _emailService = emailService;
             _logger = logger;
         }
-
         [HttpGet("students")]
         public async Task<ActionResult<List<FlashcardInactiveUserDto>>> GetStudentsForReminder()
         {
             var today = PolandTime.Today;
-
             var students = await _dbContext.Users
                 .Where(u => u.Role == UserRole.User && u.IsActive)
                 .ToListAsync();
-
             var userIds = students.Select(s => s.Id).ToList();
-
             var latestStudyLogs = await _dbContext.FlashcardStudyLogs
                 .Where(log => userIds.Contains(log.UserId))
                 .GroupBy(log => log.UserId)
@@ -49,14 +43,12 @@ namespace inzBackend.Controllers
                     LastStudyDate = g.Max(x => x.StudyDate)
                 })
                 .ToDictionaryAsync(x => x.UserId, x => x.LastStudyDate);
-
             var result = students.Select(student =>
             {
                 DateOnly? lastStudyDate = latestStudyLogs.TryGetValue(student.Id, out var date) ? date : null;
                 int daysInactive = lastStudyDate.HasValue
                     ? today.DayNumber - lastStudyDate.Value.DayNumber
                     : 999;
-
                 return new FlashcardInactiveUserDto
                 {
                     Id = student.Id,
@@ -71,17 +63,13 @@ namespace inzBackend.Controllers
             .OrderByDescending(x => x.IsInactiveForThreeDays)
             .ThenByDescending(x => x.DaysInactive)
             .ToList();
-
             return Ok(result);
         }
-
         [HttpPost("send-flashcard-reminders")]
         public async Task<ActionResult<SendRemindersResultDto>> SendFlashcardReminders([FromBody] SendFlashcardRemindersRequest request)
         {
             var result = new SendRemindersResultDto();
-
             List<AppUser> targetUsers;
-
             if (request.UserIds != null && request.UserIds.Count > 0)
             {
                 targetUsers = await _dbContext.Users
@@ -92,18 +80,15 @@ namespace inzBackend.Controllers
             {
                 var today = PolandTime.Today;
                 var threeDaysAgoCutoff = today.AddDays(-3);
-
                 var activeUserIds = await _dbContext.FlashcardStudyLogs
                     .Where(log => log.StudyDate > threeDaysAgoCutoff)
                     .Select(log => log.UserId)
                     .Distinct()
                     .ToListAsync();
-
                 targetUsers = await _dbContext.Users
                     .Where(u => u.Role == UserRole.User && u.IsActive && !activeUserIds.Contains(u.Id))
                     .ToListAsync();
             }
-
             foreach (var user in targetUsers)
             {
                 try
@@ -118,7 +103,6 @@ namespace inzBackend.Controllers
                     result.Errors.Add($"Failed for {user.Username}: {ex.Message}");
                 }
             }
-
             return Ok(result);
         }
     }

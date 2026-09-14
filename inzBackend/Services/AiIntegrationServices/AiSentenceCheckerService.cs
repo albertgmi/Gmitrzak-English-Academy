@@ -1,18 +1,15 @@
 ﻿using inzBackend.Models.AIAnswerCheckingModels;
 using OpenAI.Chat;
 using System.Text.Json;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiSentenceCheckerService : IAiSentenceCheckerService
     {
         private readonly ChatClient _chatClient;
-
         public AiSentenceCheckerService(ChatClient chatClient)
         {
             _chatClient = chatClient;
         }
-
         public async Task<SentenceCheckResult> CheckAnswerAsync(
             string polish, string expectedEnglish, string userAnswer)
         {
@@ -36,20 +33,16 @@ namespace inzBackend.Services.AiIntegrationServices
                     $"Student answer: {userAnswer}"
                 )
 };
-
             var options = new ChatCompletionOptions
             {
                 ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
                 Temperature = 0.1f
             };
-
             var completion = await _chatClient.CompleteChatAsync(messages, options);
             var json = completion.Value.Content[0].Text;
-
             using var doc = JsonDocument.Parse(json);
             var result = doc.RootElement.GetProperty("result").GetString() ?? "Incorrect";
             var explanation = doc.RootElement.GetProperty("explanation").GetString() ?? string.Empty;
-
             return new SentenceCheckResult
             {
                 Result = result,

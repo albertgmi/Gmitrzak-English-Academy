@@ -4,7 +4,6 @@ using inzBackend.Models.CreditModels;
 using inzBackend.Services.CreditServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/admin/credits")]
@@ -17,21 +16,18 @@ namespace inzBackend.Controllers
         {
             _creditService = creditService;
         }
-
         [HttpGet("summary")]
         public ActionResult<List<UserCreditSummaryDto>> GetSummary()
         {
             var result = _creditService.GetAllUsersCreditSummary();
             return Ok(result);
         }
-
         [HttpGet("student/{studentId}")]
         public ActionResult<StudentCreditDetailDto> GetStudentDetail(int studentId)
         {
             var result = _creditService.GetStudentCreditDetail(studentId);
             return Ok(result);
         }
-
         [HttpPatch("purchase/{purchaseId}/status")]
         public ActionResult UpdateStatus(int purchaseId, [FromBody] UpdatePurchaseStatusRequest request)
         {

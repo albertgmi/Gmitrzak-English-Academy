@@ -1,5 +1,4 @@
 ﻿using inzBackend.Helpers;
-
 namespace inzBackend.Entities.Base
 {
     public abstract class BaseEntity

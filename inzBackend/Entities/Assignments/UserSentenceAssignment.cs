@@ -1,7 +1,6 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Identity;
 using inzBackend.Entities.LearningMaterials;
-
 namespace inzBackend.Entities.Assignments
 {
     public class UserSentenceAssignment : AuditableEntity

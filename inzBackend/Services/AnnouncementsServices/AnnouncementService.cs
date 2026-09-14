@@ -7,20 +7,17 @@ using Microsoft.EntityFrameworkCore;
 using inzBackend.Helpers;
 using inzBackend.Enums;
 using inzBackend.Entities.Administration;
-
 namespace inzBackend.Services.AnnouncementsServices
 {
     public class AnnouncementService : IAnnouncementService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
-
         public AnnouncementService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
         }
-
         public List<AnnouncementDto> GetAll()
         {
             return _dbContext.Announcements
@@ -43,7 +40,6 @@ namespace inzBackend.Services.AnnouncementsServices
                 })
                 .ToList();
         }
-
         public List<AnnouncementInboxDto> GetInbox()
         {
             var userId = _userContextService.GetUserId;
@@ -70,7 +66,6 @@ namespace inzBackend.Services.AnnouncementsServices
                 })
                 .ToList();
         }
-
         public UnreadCountDto GetUnreadCount()
         {
             var userId = _userContextService.GetUserId;
@@ -78,16 +73,13 @@ namespace inzBackend.Services.AnnouncementsServices
                 .Count(x => x.UserId == userId && !x.IsRead);
             return new UnreadCountDto { Count = count };
         }
-
         public void Create(CreateAnnouncementRequest request)
         {
             var senderId = _userContextService.GetUserId!.Value;
-
             if (!Enum.TryParse<AnnouncementType>(request.Type, true, out var announcementType))
             {
                 announcementType = AnnouncementType.Announcement;
             }
-
             var announcement = new Announcement
             {
                 SenderId = senderId,
@@ -96,10 +88,8 @@ namespace inzBackend.Services.AnnouncementsServices
                 Type = announcementType,
                 CreatedAt = PolandTime.Now
             };
-
             _dbContext.Announcements.Add(announcement);
             _dbContext.SaveChanges();
-
             List<int> recipientIds;
             if (request.RecipientUserIds is null || !request.RecipientUserIds.Any())
             {
@@ -112,44 +102,35 @@ namespace inzBackend.Services.AnnouncementsServices
             {
                 recipientIds = request.RecipientUserIds;
             }
-
             var recipients = recipientIds.Select(uid => new AnnouncementRecipient
             {
                 AnnouncementId = announcement.Id,
                 UserId = uid,
                 IsRead = false
             }).ToList();
-
             _dbContext.AnnouncementRecipients.AddRange(recipients);
             _dbContext.SaveChanges();
         }
-
         public void SignUp(int recipientId)
         {
             var userId = _userContextService.GetUserId;
             var recipient = _dbContext.AnnouncementRecipients
                 .Include(x => x.Announcement)
                 .FirstOrDefault(x => x.Id == recipientId && x.UserId == userId);
-
             if (recipient is null || recipient.Announcement.Type != AnnouncementType.Listing) return;
-
             recipient.SignedUp = !(recipient.SignedUp ?? false);
             _dbContext.SaveChanges();
         }
-
         public void Vote(int recipientId, bool voteValue)
         {
             var userId = _userContextService.GetUserId;
             var recipient = _dbContext.AnnouncementRecipients
                 .Include(x => x.Announcement)
                 .FirstOrDefault(x => x.Id == recipientId && x.UserId == userId);
-
             if (recipient is null || recipient.Announcement.Type != AnnouncementType.Voting) return;
-
             recipient.Vote = voteValue;
             _dbContext.SaveChanges();
         }
-
         public void MarkRead(int recipientId)
         {
             var userId = _userContextService.GetUserId;
@@ -160,7 +141,6 @@ namespace inzBackend.Services.AnnouncementsServices
             recipient.ReadAt = PolandTime.Now;
             _dbContext.SaveChanges();
         }
-
         public void MarkAllRead()
         {
             var userId = _userContextService.GetUserId;
@@ -174,7 +154,6 @@ namespace inzBackend.Services.AnnouncementsServices
             }
             _dbContext.SaveChanges();
         }
-
         public void Delete(int id)
         {
             var announcement = _dbContext.Announcements
@@ -182,12 +161,10 @@ namespace inzBackend.Services.AnnouncementsServices
                 .FirstOrDefault(x => x.Id == id);
             if (announcement is null)
                 throw new NotFoundException("Announcement not found");
-
             _dbContext.AnnouncementRecipients.RemoveRange(announcement.Recipients);
             _dbContext.Announcements.Remove(announcement);
             _dbContext.SaveChanges();
         }
-
         public AnnouncementDetailsDto GetDetails(int announcementId)
         {
             var announcement = _dbContext.Announcements
@@ -195,16 +172,13 @@ namespace inzBackend.Services.AnnouncementsServices
                     .ThenInclude(r => r.User)
                         .ThenInclude(u => u.Profile)
                 .FirstOrDefault(a => a.Id == announcementId);
-
             if (announcement is null)
                 throw new NotFoundException("Announcement not found");
-
             return new AnnouncementDetailsDto
             {
                 AnnouncementId = announcement.Id,
                 Title = announcement.Title,
                 Type = announcement.Type.ToString(),
-
                 Recipients = announcement.Recipients
                     .Select(r => new AnnouncementRecipientDetailsDto
                     {

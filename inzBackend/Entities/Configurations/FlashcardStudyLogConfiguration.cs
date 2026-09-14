@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.SpacedRepetition;
-
 namespace inzBackend.Models.Configurations
 {
     public class FlashcardStudyLogConfiguration : IEntityTypeConfiguration<FlashcardStudyLog>
@@ -12,7 +11,6 @@ namespace inzBackend.Models.Configurations
             builder.HasOne(x => x.Flashcard)
                 .WithMany()
                 .HasForeignKey(x => x.FlashcardId);
-
             builder.HasOne(x => x.User)
                 .WithMany(u => u.FlashcardStudyLogs)
                 .HasForeignKey(x => x.UserId);

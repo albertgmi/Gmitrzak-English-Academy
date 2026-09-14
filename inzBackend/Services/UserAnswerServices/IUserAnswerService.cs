@@ -1,6 +1,5 @@
 using inzBackend.Models.AIAnswerCheckingModels;
 using inzBackend.Models.ModuleReportModels;
-
 namespace inzBackend.Services.UserAnswerServices
 {
     public interface IUserAnswerService

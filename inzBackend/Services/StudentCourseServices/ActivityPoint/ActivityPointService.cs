@@ -2,35 +2,29 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using inzBackend.Helpers;
-
 namespace inzBackend.Services.StudentCourseServices.ActivityPoint
 {
     public class ActivityPointService : IActivityPointService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
-
         public ActivityPointService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
         }
-
         public ActivityPointsHistoryDto GetHistory()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;
-
             var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
             var thisWeekStart = today.AddDays(-daysFromMonday);
             var lastWeekStart = thisWeekStart.AddDays(-7);
             var lastWeekEnd = thisWeekStart.AddDays(-1);
-
             var all = _dbContext.ActivityPoints
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.PointDate)
                 .ToList();
-
             return new ActivityPointsHistoryDto
             {
                 TotalAllTime = all.Sum(x => x.Points),

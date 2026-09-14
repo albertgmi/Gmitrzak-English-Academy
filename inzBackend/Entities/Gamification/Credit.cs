@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Identity;
-
 namespace inzBackend.Entities.Gamification
 {
     public class Credit : BaseEntity

@@ -62,7 +62,6 @@ using OpenAI;
 using OpenAI.Chat;
 using System.Text;
 using System.Text.Json.Serialization;
-
 namespace inzBackend
 {
     public class Program
@@ -70,36 +69,24 @@ namespace inzBackend
         public static void Main(string[] args)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
             var builder = WebApplication.CreateBuilder(args);
-
-            // Configuration & DbContext
             var connectionString = builder.Configuration.GetConnectionString("GmitrzakEnglishAppConnectionString");
-
             builder.Services.AddDbContext<GmitrzakEnglishAcademyDbContext>(options =>
                 options.UseNpgsql(connectionString));
-
-            // Controllers, JSON & Validation
             builder.Services.AddSwaggerGen();
-
             builder.Services.Configure<JsonOptions>(options =>
             {
                 options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
-
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 })
                 .AddFluentValidation();
-
             builder.Services.AddAutoMapper(typeof(GmitrzakEnglishAppMappingProfile).Assembly);
-
-            // Authentication (JWT)
             var authenticationSettings = new AuthenticationSettings();
             builder.Configuration.GetSection("Authentication").Bind(authenticationSettings);
-
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = "Bearer";
@@ -117,32 +104,24 @@ namespace inzBackend
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
                 };
             });
-
             builder.Services.AddSingleton(authenticationSettings);
-
-            // External integrations: Groq (OpenAI-compatible) & Cloudinary
             builder.Services.AddScoped<ChatClient>(sp =>
             {
                 var apiKey = builder.Configuration["GroqSettings:ApiKey"] ?? "";
                 var modelId = builder.Configuration["GroqSettings:ModelId"] ?? "llama-3.3-70b-versatile";
-
                 var clientOptions = new OpenAIClientOptions
                 {
                     Endpoint = new Uri("https://api.groq.com/openai/v1")
                 };
-
                 var openAiClient = new OpenAIClient(
                     new System.ClientModel.ApiKeyCredential(apiKey), clientOptions);
-
                 return openAiClient.GetChatClient(modelId);
             });
-
             builder.Services.AddSingleton<Client>(sp =>
             {
                 var apiKey = builder.Configuration["GeminiSettings:ApiKey"];
                 return new Client(apiKey: apiKey);
             });
-
             var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings");
             var cloudinaryAccount = new Account(
                 cloudinarySettings["CloudName"],
@@ -150,8 +129,6 @@ namespace inzBackend
                 cloudinarySettings["ApiSecret"]
             );
             builder.Services.AddSingleton(new Cloudinary(cloudinaryAccount));
-
-            // Application services
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IProgramService, ProgramService>();
@@ -201,17 +178,12 @@ namespace inzBackend
             builder.Services.AddScoped<IAiUsageGuardService, AiUsageGuardService>();
             builder.Services.AddScoped<IShopActionService, ShopActionService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
-
-            // Infrastructure / cross-cutting services
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
             builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
             builder.Services.AddScoped<ExceptionHandlingMiddleware>();
             builder.Services.AddScoped<IUserContextService, UserContextService>();
-
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSignalR();
-
-            // CORS
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AngularCorsPolicy", policy =>
@@ -223,38 +195,29 @@ namespace inzBackend
                           .AllowCredentials();
                 });
             });
-
-            // Build app & middleware pipeline
             var app = builder.Build();
-
             app.UseCors("AngularCorsPolicy");
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
             app.UseMiddleware<UpdateLastActiveMiddleware>();
             app.UseStaticFiles();
-
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
             app.MapHub<EssayHub>("/hubs/essay");
             app.MapHub<SentenceCollaborationHub>("/hubs/sentence-collaboration");
             app.MapHub<LiveNotepadHub>("/hubs/live-notepad");
-
-            // Apply pending EF Core migrations
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<GmitrzakEnglishAcademyDbContext>();
-
                 if (dbContext.Database.GetPendingMigrations().Any())
                     dbContext.Database.Migrate();
             }
-
             app.Run();
         }
     }

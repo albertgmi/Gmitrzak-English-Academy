@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Assignments;
-
 namespace inzBackend.Entities.Configurations
 {
     public class UserSentenceAssignmentConfiguration : IEntityTypeConfiguration<UserSentenceAssignment>

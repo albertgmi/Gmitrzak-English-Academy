@@ -1,5 +1,4 @@
 ﻿using inzBackend.Enums;
-
 namespace inzBackend.Models.UserModels
 {
     public class RegisterUserRequest

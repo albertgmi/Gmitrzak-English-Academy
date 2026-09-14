@@ -12,7 +12,6 @@ using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-
 namespace inzBackend.Services.UserAnswerServices
 {
     public class UserAnswerService : IUserAnswerService
@@ -21,7 +20,6 @@ namespace inzBackend.Services.UserAnswerServices
         private readonly IAiSentenceCheckerService _aiService;
         private readonly IUserContextService _userContextService;
         private readonly ILessonPanelService _lessonPanelService;
-
         public UserAnswerService(GmitrzakEnglishAcademyDbContext dbContext, IAiSentenceCheckerService aiService,
             IUserContextService userContextService, ILessonPanelService lessonPanelService)
         {
@@ -30,31 +28,24 @@ namespace inzBackend.Services.UserAnswerServices
             _userContextService = userContextService;
             _lessonPanelService = lessonPanelService;
         }
-
         public async Task<AnswerResultDto> SubmitAnswerAsync(SubmitAnswerRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
-
             var user = _dbContext
                 .Users
                 .FirstOrDefault(x => x.Id == userId);
-
             var module = await _dbContext.Modules
                 .FirstOrDefaultAsync(x => x.Id == request.ModuleId)
                 ?? throw new NotFoundException($"Module {request.ModuleId} not found");
-
             var sentence = await _dbContext.SentenceStocks
                 .FirstOrDefaultAsync(x => x.Id == request.SentenceStockId)
                 ?? throw new NotFoundException("Sentence not found");
-
             var sentenceCheckResult = await _aiService.CheckAnswerAsync(
                 sentence.Polish, sentence.EnglishTranslation, request.UserAnswer);
-
             var existingAnswer = await _dbContext.UserSentenceAnswers
                 .FirstOrDefaultAsync(x => x.UserId == userId
                                        && x.ModuleId == request.ModuleId
                                        && x.SentenceStockId == request.SentenceStockId);
-
             if (existingAnswer is not null)
             {
                 existingAnswer.UserAnswer = request.UserAnswer;
@@ -78,15 +69,12 @@ namespace inzBackend.Services.UserAnswerServices
                 };
                 _dbContext.UserSentenceAnswers.Add(existingAnswer);
             }
-
             var alreadyExists = await _dbContext.Sentences
                 .AnyAsync(x => x.UserId == userId
                 && x.Content.ToLower().Trim() == sentence.Polish.ToLower().Trim());
-
             if (!alreadyExists)
             {
                 var isCorrectOrPartial = sentenceCheckResult.Result == "Correct" || sentenceCheckResult.Result == "Partial";
-
                 _dbContext.Sentences.Add(new Sentence
                 {
                     UserId = userId,
@@ -98,11 +86,9 @@ namespace inzBackend.Services.UserAnswerServices
                     LastModifiedBy = user?.Username ?? "System"
                 });
             }
-
             await _dbContext.SaveChangesAsync();
             await TryCompleteModuleAsync(userId, request.ModuleId);
             await _dbContext.SaveChangesAsync();
-
             return new AnswerResultDto
             {
                 Id = existingAnswer.Id,
@@ -113,75 +99,63 @@ namespace inzBackend.Services.UserAnswerServices
                 AiExplanation = sentenceCheckResult.Explanation
             };
         }
-
         public List<AnswerResultDto> GetAnswersForModule(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
             return MapAnswers(moduleId, userId);
         }
-
         public List<AnswerResultDto> GetAnswersForModuleByStudent(int moduleId, int studentId)
         {
             return MapAnswers(moduleId, studentId);
         }
-
         public void OverrideAnswer(int answerId, TeacherOverrideRequest request)
         {
             var answer = _dbContext.UserSentenceAnswers
                 .FirstOrDefault(x => x.Id == answerId)
                 ?? throw new NotFoundException("Answer not found");
-
             answer.TeacherOverride = request.Override;
             answer.TeacherExplanation = request.TeacherExplanation;
             answer.TeacherReviewed = true;
             _dbContext.SaveChanges();
         }
-
         public ModuleReportDto GenerateReport(int moduleId, int studentId)
         {
             var module = _dbContext.Modules
                 .FirstOrDefault(x => x.Id == moduleId)
                 ?? throw new NotFoundException("Module not found");
-
             var student = _dbContext.Users
                 .FirstOrDefault(x => x.Id == studentId)
                 ?? throw new NotFoundException("Student not found");
-
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.SentenceSetId)
                 .ToList();
-
             var sentenceItems = _dbContext.SentenceSetItems
                 .Include(x => x.SentenceStock)
                 .Where(x => setIds.Contains(x.SentenceSetId))
                 .OrderBy(x => x.SentenceSetId).ThenBy(x => x.Order)
                 .ToList();
-
             var answers = _dbContext.UserSentenceAnswers
                 .Where(x => x.UserId == studentId && x.ModuleId == moduleId)
                 .ToDictionary(x => x.SentenceStockId);
-
             var items = sentenceItems.Select((item, idx) =>
             {
                 answers.TryGetValue(item.SentenceStockId, out var ans);
                 var finalResult = ans == null ? "Not answered"
                     : (ans.TeacherOverride ?? ans.AiResult);
-
                 return new ModuleReportItemDto
                 {
                     Order = idx + 1,
                     Polish = item.SentenceStock.Polish,
                     ExpectedTranslation = item.SentenceStock.EnglishTranslation,
-                    StudentAnswer = ans?.UserAnswer ?? "—",
-                    AiResult = ans?.AiResult ?? "—",
-                    AiExplanation = ans?.AiExplanation ?? "—",
+                    StudentAnswer = ans?.UserAnswer ?? "-",
+                    AiResult = ans?.AiResult ?? "-",
+                    AiExplanation = ans?.AiExplanation ?? "-",
                     TeacherOverride = ans?.TeacherOverride,
                     TeacherExplanation = ans?.TeacherExplanation,
                     FinalResult = finalResult
                 };
             }).ToList();
-
             return new ModuleReportDto
             {
                 ModuleName = module.Name,
@@ -194,11 +168,9 @@ namespace inzBackend.Services.UserAnswerServices
                 Items = items
             };
         }
-
         public List<CompletedSentenceModuleDto> GetCompletedSentenceModules(int studentId, DateOnly dateFrom, DateOnly dateTo)
         {
             var result = new List<CompletedSentenceModuleDto>();
-
             var directCompleted = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .Where(x => x.UserId == studentId
@@ -208,7 +180,6 @@ namespace inzBackend.Services.UserAnswerServices
                          && DateOnly.FromDateTime(x.LastModifiedAt.Value.DateTime) >= dateFrom
                          && DateOnly.FromDateTime(x.LastModifiedAt.Value.DateTime) <= dateTo)
                 .ToList();
-
             foreach (var a in directCompleted)
             {
                 var totalSentences = _dbContext.ModuleSentenceSets
@@ -216,10 +187,8 @@ namespace inzBackend.Services.UserAnswerServices
                     .Where(x => x.ModuleId == a.ModuleId)
                     .SelectMany(x => x.SentenceSet.Items)
                     .Count();
-
                 var answeredCount = _dbContext.UserSentenceAnswers
                     .Count(x => x.UserId == studentId && x.ModuleId == a.ModuleId);
-
                 result.Add(new CompletedSentenceModuleDto
                 {
                     ModuleId = a.ModuleId,
@@ -230,7 +199,6 @@ namespace inzBackend.Services.UserAnswerServices
                     AnsweredCount = answeredCount
                 });
             }
-
             var matrixCompleted = _dbContext.UserMatrixModuleCompletions
                 .Include(x => x.MatrixModule)
                     .ThenInclude(mm => mm.Module)
@@ -241,20 +209,16 @@ namespace inzBackend.Services.UserAnswerServices
                          && x.CompletedDate >= dateFrom
                          && x.CompletedDate <= dateTo)
                 .ToList();
-
             foreach (var c in matrixCompleted)
             {
                 var moduleId = c.MatrixModule.ModuleId;
-
                 var totalSentences = _dbContext.ModuleSentenceSets
                     .Include(x => x.SentenceSet).ThenInclude(s => s.Items)
                     .Where(x => x.ModuleId == moduleId)
                     .SelectMany(x => x.SentenceSet.Items)
                     .Count();
-
                 var answeredCount = _dbContext.UserSentenceAnswers
                     .Count(x => x.UserId == studentId && x.ModuleId == moduleId);
-
                 result.Add(new CompletedSentenceModuleDto
                 {
                     ModuleId = moduleId,
@@ -266,23 +230,18 @@ namespace inzBackend.Services.UserAnswerServices
                     AnsweredCount = answeredCount
                 });
             }
-
             return result
                 .OrderBy(x => x.CompletedDate)
                 .ToList();
         }
-
         public DateRangeReportDto GenerateDateRangeReport(int studentId, DateOnly dateFrom, DateOnly dateTo)
         {
             var student = _dbContext.Users.FirstOrDefault(x => x.Id == studentId)
                 ?? throw new NotFoundException("Student not found");
-
             var modules = GetCompletedSentenceModules(studentId, dateFrom, dateTo);
-
             var moduleReports = modules
                 .Select(m => GenerateReport(m.ModuleId, studentId))
                 .ToList();
-
             return new DateRangeReportDto
             {
                 StudentUsername = student.Username,
@@ -296,9 +255,6 @@ namespace inzBackend.Services.UserAnswerServices
                 TotalSentences = moduleReports.Sum(m => m.TotalSentences)
             };
         }
-
-
-
         private List<AnswerResultDto> MapAnswers(int moduleId, int userId)
         {
             return _dbContext.UserSentenceAnswers
@@ -318,7 +274,6 @@ namespace inzBackend.Services.UserAnswerServices
                 })
                 .ToList();
         }
-
         private async Task TryCompleteModuleAsync(int userId, int moduleId)
         {
             var totalSentences = await _dbContext.ModuleSentenceSets
@@ -326,53 +281,42 @@ namespace inzBackend.Services.UserAnswerServices
                 .Where(x => x.ModuleId == moduleId)
                 .SelectMany(x => x.SentenceSet.Items)
                 .CountAsync();
-
             if (totalSentences == 0) return;
-
             var answeredCount = await _dbContext.UserSentenceAnswers
                 .CountAsync(x => x.UserId == userId && x.ModuleId == moduleId);
-
             if (answeredCount < totalSentences) return;
-
             var directAssignment = await _dbContext.UserModuleAssignments
                 .FirstOrDefaultAsync(x => x.UserId == userId
                                        && x.ModuleId == moduleId);
-
             if (directAssignment is not null && !directAssignment.IsCompleted)
             {
                 await AssignModuleCompletionPointsAsync(userId, moduleId, directAssignment);
                 directAssignment.IsCompleted = true;
                 await _dbContext.SaveChangesAsync();
             }
-
             var matrixModules = await _dbContext.MatrixModules
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.Id)
                 .ToListAsync();
-
             foreach (var mmId in matrixModules)
             {
                 var alreadyCompleted = await _dbContext.UserMatrixModuleCompletions
                     .AnyAsync(x => x.UserId == userId && x.MatrixModuleId == mmId);
-
                 if (!alreadyCompleted)
                 {
                     var matrixModule = await _dbContext.MatrixModules
                         .Include(x => x.Matrix)
                         .FirstOrDefaultAsync(x => x.Id == mmId);
-
                     var matrixAssignment = matrixModule is not null
                         ? await _dbContext.UserMatrixAssignments
                             .FirstOrDefaultAsync(x => x.UserId == userId
                                                    && x.MatrixId == matrixModule.MatrixId)
                         : null;
-
                     if (matrixAssignment is not null && matrixModule is not null)
                     {
                         var unlockDate = matrixAssignment.StartDate
                             .AddDays((matrixModule.WeekNumber - 1) * matrixAssignment.Matrix.RefreshIntervalDays)
                             .AddDays(matrixModule.DayOfWeek - 1);
-
                         var dueDate = unlockDate.AddDays(7);
                         var fakeAssignment = new UserModuleAssignment
                         {
@@ -381,7 +325,6 @@ namespace inzBackend.Services.UserAnswerServices
                         };
                         await AssignModuleCompletionPointsAsync(userId, moduleId, fakeAssignment);
                     }
-
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
                     {
                         UserId = userId,
@@ -390,42 +333,32 @@ namespace inzBackend.Services.UserAnswerServices
                     });
                 }
             }
-
             await _dbContext.SaveChangesAsync();
         }
-
         private async Task AssignModuleCompletionPointsAsync(int userId, int moduleId, UserModuleAssignment? assignment)
         {
             var answers = await _dbContext.UserSentenceAnswers
                 .Where(x => x.UserId == userId && x.ModuleId == moduleId)
                 .ToListAsync();
-
             var module = await _dbContext.Modules
                 .FirstOrDefaultAsync(x => x.Id == moduleId);
             var moduleName = module?.Name ?? "Unknown Module";
-
             var today = PolandTime.Today;
-
             int totalPoints = answers.Sum(ans => (ans.TeacherOverride ?? ans.AiResult) switch
             {
                 "Correct" => 5,
                 "Partial" => 3,
                 _ => 1
             });
-
             int bonus = 0;
             if (assignment is not null && today <= assignment.DueDate)
                 bonus = 10;
-
             totalPoints += bonus;
-
             string reason = bonus > 0
                 ? $"Module '{moduleName}' completed (+{bonus} bonus for on-time)"
-                : $"Module '{moduleName}' completed (no bonus — past due date)";
-
+                : $"Module '{moduleName}' completed (no bonus - past due date)";
             _lessonPanelService.AddActivityPoints(userId, totalPoints, reason);
         }
-
         public List<inzBackend.Models.SentenceModels.SentenceModuleLiveDto> GetSentenceModulesForLiveRoom(int? studentId = null)
         {
             var query = _dbContext.UserSentenceAnswers
@@ -433,7 +366,6 @@ namespace inzBackend.Services.UserAnswerServices
                 .Include(x => x.Module)
                 .Include(x => x.SentenceStock)
                 .AsQueryable();
-
             if (studentId.HasValue)
             {
                 query = query.Where(x => x.UserId == studentId.Value);
@@ -447,7 +379,6 @@ namespace inzBackend.Services.UserAnswerServices
                     query = query.Where(x => x.UserId == currentUserId);
                 }
             }
-
             var grouped = query
                 .ToList()
                 .GroupBy(x => new { x.ModuleId, x.UserId })
@@ -460,9 +391,7 @@ namespace inzBackend.Services.UserAnswerServices
                         .Select(ssi => ssi.SentenceStockId)
                         .Distinct()
                         .Count();
-
                     if (totalInModule == 0) totalInModule = g.Count();
-
                     var answerIds = g.Select(x => x.Id).ToList();
                     var studentUsername = first.User?.Username;
                     int unresolvedCommentsCount = 0;
@@ -473,14 +402,11 @@ namespace inzBackend.Services.UserAnswerServices
                                      && !c.IsArchived
                                      && c.Author == studentUsername);
                     }
-
                     int correct = g.Count(x => (x.TeacherOverride ?? x.AiResult) == "Correct");
                     int partial = g.Count(x => (x.TeacherOverride ?? x.AiResult) == "Partial");
                     int incorrect = g.Count(x => (x.TeacherOverride ?? x.AiResult) == "Incorrect");
                     bool allReviewed = g.All(x => x.TeacherReviewed || (x.TeacherOverride ?? x.AiResult) == "Correct");
-
                     var maxDate = g.Max(x => x.LastModifiedAt);
-
                     return new inzBackend.Models.SentenceModels.SentenceModuleLiveDto
                     {
                         ModuleId = g.Key.ModuleId,
@@ -500,43 +426,34 @@ namespace inzBackend.Services.UserAnswerServices
                 })
                 .OrderByDescending(x => x.LastAnswerDate)
                 .ToList();
-
             return grouped;
         }
-
         public List<inzBackend.Models.SentenceModels.SentenceAnswerLiveDto> GetSentenceAnswersForLiveRoom(int moduleId, int? studentId = null)
         {
             var targetUserId = studentId ?? _userContextService.GetUserId!.Value;
             var role = _userContextService.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-
             if (role != "Admin" && !studentId.HasValue)
             {
                 targetUserId = _userContextService.GetUserId!.Value;
             }
-
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.SentenceSetId)
                 .ToList();
-
             var sentenceItems = _dbContext.SentenceSetItems
                 .Include(x => x.SentenceStock)
                 .Where(x => setIds.Contains(x.SentenceSetId))
                 .OrderBy(x => x.SentenceSetId).ThenBy(x => x.Order)
                 .ToList();
-
             var userAnswers = _dbContext.UserSentenceAnswers
                 .Include(x => x.User).ThenInclude(u => u.Profile)
                 .Include(x => x.Module)
                 .Where(x => x.ModuleId == moduleId && x.UserId == targetUserId)
                 .ToDictionary(x => x.SentenceStockId);
-
             var result = new List<inzBackend.Models.SentenceModels.SentenceAnswerLiveDto>();
-
             foreach (var item in sentenceItems)
             {
                 userAnswers.TryGetValue(item.SentenceStockId, out var ans);
-
                 if (ans != null)
                 {
                     result.Add(new inzBackend.Models.SentenceModels.SentenceAnswerLiveDto
@@ -559,10 +476,8 @@ namespace inzBackend.Services.UserAnswerServices
                     });
                 }
             }
-
             return result;
         }
-
         public inzBackend.Models.SentenceModels.SentenceAnswerLiveDto GetSentenceAnswerDetailForLiveRoom(int answerId)
         {
             var ans = _dbContext.UserSentenceAnswers
@@ -571,7 +486,6 @@ namespace inzBackend.Services.UserAnswerServices
                 .Include(x => x.SentenceStock)
                 .FirstOrDefault(x => x.Id == answerId)
                 ?? throw new NotFoundException($"Sentence answer {answerId} not found");
-
             return new inzBackend.Models.SentenceModels.SentenceAnswerLiveDto
             {
                 Id = ans.Id,
@@ -591,7 +505,6 @@ namespace inzBackend.Services.UserAnswerServices
                 StudentAvatarUrl = ans.User?.Profile?.AvatarUrl
             };
         }
-
         public inzBackend.Models.SentenceModels.SentenceAnswerLiveDto SaveSentenceReview(int answerId, inzBackend.Models.SentenceModels.SaveSentenceReviewRequest request)
         {
             var ans = _dbContext.UserSentenceAnswers
@@ -600,7 +513,6 @@ namespace inzBackend.Services.UserAnswerServices
                 .Include(x => x.SentenceStock)
                 .FirstOrDefault(x => x.Id == answerId)
                 ?? throw new NotFoundException($"Sentence answer {answerId} not found");
-
             if (request.AdminCorrection != null)
             {
                 ans.AdminCorrection = request.AdminCorrection;
@@ -614,9 +526,7 @@ namespace inzBackend.Services.UserAnswerServices
                 ans.TeacherExplanation = request.TeacherExplanation;
             }
             ans.TeacherReviewed = true;
-
             _dbContext.SaveChanges();
-
             return new inzBackend.Models.SentenceModels.SentenceAnswerLiveDto
             {
                 Id = ans.Id,
@@ -636,7 +546,6 @@ namespace inzBackend.Services.UserAnswerServices
                 StudentAvatarUrl = ans.User?.Profile?.AvatarUrl
             };
         }
-
         public List<inzBackend.Models.SentenceModels.SentenceAnswerCommentDto> GetCommentsForSentenceAnswer(int answerId)
         {
             return _dbContext.UserSentenceAnswerComments
@@ -655,15 +564,12 @@ namespace inzBackend.Services.UserAnswerServices
                 })
                 .ToList();
         }
-
         public inzBackend.Models.SentenceModels.SentenceAnswerCommentDto AddCommentToSentenceAnswer(int answerId, inzBackend.Models.SentenceModels.CreateSentenceAnswerCommentRequest request)
         {
             var ans = _dbContext.UserSentenceAnswers
                 .FirstOrDefault(x => x.Id == answerId)
                 ?? throw new NotFoundException($"Sentence answer {answerId} not found");
-
             var authorName = _userContextService.GetUserName ?? "Teacher";
-
             var comment = new inzBackend.Entities.Assignments.UserSentenceAnswerComment
             {
                 UserSentenceAnswerId = answerId,
@@ -674,10 +580,8 @@ namespace inzBackend.Services.UserAnswerServices
                 Timestamp = PolandTime.DateTimeNow,
                 IsArchived = false
             };
-
             _dbContext.UserSentenceAnswerComments.Add(comment);
             _dbContext.SaveChanges();
-
             return new inzBackend.Models.SentenceModels.SentenceAnswerCommentDto
             {
                 Id = comment.Id,
@@ -690,13 +594,11 @@ namespace inzBackend.Services.UserAnswerServices
                 IsArchived = comment.IsArchived
             };
         }
-
         public void ArchiveSentenceAnswerComment(int commentId)
         {
             var comment = _dbContext.UserSentenceAnswerComments
                 .FirstOrDefault(x => x.Id == commentId)
                 ?? throw new NotFoundException($"Comment {commentId} not found");
-
             comment.IsArchived = true;
             _dbContext.SaveChanges();
         }

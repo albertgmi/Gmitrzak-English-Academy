@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Curriculum;
 using inzBackend.Models.CourseModels;
-
 namespace inzBackend.Services.CourseServices
 {
     public interface ICourseService

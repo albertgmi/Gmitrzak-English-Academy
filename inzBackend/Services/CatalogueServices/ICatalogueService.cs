@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.CatalogueModels;
-
 namespace inzBackend.Services.CatalogueServices
 {
     public interface ICatalogueService

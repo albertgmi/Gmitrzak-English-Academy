@@ -2,7 +2,6 @@
 using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.GlobalVocabularyModels;
 using inzBackend.Models.StudentLearningModels.VocabularyModels;
-
 namespace inzBackend.Services.GlobalVocabularyServices
 {
     public interface IGlobalVocabularyService

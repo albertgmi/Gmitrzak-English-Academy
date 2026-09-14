@@ -1,5 +1,4 @@
 using System;
-
 namespace inzBackend.Models.SentenceModels
 {
     public class SentenceCollaborativeUserDto
@@ -10,7 +9,6 @@ namespace inzBackend.Models.SentenceModels
         public string? AvatarUrl { get; set; }
         public DateTime JoinedAt { get; set; }
     }
-
     public class SentenceModuleLiveDto
     {
         public int ModuleId { get; set; }
@@ -27,10 +25,9 @@ namespace inzBackend.Models.SentenceModels
         public int UnresolvedStudentCommentsCount { get; set; }
         public DateTime? LastAnswerDate { get; set; }
     }
-
     public class SentenceAnswerLiveDto
     {
-        public int Id { get; set; } // UserSentenceAnswerId
+        public int Id { get; set; } 
         public int ModuleId { get; set; }
         public string ModuleName { get; set; } = string.Empty;
         public int SentenceStockId { get; set; }
@@ -46,14 +43,12 @@ namespace inzBackend.Models.SentenceModels
         public string StudentUsername { get; set; } = string.Empty;
         public string? StudentAvatarUrl { get; set; }
     }
-
     public class SaveSentenceReviewRequest
     {
         public string? AdminCorrection { get; set; }
         public string? TeacherOverride { get; set; }
         public string? TeacherExplanation { get; set; }
     }
-
     public class SentenceAnswerCommentDto
     {
         public int Id { get; set; }
@@ -66,7 +61,6 @@ namespace inzBackend.Models.SentenceModels
         public DateTime Timestamp { get; set; }
         public bool IsArchived { get; set; }
     }
-
     public class CreateSentenceAnswerCommentRequest
     {
         public string SelectedText { get; set; } = string.Empty;

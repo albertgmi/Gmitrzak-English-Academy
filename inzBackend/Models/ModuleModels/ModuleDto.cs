@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.MatrixModels;
-
 namespace inzBackend.Models.ModuleModels
 {
     public class ModuleDto

@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.AiPronunciationModels;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public interface IAiPronunciationService

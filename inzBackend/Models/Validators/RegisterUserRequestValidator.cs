@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using inzBackend.Models.UserModels;
-
 namespace inzBackend.Models.Validators
 {
     public class RegisterUserRequestValidator : AbstractValidator<RegisterUserRequest>

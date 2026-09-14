@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Administration;
-
 namespace inzBackend.Entities.Configurations
 {
     public class TeacherNoteConfiguration : IEntityTypeConfiguration<TeacherNote>

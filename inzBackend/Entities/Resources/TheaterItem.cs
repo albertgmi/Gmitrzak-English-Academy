@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Enums;
-
 namespace inzBackend.Entities.Resources
 {
     public class TheaterItem : AuditableEntity

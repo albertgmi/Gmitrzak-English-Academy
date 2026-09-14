@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.AIAnswerCheckingModels;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public interface IAiSentenceCheckerService

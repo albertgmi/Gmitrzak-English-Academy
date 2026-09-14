@@ -10,14 +10,12 @@ namespace inzBackend.Models.UserModels
         public int DaysInactive { get; set; }
         public bool IsInactiveForThreeDays { get; set; }
     }
-
     public class SendFlashcardRemindersRequest
     {
         public List<int> UserIds { get; set; } = new();
         public string? CustomSubject { get; set; }
         public string? CustomBody { get; set; }
     }
-
     public class SendRemindersResultDto
     {
         public int SentCount { get; set; }

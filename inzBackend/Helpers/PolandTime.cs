@@ -3,7 +3,6 @@ namespace inzBackend.Helpers
     public static class PolandTime
     {
         private static readonly TimeZoneInfo PolishZone = GetPolishTimeZone();
-
         private static TimeZoneInfo GetPolishTimeZone()
         {
             try

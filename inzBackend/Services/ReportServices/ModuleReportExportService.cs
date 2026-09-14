@@ -14,7 +14,6 @@ using inzBackend.Models;
 using inzBackend.Services.UserAnswerServices;
 using inzBackend.Enums;
 using inzBackend.Helpers;
-
 namespace inzBackend.Services.ReportServices
 {
     public class ModuleReportExportService : IModuleReportExportService
@@ -26,11 +25,9 @@ namespace inzBackend.Services.ReportServices
             _dbContext = dbContext;
             _userAnswerService = userAnswerService;
         }
-
         public byte[] GenerateRangePdf(DateRangeReportDto report)
         {
             QuestPDF.Settings.License = LicenseType.Community;
-
             return QDocument.Create(container =>
             {
                 container.Page(page =>
@@ -38,7 +35,6 @@ namespace inzBackend.Services.ReportServices
                     page.Size(PageSizes.A4);
                     page.Margin(2, Unit.Centimetre);
                     page.DefaultTextStyle(x => x.FontSize(12).FontFamily("Times New Roman"));
-
                     page.Header().Column(col =>
                     {
                         col.Item().Text("Sentences")
@@ -50,7 +46,6 @@ namespace inzBackend.Services.ReportServices
                         col.Item().PaddingVertical(8)
                             .LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     });
-
                     page.Content().Column(col =>
                     {
                         col.Item().PaddingBottom(12).Row(row =>
@@ -65,12 +60,10 @@ namespace inzBackend.Services.ReportServices
                             BuildSummaryBox(row, report.TotalIncorrect.ToString(),
                                 "Incorrect", Colors.Red.Lighten2, Colors.Red.Lighten4, Colors.Red.Darken2);
                         });
-
                         foreach (var module in report.Modules)
                         {
                             col.Item().PaddingBottom(4).Text(module.ModuleName)
                                 .FontSize(14).Bold().FontColor(Colors.Blue.Darken1);
-
                             col.Item().PaddingBottom(8).Row(row =>
                             {
                                 row.Spacing(6);
@@ -81,7 +74,6 @@ namespace inzBackend.Services.ReportServices
                                 BuildSummaryBox(row, module.IncorrectCount.ToString(),
                                     "Incorrect", Colors.Red.Lighten2, Colors.Red.Lighten4, Colors.Red.Darken2);
                             });
-
                             foreach (var item in module.Items)
                             {
                                 var borderColor = item.FinalResult == "Correct" ? Colors.Green.Lighten2
@@ -90,7 +82,6 @@ namespace inzBackend.Services.ReportServices
                                 var bgColor = item.FinalResult == "Correct" ? Colors.Green.Lighten5
                                     : item.FinalResult == "Partial" ? Colors.Yellow.Lighten5
                                     : Colors.Red.Lighten5;
-
                                 col.Item().PaddingBottom(6)
                                     .Border(1).BorderColor(borderColor)
                                     .Background(bgColor).Padding(8).Column(c =>
@@ -107,7 +98,6 @@ namespace inzBackend.Services.ReportServices
                                         c.Item().PaddingTop(3)
                                             .Text($"{item.AiExplanation}")
                                             .FontSize(9).Italic();
-
                                         if (!string.IsNullOrWhiteSpace(item.TeacherOverride))
                                         {
                                             c.Item().PaddingTop(4)
@@ -120,12 +110,10 @@ namespace inzBackend.Services.ReportServices
                                         }
                                     });
                             }
-
                             col.Item().PaddingVertical(8)
                                 .LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten1);
                         }
                     });
-
                     page.Footer().AlignCenter().Text(x =>
                     {
                         x.Span("Page "); x.CurrentPageNumber();
@@ -134,64 +122,50 @@ namespace inzBackend.Services.ReportServices
                 });
             }).GeneratePdf();
         }
-
         public byte[] GenerateRangeDocx(DateRangeReportDto report)
         {
             using var stream = new MemoryStream();
-
             using (var document = WordprocessingDocument.Create(
                 stream, WordprocessingDocumentType.Document, true))
             {
                 var mainPart = DocxHelper.InitDocument(document);
                 var body = new Body();
-
                 body.Append(DocxHelper.CreateParagraph("Sentences Report", bold: true, fontSize: 32, spaceAfter: 160));
                 body.Append(DocxHelper.CreateParagraph($"Student: {report.StudentUsername}", bold: true, spaceAfter: 60));
                 body.Append(DocxHelper.CreateParagraph($"Generated: {report.GeneratedDate:d MMM yyyy}", spaceAfter: 120));
                 body.Append(DocxHelper.CreateParagraph(
                     $"Total: {report.TotalSentences} | Correct: {report.TotalCorrect} | Partial: {report.TotalPartial} | Incorrect: {report.TotalIncorrect}",
                     bold: true, spaceAfter: 200));
-
                 foreach (var module in report.Modules)
                 {
                     body.Append(DocxHelper.CreateSectionHeader(module.ModuleName, "2E74B5"));
                     body.Append(DocxHelper.CreateParagraph(
                         $"Correct: {module.CorrectCount} | Partial: {module.PartialCount} | Incorrect: {module.IncorrectCount}",
                         italic: true, spaceAfter: 160));
-
                     foreach (var item in module.Items)
                     {
                         var result = item.FinalResult == "Correct" ? "Correct" : "Incorrect";
                         var resultColor = item.FinalResult == "Correct" ? "2E7D32" : "C62828";
-
                         body.Append(DocxHelper.CreateParagraph(result, italic: true, fontSize: 18, color: resultColor, spaceAfter: 40));
                         body.Append(DocxHelper.CreateParagraph($"#{item.Order} {item.Polish}", bold: true, fontSize: 24, spaceAfter: 60));
-
                         if (!string.IsNullOrWhiteSpace(item.StudentAnswer))
                             body.Append(DocxHelper.CreateParagraph($"Student answer: {item.StudentAnswer}", spaceAfter: 60));
-
                         if (!string.IsNullOrWhiteSpace(item.TeacherOverride))
                         {
                             var overrideText = $"Teacher's explanation: {item.TeacherOverride}" +
-                                (string.IsNullOrWhiteSpace(item.TeacherExplanation) ? "" : $" — {item.TeacherExplanation}");
+                                (string.IsNullOrWhiteSpace(item.TeacherExplanation) ? "" : $" - {item.TeacherExplanation}");
                             body.Append(DocxHelper.CreateParagraph(overrideText, bold: true, color: "E65100", spaceAfter: 60));
                         }
-
                         body.Append(DocxHelper.CreateEmptyLine());
                     }
-
                     body.Append(DocxHelper.CreateDividerParagraph("D3D3D3"));
                 }
-
                 body.Append(DocxHelper.CreateSectionProperties());
-
                 mainPart.Document.Append(body);
                 mainPart.Document.Save();
             }
-
             return stream.ToArray();
         }
-
         public byte[] GenerateActiveStudentsZipReport(DateOnly dateFrom, DateOnly dateTo)
         {
             var activeStudentIds = _dbContext
@@ -199,15 +173,12 @@ namespace inzBackend.Services.ReportServices
                 .Where(u => u.IsActive == true && u.Role == UserRole.User)
                 .Select(u => u.Id)
                 .ToList();
-
             var reports = new List<DateRangeReportDto>();
-
             foreach (var studentId in activeStudentIds)
             {
                 try
                 {
                     var report = _userAnswerService.GenerateDateRangeReport(studentId, dateFrom, dateTo);
-
                     if (report.Modules != null && report.Modules.Any())
                     {
                         reports.Add(report);
@@ -218,33 +189,25 @@ namespace inzBackend.Services.ReportServices
                     continue;
                 }
             }
-
             return GenerateActiveStudentsDocxZip(reports);
         }
-
         private byte[] GenerateActiveStudentsDocxZip(IEnumerable<DateRangeReportDto> reports)
         {
             using var zipStream = new MemoryStream();
-
             using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
             {
                 foreach (var report in reports)
                 {
                     var sanitizedUsername = string.Join("_", report.StudentUsername.Split(Path.GetInvalidFileNameChars()));
                     var fileName = $"Raport_{sanitizedUsername}_{report.DateFrom:yyyyMMdd}-{report.DateTo:yyyyMMdd}.docx";
-
                     var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
-
                     var docxBytes = GenerateRangeDocx(report);
-
                     using var entryStream = zipEntry.Open();
                     entryStream.Write(docxBytes, 0, docxBytes.Length);
                 }
             }
-
             return zipStream.ToArray();
         }
-
         private static void BuildSummaryBox(RowDescriptor row, string value, string label, string borderColor, string bgColor, string textColor)
         {
             row.RelativeItem()
@@ -260,7 +223,6 @@ namespace inzBackend.Services.ReportServices
                         .FontSize(22)
                         .Bold()
                         .FontColor(textColor);
-
                     c.Item()
                         .AlignCenter()
                         .Text(label)

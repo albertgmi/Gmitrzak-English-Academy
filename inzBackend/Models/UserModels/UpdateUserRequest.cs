@@ -1,5 +1,4 @@
 using inzBackend.Enums;
-
 namespace inzBackend.Models.UserModels
 {
     public class UpdateUserRequest
@@ -10,6 +9,5 @@ namespace inzBackend.Models.UserModels
         public UserRole Role { get; set; }
         public bool isActive { get; set; }
         public int? StreakOverride { get; set; }
-
     }
 }

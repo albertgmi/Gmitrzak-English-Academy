@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Resources;
-
 namespace inzBackend.Entities.Curriculum
 {
     public class Module : AuditableEntity

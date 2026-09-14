@@ -1,6 +1,5 @@
 using inzBackend.Entities.Base;
 using inzBackend.Enums;
-
 namespace inzBackend.Entities.Curriculum
 {
     public class AcademyExam : AuditableEntity
@@ -14,7 +13,6 @@ namespace inzBackend.Entities.Curriculum
         public string PassingThreshold { get; set; } = string.Empty;
         public DateTime SignupDeadline { get; set; }
         public bool IsActive { get; set; } = true;
-
         public ICollection<AcademyExamSignup> Signups { get; set; } = new List<AcademyExamSignup>();
     }
 }

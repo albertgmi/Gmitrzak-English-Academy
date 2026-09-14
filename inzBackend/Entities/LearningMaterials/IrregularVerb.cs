@@ -2,7 +2,6 @@ using inzBackend.Entities.Base;
 using inzBackend.Entities.Identity;
 using inzBackend.Enums;
 using inzBackend.Helpers;
-
 namespace inzBackend.Entities.LearningMaterials
 {
     public class IrregularVerb : AuditableEntity

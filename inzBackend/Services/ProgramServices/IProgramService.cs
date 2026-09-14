@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.ProgramModels;
-
 namespace inzBackend.Services.ProgramServices
 {
     public interface IProgramService

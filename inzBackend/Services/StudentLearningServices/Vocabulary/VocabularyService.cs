@@ -2,14 +2,12 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.StudentLearningServices.Vocabulary
 {
     public class VocabularyService : IVocabularyService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
-
         public VocabularyService(
             GmitrzakEnglishAcademyDbContext dbContext,
             IUserContextService userContextService)
@@ -17,7 +15,6 @@ namespace inzBackend.Services.StudentLearningServices.Vocabulary
             _dbContext = dbContext;
             _userContextService = userContextService;
         }
-
         public List<VocabularyDto> GetAllVocabulary()
         {
             var userId = _userContextService.GetUserId;

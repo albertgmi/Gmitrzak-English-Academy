@@ -2,7 +2,6 @@
 using inzBackend.Services.ProgramServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/program")]
@@ -15,34 +14,29 @@ namespace inzBackend.Controllers
         {
             _programService = programService;
         }
-
         [HttpGet]
         public ActionResult<ProgramDto> GetAllPrograms()
         {
             var programs = _programService.GetAllPrograms();
             return Ok(programs);
         }
-
         [HttpPut("{programId}")]
         public ActionResult UpdateProgram([FromRoute] int programId, [FromBody] UpdateProgramRequest request)
         {
             _programService.UpdateProgram(programId, request);
             return Ok();
         }
-
         [HttpDelete("{programId}")]
         public ActionResult DeleteProgram([FromRoute] int programId)
         {
             _programService.DeleteProgram(programId);
             return NoContent();
         }
-
         [HttpPost]
         public ActionResult<Entities.Curriculum.Program> CreateProgram([FromBody] CreateProgramRequest request)
         {
             var createdProgram = _programService.CreateProgram(request);
             return Ok(createdProgram);
         }
-
     }
 }

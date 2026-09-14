@@ -5,7 +5,6 @@ using inzBackend.Helpers;
 using inzBackend.Models;
 using inzBackend.Models.CreditModels;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.CreditServices
 {
     public class CreditService : ICreditService
@@ -15,12 +14,10 @@ namespace inzBackend.Services.CreditServices
         private const int WEEKLY_FLASHCARD_GOAL = 300;
         private const int DAILY_CREDIT_REWARD = 1;
         private const int WEEKLY_CREDIT_REWARD = 5;
-
         public CreditService(GmitrzakEnglishAcademyDbContext dbContext)
         {
             _dbContext = dbContext;
         }
-
         public void AwardCredits(int userId, int amount, string reason)
         {
             _dbContext.Credits.Add(new Credit
@@ -32,75 +29,61 @@ namespace inzBackend.Services.CreditServices
             });
             _dbContext.SaveChanges();
         }
-
         public void CheckAndAwardDailyChallenge(int userId)
         {
             var today = PolandTime.Today;
-
             var alreadyAwarded = _dbContext.Credits
                 .Any(x => x.UserId == userId
                        && x.Date == today
                        && x.Reason == "Daily challenge: 75 flashcards");
-
             if (alreadyAwarded) return;
-
             var todayCount = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId
                          && x.StudyDate == today)
                 .Sum(x => (int?)(x.EasyCount + x.HardCount + x.IncorrectCount)) ?? 0;
-
             if (todayCount >= DAILY_FLASHCARD_GOAL)
             {
                 AwardCredits(userId, DAILY_CREDIT_REWARD,
                     "Daily challenge: 75 flashcards");
             }
         }
-
         public void CheckAndAwardWeeklyChallenge(int userId)
         {
             var today = PolandTime.Today;
             var dow = ((int)today.DayOfWeek + 6) % 7;
             var weekStart = today.AddDays(-dow);
             var weekEnd = weekStart.AddDays(6);
-
             var alreadyAwarded = _dbContext.Credits
                 .Any(x => x.UserId == userId
                        && x.Date >= weekStart
                        && x.Date <= weekEnd
                        && x.Reason == "Weekly challenge: 300 flashcards");
-
             if (alreadyAwarded) return;
-
             var weekCount = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId
                          && x.StudyDate >= weekStart
                          && x.StudyDate <= weekEnd)
                 .Sum(x => (int?)(x.EasyCount + x.HardCount + x.IncorrectCount)) ?? 0;
-
             if (weekCount >= WEEKLY_FLASHCARD_GOAL)
             {
                 AwardCredits(userId, WEEKLY_CREDIT_REWARD,
                     "Weekly challenge: 300 flashcards");
             }
         }
-
         public CreditSummaryDto GetCreditSummary(int userId)
         {
             var credits = _dbContext.Credits
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.Date)
                 .ToList();
-
             var purchases = _dbContext.ShopPurchases
                 .Include(x => x.ShopItem)
                 .Where(x => x.UserId == userId && x.Status != "Cancelled")
                 .OrderByDescending(x => x.PurchaseDate)
                 .ToList();
-
             var earned = credits.Where(x => x.Amount > 0).Sum(x => x.Amount);
             var revoked = credits.Where(x => x.Amount < 0).Sum(x => Math.Abs(x.Amount));
             var spent = purchases.Sum(x => x.CreditCost) + revoked;
-
             var history = credits.Select(x => new CreditHistoryItemDto
             {
                 Id = x.Id,
@@ -109,7 +92,6 @@ namespace inzBackend.Services.CreditServices
                 Date = x.Date,
                 Type = x.Amount < 0 ? "spent" : "earned"
             }).ToList();
-
             var spendHistory = purchases.Select(x => new CreditHistoryItemDto
             {
                 Id = x.Id,
@@ -118,12 +100,10 @@ namespace inzBackend.Services.CreditServices
                 Date = x.PurchaseDate,
                 Type = "spent"
             }).ToList();
-
             var fullHistory = history
                 .Concat(spendHistory)
                 .OrderByDescending(x => x.Date)
                 .ToList();
-
             return new CreditSummaryDto
             {
                 TotalCredits = earned - spent,
@@ -141,12 +121,10 @@ namespace inzBackend.Services.CreditServices
                 }).ToList()
             };
         }
-
         public List<ShopItemDto> GetShopItems(int userId)
         {
             var summary = GetCreditSummary(userId);
             var available = summary.TotalCredits;
-
             return _dbContext.ShopItems
                 .Where(x => x.IsActive)
                 .OrderBy(x => x.CreditCost)
@@ -161,7 +139,6 @@ namespace inzBackend.Services.CreditServices
                 })
                 .ToList();
         }
-
         public List<ShopItemDto> GetShopItems()
         {
             return _dbContext.ShopItems
@@ -178,19 +155,15 @@ namespace inzBackend.Services.CreditServices
                 })
                 .ToList();
         }
-
         public ShopPurchaseResultDto PurchaseItem(int userId, int shopItemId)
         {
             var item = _dbContext.ShopItems
                 .FirstOrDefault(x => x.Id == shopItemId && x.IsActive);
-
             if (item is null)
                 return new ShopPurchaseResultDto
                 { Success = false, Message = "Item not found." };
-
             var summary = GetCreditSummary(userId);
             var available = summary.TotalCredits;
-
             if (available < item.CreditCost)
                 return new ShopPurchaseResultDto
                 {
@@ -198,7 +171,6 @@ namespace inzBackend.Services.CreditServices
                     Message = $"Not enough credits. You have {available}, need {item.CreditCost}.",
                     CreditsRemaining = available
                 };
-
             var purchase = new ShopPurchase
             {
                 UserId = userId,
@@ -207,10 +179,8 @@ namespace inzBackend.Services.CreditServices
                 PurchaseDate = PolandTime.Today,
                 Status = "Pending"
             };
-
             _dbContext.ShopPurchases.Add(purchase);
             _dbContext.SaveChanges();
-
             return new ShopPurchaseResultDto
             {
                 Success = true,
@@ -219,14 +189,12 @@ namespace inzBackend.Services.CreditServices
                 PurchaseId = purchase.Id
             };
         }
-
         public List<UserCreditSummaryDto> GetAllUsersCreditSummary()
         {
             var users = _dbContext.Users
                 .Include(x=>x.Profile)
                 .Where(x => x.Role == Enums.UserRole.User && x.IsActive)
                 .ToList();
-
             var result = users.Select(u =>
             {
                 var summary = GetCreditSummary(u.Id);
@@ -241,17 +209,13 @@ namespace inzBackend.Services.CreditServices
                     AvatarUrl = u.Profile.AvatarUrl
                 };
             }).ToList();
-
             return result;
         }
-
         public StudentCreditDetailDto GetStudentCreditDetail(int studentId)
         {
             var user = _dbContext.Users.FirstOrDefault(x => x.Id == studentId)
                 ?? throw new NotFoundException("Student not found");
-
             var summary = GetCreditSummary(studentId);
-
             return new StudentCreditDetailDto
             {
                 UserId = user.Id,
@@ -263,17 +227,14 @@ namespace inzBackend.Services.CreditServices
                 Purchases = summary.Purchases
             };
         }
-
         public void UpdatePurchaseStatus(int purchaseId, string status)
         {
             var purchase = _dbContext.ShopPurchases
                 .FirstOrDefault(x => x.Id == purchaseId)
                 ?? throw new NotFoundException("Purchase not found");
-
             var validStatuses = new[] { "Pending", "Fulfilled", "Cancelled" };
             if (!validStatuses.Contains(status))
                 throw new BadRequestException("Invalid status");
-
             purchase.Status = status;
             _dbContext.SaveChanges();
         }

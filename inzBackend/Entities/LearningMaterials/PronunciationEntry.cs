@@ -1,7 +1,6 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Identity;
 using inzBackend.Enums;
-
 namespace inzBackend.Entities.LearningMaterials
 {
     public class PronunciationEntry : AuditableEntity

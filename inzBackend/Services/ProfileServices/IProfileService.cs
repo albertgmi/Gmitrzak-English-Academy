@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.ProfileModels;
-
 namespace inzBackend.Services.ProfileServices
 {
     public interface IProfileService

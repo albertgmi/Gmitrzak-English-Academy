@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Identity;
-
 namespace inzBackend.Entities.Configurations
 {
     public class UserLoginLogConfiguration : IEntityTypeConfiguration<UserLoginLog>

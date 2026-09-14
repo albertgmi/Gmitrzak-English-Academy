@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.CreditModels;
-
 namespace inzBackend.Services.CreditServices
 {
     public interface ICreditService

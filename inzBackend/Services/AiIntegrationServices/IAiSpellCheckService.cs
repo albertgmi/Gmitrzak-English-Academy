@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.AiSpellCheckingModels;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public interface IAiSpellCheckService

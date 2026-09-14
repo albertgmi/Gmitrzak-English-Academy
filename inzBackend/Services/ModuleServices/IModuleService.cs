@@ -1,7 +1,6 @@
 ﻿using inzBackend.Models;
 using inzBackend.Models.ModuleModels;
 using inzBackend.Models.StudentCourseModels;
-
 namespace inzBackend.Services.ModuleServices
 {
     public interface IModuleService

@@ -1,5 +1,4 @@
 using inzBackend.Models.EssayModels;
-
 namespace inzBackend.Services.EssayServices
 {
     public interface IEssayService

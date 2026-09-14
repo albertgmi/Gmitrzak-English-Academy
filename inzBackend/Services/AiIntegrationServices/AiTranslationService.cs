@@ -1,7 +1,6 @@
 ﻿using inzBackend.Models.CatalogueModels;
 using OpenAI.Chat;
 using System.Text.Json;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiTranslationService : IAiTranslationService
@@ -11,7 +10,6 @@ namespace inzBackend.Services.AiIntegrationServices
         {
             _chatClient = chatClient;
         }
-
         public async Task<List<string>> TranslateBatchAsync(List<string> texts,
             string targetLanguage = "Polish")
         {
@@ -38,19 +36,16 @@ namespace inzBackend.Services.AiIntegrationServices
             var result = JsonSerializer.Deserialize<TranslationResult>(responseText);
             return result?.Translations ?? new List<string>();
         }
-
         public async Task<List<bool>> ValidateTranslationsAsync(
             List<(string Source, string Translation)> pairs,
             string targetLanguage = "Polish")
         {
             if (pairs == null || !pairs.Any())
                 return new List<bool>();
-
             var jsonInput = JsonSerializer.Serialize(new
             {
                 items = pairs.Select(p => new { source = p.Source, translation = p.Translation })
             });
-
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateSystemMessage(
@@ -64,26 +59,21 @@ namespace inzBackend.Services.AiIntegrationServices
                 ),
                 ChatMessage.CreateUserMessage($"Target Language: {targetLanguage}. Input JSON: {jsonInput}")
             };
-
             var options = new ChatCompletionOptions
             {
                 ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
                 Temperature = 0.1f
             };
-
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
             string responseText = completion.Content[0].Text;
             var result = JsonSerializer.Deserialize<TranslationValidationResult>(responseText);
-
             var valid = result?.Valid ?? new List<bool>();
-
             if (valid.Count < pairs.Count)
             {
                 var padded = new List<bool>(valid);
                 padded.AddRange(Enumerable.Repeat(false, pairs.Count - valid.Count));
                 return padded;
             }
-
             return valid;
         }
     }

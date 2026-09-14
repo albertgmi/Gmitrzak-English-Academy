@@ -8,7 +8,6 @@ using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.StudentLearningServices.Sentences
 {
     public class SentencesService : ISentencesService
@@ -16,7 +15,6 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly ILessonPanelService _lessonPanelService;
-
         public SentencesService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
             IMapper mapper, ILessonPanelService lessonPanelService)
         {
@@ -24,11 +22,9 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             _userContextService = userContextService;
             _lessonPanelService = lessonPanelService;
         }
-
         public List<SentenceDto> GetAllSentences()
         {
             var userId = _userContextService.GetUserId!.Value;
-
             var allSentences = _dbContext.Sentences
                 .Where(x => x.UserId == userId)
                 .Select(x => new SentenceDto
@@ -46,35 +42,27 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                 })
                 .Distinct()
                 .ToList();
-
             return allSentences;
         }
-
         public ModuleSentenceSessionDto GetModuleSentences(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
-
             var directAssignment = _dbContext.UserModuleAssignments
                 .Include(x => x.Module)
                 .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
-
             var moduleName = directAssignment?.Module.Name ?? "Module";
-
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.SentenceSetId)
                 .ToList();
-
             var sentences = _dbContext.SentenceSetItems
                 .Include(x => x.SentenceStock)
                 .Where(x => setIds.Contains(x.SentenceSetId))
                 .OrderBy(x => x.SentenceSetId).ThenBy(x => x.Order)
                 .ToList();
-
             var existingAnswers = _dbContext.UserSentenceAnswers
                 .Where(x => x.UserId == userId && x.ModuleId == moduleId)
                 .ToDictionary(x => x.SentenceStockId);
-
             return new ModuleSentenceSessionDto
             {
                 ModuleId = moduleId,
@@ -97,18 +85,13 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                 }).ToList()
             };
         }
-
         public void ReviewSentence(int id, ReviewSentenceRequest request)
         {
             var userId = _userContextService.GetUserId;
-
             var sentence = _dbContext.Sentences
                 .FirstOrDefault(x => x.Id == id && x.UserId == userId);
-
             if (sentence is null) return;
-
             var today = PolandTime.Today;
-
             switch (request.Quality.ToLower())
             {
                 case "easy":
@@ -116,33 +99,27 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                     sentence.NextReviewDate = today.AddDays(sentence.Interval);
                     sentence.EaseFactor = Math.Min(sentence.EaseFactor + 10, 300);
                     break;
-
                 case "hard":
                     sentence.Interval = 1;
                     sentence.NextReviewDate = today.AddDays(1);
                     sentence.EaseFactor = Math.Max(sentence.EaseFactor - 15, 130);
                     break;
-
                 case "incorrect":
                     sentence.Interval = 0;
                     sentence.NextReviewDate = today;
                     sentence.EaseFactor = Math.Max(sentence.EaseFactor - 20, 130);
                     break;
             }
-
             sentence.IsReviewed = true;
             _lessonPanelService.AddActivityPoints((int)userId, 2, "Sentence reviewed");
             sentence.IsLeech = sentence.EaseFactor <= 150;
-
             _dbContext.SaveChanges();
         }
-
         public FlashcardStreakDto GetStreak()
         {
             var userId = _userContextService.GetUserId;
             if (userId is null)
                 return new FlashcardStreakDto { Streak = 0, StudiedToday = false };
-
             var today = PolandTime.Today;
             var dates = _dbContext.SectionActivityLogs
                 .Where(x => x.UserId == userId && x.Section == "sentenceflashcards")
@@ -150,23 +127,19 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                 .Distinct()
                 .OrderByDescending(x => x)
                 .ToList();
-
             bool studiedToday = dates.Contains(today);
             int streak = CountConsecutiveStreak(dates, today);
-
             return new FlashcardStreakDto
             {
                 Streak = streak,
                 StudiedToday = studiedToday
             };
         }
-
         private static int CountConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
         {
             if (!datesDesc.Any()) return 0;
             var mostRecent = datesDesc.First();
             if (mostRecent < today.AddDays(-1)) return 0;
-
             var streak = 0;
             var expected = mostRecent;
             foreach (var date in datesDesc)

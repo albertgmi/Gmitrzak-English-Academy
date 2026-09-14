@@ -1,5 +1,4 @@
 using inzBackend.Models.AdminLearningModels;
-
 namespace inzBackend.Services.AdminLearningServices.Pronunciation
 {
     public interface IAdminPronunciationService

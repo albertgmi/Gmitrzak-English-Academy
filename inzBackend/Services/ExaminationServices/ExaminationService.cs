@@ -1,18 +1,15 @@
 ﻿using inzBackend.Models.ExaminationModels;
 using inzBackend.Models;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.ExaminationServices
 {
     public class ExaminationService : IExaminationService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
-
         public ExaminationService(GmitrzakEnglishAcademyDbContext dbContext)
         {
             _dbContext = dbContext;
         }
-
         public ExaminationDto GetExamination(int studentId)
         {
             var studiedFlashcardIds = _dbContext.FlashcardStudyLogs
@@ -20,7 +17,6 @@ namespace inzBackend.Services.ExaminationServices
                 .Select(x => x.FlashcardId)
                 .Distinct()
                 .ToList();
-
             var flashcards = _dbContext.Flashcards
                 .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == studentId
@@ -38,7 +34,6 @@ namespace inzBackend.Services.ExaminationServices
                     Interval = x.Interval
                 })
                 .ToList();
-
             var sentences = _dbContext.Sentences
                 .Where(x => x.UserId == studentId && x.IsReviewed)
                 .OrderBy(_ => Guid.NewGuid())
@@ -51,7 +46,6 @@ namespace inzBackend.Services.ExaminationServices
                     Notes = x.Notes
                 })
                 .ToList();
-
             var memories = _dbContext.Memories
                 .Where(x => x.UserId == studentId)
                 .OrderByDescending(x => x.CreatedAt)
@@ -65,7 +59,6 @@ namespace inzBackend.Services.ExaminationServices
                     Category = x.Category
                 })
                 .ToList();
-
             return new ExaminationDto
             {
                 Flashcards = flashcards,

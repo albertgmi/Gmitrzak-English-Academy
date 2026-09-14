@@ -2,7 +2,6 @@
 using inzBackend.Services.ExaminationServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/examination")]
@@ -15,7 +14,6 @@ namespace inzBackend.Controllers
         {
             _examinationService = examinationService;
         }
-
         [HttpGet("{studentId}")]
         public ActionResult<ExaminationDto> GetExamination(int studentId)
         {

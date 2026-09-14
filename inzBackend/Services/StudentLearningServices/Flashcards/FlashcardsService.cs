@@ -8,7 +8,6 @@ using inzBackend.Exceptions;
 using inzBackend.Helpers;
 using inzBackend.Services.CreditServices;
 using inzBackend.Entities.SpacedRepetition;
-
 namespace inzBackend.Services.StudentLearningServices.Flashcards
 {
     public class FlashcardsService : IFlashcardsService
@@ -18,7 +17,6 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
         private readonly IMapper _mapper;
         private readonly ILessonPanelService _lessonPanelService;
         private readonly ICreditService _creditService;
-
         public FlashcardsService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
             IMapper mapper, ILessonPanelService lessonPanelService, ICreditService creditService)
         {
@@ -28,7 +26,6 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
             _lessonPanelService = lessonPanelService;
             _creditService = creditService;
         }
-
         public List<FlashcardDto> GetAllFlashcards()
         {
             var userId = _userContextService.GetUserId;
@@ -39,7 +36,6 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .ToList();
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
-
         public List<FlashcardDto> GetLeeches()
         {
             var userId = _userContextService.GetUserId;
@@ -50,26 +46,21 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .ToList();
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
-
         public List<FlashcardDto> GetStudiedToday()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;
-
             var studiedIds = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId && x.StudyDate == today)
                 .Select(x => x.FlashcardId)
                 .Distinct()
                 .ToList();
-
             var flashcards = _dbContext.Flashcards
                 .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == userId && studiedIds.Contains(x.Id))
                 .ToList();
-
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
-
         public List<FlashcardStudyLogDto> GetStudyLogs()
         {
             var userId = _userContextService.GetUserId;
@@ -80,37 +71,28 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .OrderByDescending(x => x.StudyDate)
                 .ThenBy(x => x.CreatedAt)
                 .ToList();
-
             return _mapper.Map<List<FlashcardStudyLogDto>>(studyLogs);
         }
-
         public List<FlashcardDto> SearchFlashcards(string query)
         {
             var userId = _userContextService.GetUserId;
             var q = query.ToLower();
-
             var flashcards = _dbContext.Flashcards
                 .Include(x => x.Vocabulary)
                 .Where(x => x.UserId == userId && x.Vocabulary != null &&
                     (x.Vocabulary.Front.ToLower().Contains(q) ||
                      x.Vocabulary.Back.ToLower().Contains(q)))
                 .ToList();
-
             return _mapper.Map<List<FlashcardDto>>(flashcards);
         }
-
         public void ReviewCard(int flashcardId, ReviewCardRequest request)
         {
             var userId = _userContextService.GetUserId;
-
             var card = _dbContext.Flashcards
                 .FirstOrDefault(x => x.Id == flashcardId && x.UserId == userId);
-
             if (card is null)
                 return;
-
             var today = PolandTime.Today;
-
             switch (request.Quality.ToLower())
             {
                 case "easy":
@@ -118,31 +100,25 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                     card.NextReviewDate = today.AddDays(card.Interval);
                     card.EaseFactor = Math.Min(card.EaseFactor + 10, 300);
                     break;
-
                 case "hard":
                     card.Interval = 1;
                     card.NextReviewDate = today.AddDays(1);
                     card.EaseFactor = Math.Max(card.EaseFactor - 15, 130);
                     break;
-
                 case "incorrect":
                     card.Interval = 0;
                     card.NextReviewDate = today;
                     card.EaseFactor = Math.Max(card.EaseFactor - 20, 130);
                     break;
             }
-
             _lessonPanelService.AddActivityPoints((int)userId, 2, "Flashcard done");
             _creditService.CheckAndAwardDailyChallenge((int)userId);
             _creditService.CheckAndAwardWeeklyChallenge((int)userId);
-
             card.IsLeech = card.EaseFactor <= 150;
-
             var log = _dbContext.FlashcardStudyLogs
                 .FirstOrDefault(x => x.UserId == userId
                      && x.StudyDate == today
                      && x.FlashcardId == card.Id);
-
             if (log is null)
             {
                 log = new FlashcardStudyLog
@@ -157,42 +133,34 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 };
                 _dbContext.FlashcardStudyLogs.Add(log);
             }
-
             switch (request.Quality.ToLower())
             {
                 case "easy": log.EasyCount++; break;
                 case "hard": log.HardCount++; break;
                 case "incorrect": log.IncorrectCount++; break;
             }
-
             log.TimeSpentSeconds += request.TimeSpentSeconds;
-
             if (request.Quality.ToLower() == "easy" || request.Quality.ToLower() == "hard")
             {
                 bool alreadyGotBonusToday = _dbContext.ActivityPoints
                     .Any(x => x.UserId == userId && x.PointDate == today && x.Reason.Contains("Daily Flashcard Session Completed"));
-
                 if (!alreadyGotBonusToday)
                 {
                     bool hasMoreDueCards = _dbContext.Flashcards
                         .Any(x => x.UserId == userId && x.NextReviewDate <= today && x.Id != card.Id);
-
                     if (!hasMoreDueCards)
                     {
                         _lessonPanelService.AddActivityPoints(userId.Value, 15, "Daily Flashcard Session Completed - Bonus!");
                     }
                 }
             }
-
             _dbContext.SaveChanges();
         }
-
         public FlashcardStreakDto GetStreak()
         {
             var userId = _userContextService.GetUserId;
             if (userId is null)
                 return new FlashcardStreakDto { Streak = 0, StudiedToday = false };
-
             var today = PolandTime.Today;
             var dates = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId)
@@ -200,23 +168,19 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .Distinct()
                 .OrderByDescending(x => x)
                 .ToList();
-
             bool studiedToday = dates.Contains(today);
             int streak = CountConsecutiveStreak(dates, today);
-
             return new FlashcardStreakDto
             {
                 Streak = streak,
                 StudiedToday = studiedToday
             };
         }
-
         private static int CountConsecutiveStreak(List<DateOnly> datesDesc, DateOnly today)
         {
             if (!datesDesc.Any()) return 0;
             var mostRecent = datesDesc.First();
             if (mostRecent < today.AddDays(-1)) return 0;
-
             var streak = 0;
             var expected = mostRecent;
             foreach (var date in datesDesc)

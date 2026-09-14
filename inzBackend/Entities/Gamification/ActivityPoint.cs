@@ -1,5 +1,4 @@
 ﻿using inzBackend.Entities.Base;
-
 namespace inzBackend.Entities.Gamification
 {
     public class ActivityPoint : BaseEntity

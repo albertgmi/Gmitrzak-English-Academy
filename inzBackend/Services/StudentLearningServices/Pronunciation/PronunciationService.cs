@@ -6,14 +6,12 @@ using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AiPronunciationModels;
 using inzBackend.Models.StudentLearningModels.PronunciationEntryModels;
 using inzBackend.Services.UserServices;
-
 namespace inzBackend.Services.StudentLearningServices.Pronunciation
 {
     public class PronunciationService : IPronunciationService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
-
         public PronunciationService(
             GmitrzakEnglishAcademyDbContext dbContext,
             IUserContextService userContextService)
@@ -24,7 +22,6 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
         public List<PronunciationEntryDto> GetAllEntries()
         {
             var userId = _userContextService.GetUserId!.Value;
-
             return _dbContext.PronunciationEntries
                 .Where(x => x.UserId == userId
                          && x.IsInCurrentSession
@@ -41,12 +38,10 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
                 })
                 .ToList();
         }
-
         public List<PronunciationTestItemDto> GetCorrectPronunciation()
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
-
             var entries = _dbContext.PronunciationEntries
                 .Where(x => x.UserId == userId
                          && x.Status == PronunciationStatus.Correct)
@@ -65,17 +60,13 @@ namespace inzBackend.Services.StudentLearningServices.Pronunciation
                 .ToList();
             return entries;
         }
-
         public List<PronunciationAttemptDto> GetAttempts(int pronunciationEntryId)
         {
             int userId = _userContextService.GetUserId!.Value;
-
             var entryExists = _dbContext.PronunciationEntries
                 .Any(x => x.Id == pronunciationEntryId && x.UserId == userId);
-
             if (!entryExists)
                 throw new NotFoundException("Pronunciation entry not found");
-
             return _dbContext.PronunciationAttempts
                 .Where(a => a.PronunciationEntryId == pronunciationEntryId && a.UserId == userId)
                 .OrderByDescending(a => a.CreatedAt)

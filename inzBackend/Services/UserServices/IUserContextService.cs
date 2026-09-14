@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-
 namespace inzBackend.Services.UserServices
 {
     public interface IUserContextService

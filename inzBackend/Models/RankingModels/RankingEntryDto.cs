@@ -1,5 +1,4 @@
 using inzBackend.Helpers;
-
 namespace inzBackend.Models.RankingModels
 {
     public class RankingEntryDto

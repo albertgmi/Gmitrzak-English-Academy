@@ -2,19 +2,16 @@ using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using inzBackend.Models.SentenceModels;
 using inzBackend.Helpers;
-
 namespace inzBackend.Hubs
 {
     public class SentenceCollaborationHub : Hub
     {
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<string, SentenceCollaborativeUserDto>> _rooms 
             = new ConcurrentDictionary<int, ConcurrentDictionary<string, SentenceCollaborativeUserDto>>();
-
         public async Task JoinSentenceRoom(int answerId, string username, string role, string? avatarUrl = null)
         {
             var groupName = GetGroupName(answerId);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-
             var userDto = new SentenceCollaborativeUserDto
             {
                 ConnectionId = Context.ConnectionId,
@@ -23,21 +20,16 @@ namespace inzBackend.Hubs
                 AvatarUrl = avatarUrl,
                 JoinedAt = PolandTime.DateTimeNow
             };
-
             var roomUsers = _rooms.GetOrAdd(answerId, _ => new ConcurrentDictionary<string, SentenceCollaborativeUserDto>());
             roomUsers[Context.ConnectionId] = userDto;
-
             var activeUsers = roomUsers.Values.ToList();
-
             await Clients.Group(groupName).SendAsync("ActiveUsersUpdated", activeUsers);
             await Clients.OthersInGroup(groupName).SendAsync("UserJoined", userDto);
         }
-
         public async Task LeaveSentenceRoom(int answerId)
         {
             var groupName = GetGroupName(answerId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-
             if (_rooms.TryGetValue(answerId, out var roomUsers))
             {
                 if (roomUsers.TryRemove(Context.ConnectionId, out var removedUser))
@@ -48,7 +40,6 @@ namespace inzBackend.Hubs
                 }
             }
         }
-
         public async Task SendContentChange(int answerId, string content, string field, string senderUsername)
         {
             var groupName = GetGroupName(answerId);
@@ -60,7 +51,6 @@ namespace inzBackend.Hubs
                 Timestamp = DateTime.UtcNow
             });
         }
-
         public async Task SendSelectionChange(int answerId, int index, int length, string senderUsername, string senderRole)
         {
             var groupName = GetGroupName(answerId);
@@ -72,7 +62,6 @@ namespace inzBackend.Hubs
                 SenderRole = senderRole
             });
         }
-
         public async Task SendTeacherNote(int answerId, string noteId, string selectedText, string noteContent, string category, string author)
         {
             var groupName = GetGroupName(answerId);
@@ -86,7 +75,6 @@ namespace inzBackend.Hubs
                 Timestamp = PolandTime.DateTimeNow
             });
         }
-
         public async Task SendTypingStatus(int answerId, bool isTyping, string senderUsername)
         {
             var groupName = GetGroupName(answerId);
@@ -96,14 +84,12 @@ namespace inzBackend.Hubs
                 SenderUsername = senderUsername
             });
         }
-
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             foreach (var roomKv in _rooms)
             {
                 var answerId = roomKv.Key;
                 var roomUsers = roomKv.Value;
-
                 if (roomUsers.TryRemove(Context.ConnectionId, out var removedUser))
                 {
                     var groupName = GetGroupName(answerId);
@@ -112,10 +98,8 @@ namespace inzBackend.Hubs
                     await Clients.OthersInGroup(groupName).SendAsync("UserLeft", removedUser);
                 }
             }
-
             await base.OnDisconnectedAsync(exception);
         }
-
         private static string GetGroupName(int answerId) => $"sentence_ans_{answerId}";
     }
 }

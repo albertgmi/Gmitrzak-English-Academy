@@ -2,26 +2,22 @@ using inzBackend.Models.StudentCourseModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using inzBackend.Helpers;
-
 namespace inzBackend.Services.StudentCourseServices.Stats
 {
     public class StatsService : IStatsService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
-
         public StatsService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
         }
-
         public StatsDto GetStats()
         {
             var userId = _userContextService.GetUserId;
             var today = PolandTime.Today;
             var last30Days = today.AddDays(-30);
-
             var dailyActivity = _dbContext.ActivityPoints
                 .Where(x => x.UserId == userId && x.PointDate >= last30Days)
                 .GroupBy(x => x.PointDate)
@@ -32,7 +28,6 @@ namespace inzBackend.Services.StudentCourseServices.Stats
                 })
                 .OrderBy(x => x.Date)
                 .ToList();
-
             var dailyFlashcards = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId && x.StudyDate >= last30Days)
                 .GroupBy(x => x.StudyDate)
@@ -44,7 +39,6 @@ namespace inzBackend.Services.StudentCourseServices.Stats
                 })
                 .OrderBy(x => x.Date)
                 .ToList();
-
             var grades = _dbContext.Grades
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.GradeDate)
@@ -57,7 +51,6 @@ namespace inzBackend.Services.StudentCourseServices.Stats
                     Notes = x.Notes
                 })
                 .ToList();
-
             var categoryBreakdown = new CategoryBreakdownDto
             {
                 AvgVocabulary = grades.Where(x => x.Category == "Vocabulary").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
@@ -66,7 +59,6 @@ namespace inzBackend.Services.StudentCourseServices.Stats
                 AvgPronunciation = grades.Where(x => x.Category == "Pronunciation").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
                 AvgAlphabet = grades.Where(x => x.Category == "Alphabet").Select(x => x.Percentage).DefaultIfEmpty(0).Average(),
             };
-
             return new StatsDto
             {
                 DailyActivity = dailyActivity,

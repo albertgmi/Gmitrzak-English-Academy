@@ -19,32 +19,27 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
-
 public class LessonPanelService : ILessonPanelService
 {
     private readonly GmitrzakEnglishAcademyDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly IUserContextService _userContextService;
-
     public LessonPanelService(GmitrzakEnglishAcademyDbContext dbContext, IMapper mapper, IUserContextService userContextService)
     {
         _dbContext = dbContext;
         _mapper = mapper;
         _userContextService = userContextService;
     }
-
     public AgendaDto GetAgenda(int studentUserId)
     {
         var agenda = _dbContext.Agendas
             .FirstOrDefault(x => x.UserId == studentUserId);
-
         if (agenda is null)
         {
             agenda = new Agenda { UserId = studentUserId };
             _dbContext.Agendas.Add(agenda);
             _dbContext.SaveChanges();
         }
-
         return new AgendaDto
         {
             Id = agenda.Id,
@@ -54,26 +49,21 @@ public class LessonPanelService : ILessonPanelService
             Notes = agenda.Notes
         };
     }
-
     public void UpdateAgenda(int studentUserId, UpdateAgendaRequest request)
     {
         var agenda = _dbContext.Agendas
             .FirstOrDefault(x => x.UserId == studentUserId);
-
         if (agenda is null)
         {
             agenda = new Agenda { UserId = studentUserId };
             _dbContext.Agendas.Add(agenda);
         }
-
         agenda.ActivityPointTarget = request.ActivityPointTarget;
         agenda.FlashcardTarget = request.FlashcardTarget;
         agenda.ListeningEpisodeTarget = request.ListeningEpisodeTarget;
         agenda.Notes = request.Notes;
-
         _dbContext.SaveChanges();
     }
-
     public List<LessonGradeDto> GetGrades(int studentUserId)
     {
         return _dbContext.Grades
@@ -89,7 +79,6 @@ public class LessonPanelService : ILessonPanelService
             })
             .ToList();
     }
-
     public ActivityPointsLessonSummaryDto GetActivityPoints(int studentUserId)
     {
         var today = PolandTime.Today;
@@ -97,12 +86,10 @@ public class LessonPanelService : ILessonPanelService
         var thisWeekStart = today.AddDays(-daysFromMonday);
         var lastWeekStart = thisWeekStart.AddDays(-7);
         var lastWeekEnd = thisWeekStart.AddDays(-1);
-
         var all = _dbContext.ActivityPoints
             .Where(x => x.UserId == studentUserId)
             .OrderByDescending(x => x.PointDate)
             .ToList();
-
         return new ActivityPointsLessonSummaryDto
         {
             TotalAllTime = all.Sum(x => x.Points),
@@ -118,19 +105,15 @@ public class LessonPanelService : ILessonPanelService
             }).ToList()
         };
     }
-
     public void AddActivityPoints(int studentUserId, int points, string reason)
     {
         var user = _dbContext.Users
             .FirstOrDefault(u => u.Id == studentUserId)
             ?? throw new NotFoundException($"User with id: {studentUserId} was not found");
-
         var today = PolandTime.Today;
         var hasActiveBoost = user.DoublePointsExpiresAt.HasValue && user.DoublePointsExpiresAt.Value >= today;
-
         var finalPoints = hasActiveBoost ? points * 2 : points;
         var finalReason = hasActiveBoost ? $"{reason} (2x boost)" : reason;
-
         _dbContext.ActivityPoints.Add(new ActivityPoint
         {
             UserId = studentUserId,
@@ -140,22 +123,18 @@ public class LessonPanelService : ILessonPanelService
         });
         _dbContext.SaveChanges();
     }
-
     public LessonFlashcardSummaryDto GetFlashcardSummary(int studentUserId)
     {
         var today = PolandTime.Today;
-
         var allCards = _dbContext.Flashcards
             .Include(x => x.Vocabulary)
             .Where(x => x.UserId == studentUserId)
             .ToList();
-
         var studiedTodayIds = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId && x.StudyDate == today)
             .Select(x => x.FlashcardId)
             .Distinct()
             .ToList();
-
         var recentLogs = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId)
             .GroupBy(x => x.StudyDate)
@@ -170,7 +149,6 @@ public class LessonPanelService : ILessonPanelService
                 TimeSpentSeconds = g.Sum(x => x.TimeSpentSeconds)
             })
             .ToList();
-
         return new LessonFlashcardSummaryDto
         {
             TotalCards = allCards.Count,
@@ -184,7 +162,6 @@ public class LessonPanelService : ILessonPanelService
             RecentLogs = recentLogs
         };
     }
-
     public List<FlashcardDto> GetAllFlashcardsForUser(int userId)
     {
         var flashcards = _dbContext.Flashcards
@@ -194,15 +171,12 @@ public class LessonPanelService : ILessonPanelService
             .ToList();
         return _mapper.Map<List<FlashcardDto>>(flashcards);
     }
-
     public byte[] ExportFlashcardsToPdf(int userId)
     {
         var flashcards = GetAllFlashcardsForUser(userId);
         var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
             ?? throw new NotFoundException($"User with id: {userId} was not found");
-
         QuestPDF.Settings.License = LicenseType.Community;
-
         var document = Document.Create(container =>
         {
             container.Page(page =>
@@ -210,7 +184,6 @@ public class LessonPanelService : ILessonPanelService
                 page.Size(PageSizes.A4);
                 page.Margin(30);
                 page.DefaultTextStyle(x => x.FontSize(10));
-
                 page.Header().Column(col =>
                 {
                     col.Item().Text($"Flashcards - {user.Username}")
@@ -219,7 +192,6 @@ public class LessonPanelService : ILessonPanelService
                         .FontSize(9).FontColor(Colors.Grey.Medium);
                     col.Item().PaddingTop(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
                 });
-
                 page.Content().PaddingTop(10).Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
@@ -233,14 +205,12 @@ public class LessonPanelService : ILessonPanelService
                         columns.ConstantColumn(80);
                         columns.ConstantColumn(50);
                     });
-
                     table.Header(header =>
                     {
                         void HeaderCell(string text) => header.Cell()
                             .Background(Colors.Blue.Darken1)
                             .Padding(5)
                             .Text(text).FontColor(Colors.White).Bold();
-
                         HeaderCell("No.");
                         HeaderCell("Front");
                         HeaderCell("Back");
@@ -250,12 +220,10 @@ public class LessonPanelService : ILessonPanelService
                         HeaderCell("Next review");
                         HeaderCell("Leech");
                     });
-
                     int i = 1;
                     foreach (var f in flashcards)
                     {
                         var bg = i % 2 == 0 ? Colors.Grey.Lighten4 : Colors.White;
-
                         table.Cell().Background(bg).Padding(5).Text(i.ToString());
                         table.Cell().Background(bg).Padding(5).Text(f.Front);
                         table.Cell().Background(bg).Padding(5).Text(f.Back);
@@ -264,11 +232,9 @@ public class LessonPanelService : ILessonPanelService
                         table.Cell().Background(bg).Padding(5).Text(f.Interval.ToString());
                         table.Cell().Background(bg).Padding(5).Text(f.NextReviewDate.ToString("yyyy-MM-dd"));
                         table.Cell().Background(bg).Padding(5).Text(f.IsLeech ? "YES" : "");
-
                         i++;
                     }
                 });
-
                 page.Footer().AlignCenter().Text(x =>
                 {
                     x.CurrentPageNumber();
@@ -277,17 +243,13 @@ public class LessonPanelService : ILessonPanelService
                 });
             });
         });
-
         return document.GeneratePdf();
     }
-
     public byte[] ExportFlashcardsToExcel(int userId)
     {
         var flashcards = GetAllFlashcardsForUser(userId);
-
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add("Flashcards");
-
         string[] headers = { "No.", "Front", "Back", "Category", "Ease Factor", "Interval", "Next Review", "Leech" };
         for (int c = 0; c < headers.Length; c++)
         {
@@ -296,7 +258,6 @@ public class LessonPanelService : ILessonPanelService
             cell.Style.Font.Bold = true;
             cell.Style.Fill.BackgroundColor = XLColor.LightBlue;
         }
-
         int row = 2;
         int rowNumber = 1;
         foreach (var f in flashcards)
@@ -311,48 +272,37 @@ public class LessonPanelService : ILessonPanelService
             sheet.Cell(row, 8).Value = f.IsLeech ? "YES" : "";
             row++;
         }
-
         sheet.Columns().AdjustToContents();
         sheet.SheetView.FreezeRows(1);
-
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
         return stream.ToArray();
     }
-
     public void DeleteFlashcardsBulk(int studentUserId, List<int> flashcardIds)
     {
         if (flashcardIds == null || !flashcardIds.Any())
             return;
-
         var flashcardsToDelete = _dbContext.Flashcards
             .Where(f => f.UserId == studentUserId && flashcardIds.Contains(f.Id))
             .ToList();
-
         if (!flashcardsToDelete.Any())
             return;
-
         var validIds = flashcardsToDelete.Select(f => f.Id).ToList();
-
         var logsToDelete = _dbContext.FlashcardStudyLogs
             .Where(l => l.UserId == studentUserId && validIds.Contains(l.FlashcardId))
             .ToList();
-
         if (logsToDelete.Any())
         {
             _dbContext.FlashcardStudyLogs.RemoveRange(logsToDelete);
         }
-
         _dbContext.Flashcards.RemoveRange(flashcardsToDelete);
         _dbContext.SaveChanges();
     }
-
     public StudentStudyTimeDto GetStudyTime(int studentUserId)
     {
         var logs = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId)
             .ToList();
-
         var daily = logs
             .GroupBy(x => x.StudyDate)
             .OrderByDescending(g => g.Key)
@@ -367,7 +317,6 @@ public class LessonPanelService : ILessonPanelService
                 IncorrectCount = g.Sum(x => x.IncorrectCount)
             })
             .ToList();
-
         return new StudentStudyTimeDto
         {
             TotalTimeSpentSeconds = logs.Sum(x => x.TimeSpentSeconds),
@@ -378,38 +327,31 @@ public class LessonPanelService : ILessonPanelService
             DailyBreakdown = daily
         };
     }
-
     public LessonLastWeekDto GetLastWeek(int studentUserId)
     {
         var today = PolandTime.Today;
         var daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
         var weekStart = today.AddDays(-daysFromMonday);
         var weekEnd = weekStart.AddDays(6);
-
         var agenda = _dbContext.Agendas
             .FirstOrDefault(x => x.UserId == studentUserId);
-
         var activityPoints = _dbContext.ActivityPoints
             .Where(x => x.UserId == studentUserId
                      && x.PointDate >= weekStart
                      && x.PointDate <= weekEnd)
             .Sum(x => (int?)x.Points) ?? 0;
-
         var flashcardLogs = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId
                      && x.StudyDate >= weekStart
                      && x.StudyDate <= weekEnd)
             .ToList();
-
         var flashcardsStudied = flashcardLogs.Sum(x => x.EasyCount + x.HardCount + x.IncorrectCount);
         var flashcardTimeSeconds = flashcardLogs.Sum(x => x.TimeSpentSeconds);
-
         var listeningEpisodes = _dbContext.ListeningReports
             .Where(x => x.UserId == studentUserId
                      && x.ReportDate >= weekStart
                      && x.ReportDate <= weekEnd)
             .Sum(x => (int?)x.EpisodeCount) ?? 0;
-
         var grades = _dbContext.Grades
             .Where(x => x.UserId == studentUserId
                      && x.GradeDate >= weekStart
@@ -423,11 +365,9 @@ public class LessonPanelService : ILessonPanelService
                 Notes = x.Notes
             })
             .ToList();
-
         var ptTarget = agenda?.ActivityPointTarget ?? 500;
         var fcTarget = agenda?.FlashcardTarget ?? 50;
         var lisTarget = agenda?.ListeningEpisodeTarget ?? 1;
-
         return new LessonLastWeekDto
         {
             WeekStart = weekStart,
@@ -445,12 +385,10 @@ public class LessonPanelService : ILessonPanelService
             ListeningEpisodeTarget = lisTarget
         };
     }
-
     public LessonStatsDto GetStats(int studentUserId)
     {
         var today = PolandTime.Today;
         var last30Days = today.AddDays(-30);
-
         var dailyActivity = _dbContext.ActivityPoints
             .Where(x => x.UserId == studentUserId && x.PointDate >= last30Days)
             .GroupBy(x => x.PointDate)
@@ -461,7 +399,6 @@ public class LessonPanelService : ILessonPanelService
             })
             .OrderBy(x => x.Date)
             .ToList();
-
         var dailyFlashcards = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId && x.StudyDate >= last30Days)
             .GroupBy(x => x.StudyDate)
@@ -473,7 +410,6 @@ public class LessonPanelService : ILessonPanelService
             })
             .OrderBy(x => x.Date)
             .ToList();
-
         var grades = _dbContext.Grades
             .Where(x => x.UserId == studentUserId)
             .OrderByDescending(x => x.GradeDate)
@@ -486,7 +422,6 @@ public class LessonPanelService : ILessonPanelService
                 Notes = x.Notes
             })
             .ToList();
-
         return new LessonStatsDto
         {
             DailyActivity = dailyActivity,
@@ -502,11 +437,9 @@ public class LessonPanelService : ILessonPanelService
             }
         };
     }
-
     public List<AttendanceDto> GetAttendance(int studentId)
     {
         var now = PolandTime.Now;
-
         var firstDayOfMonth = new DateTimeOffset(
             now.Year,
             now.Month,
@@ -516,7 +449,6 @@ public class LessonPanelService : ILessonPanelService
             0,
             now.Offset
         );
-
         var records = _dbContext.Attendance
             .Where(a =>
                 a.UserId == studentId &&
@@ -531,10 +463,8 @@ public class LessonPanelService : ILessonPanelService
                 CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
             })
             .ToList();
-
         return records;
     }
-
     public List<AttendanceDto> GetAllAttendance()
     {
         var records = _dbContext.Attendance
@@ -552,14 +482,11 @@ public class LessonPanelService : ILessonPanelService
                 CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
             })
             .ToList();
-
         return records;
     }
-
     public List<AttendanceDto> GetAttendanceHistory(int studentId)
     {
         var now = PolandTime.Now;
-
         var firstDayOfMonth = new DateTimeOffset(
             now.Year,
             now.Month,
@@ -570,7 +497,6 @@ public class LessonPanelService : ILessonPanelService
             0,
             now.Offset
         );
-
         var records = _dbContext.Attendance
             .Where(a =>
                 a.UserId == studentId &&
@@ -585,22 +511,17 @@ public class LessonPanelService : ILessonPanelService
                 CreatedAt = PolandTime.Convert(a.CreatedAt).DateTime
             })
             .ToList();
-
         return records;
     }
-
     public AttendanceDto AddAttendance(CreateAttendanceDto dto)
     {
         var studentExists = _dbContext
             .Users
             .Any(x => x.Id == dto.UserId);
-
         if (!studentExists)
             throw new Exception($"Student with ID {dto.UserId} not found.");
-
         if (!Enum.TryParse<AttendanceType>(dto.Type, true, out var attendanceType))
             throw new Exception("Invalid attendance type. Use 'SCHEDULED' or 'MAKEUP'.");
-
         var attendance = new Attendance
         {
             UserId = dto.UserId,
@@ -608,10 +529,8 @@ public class LessonPanelService : ILessonPanelService
             DurationInMinutes = dto.Duration,
             CreatedAt = PolandTime.Now
         };
-
         _dbContext.Attendance.Add(attendance);
         _dbContext.SaveChanges();
-
         return new AttendanceDto
         {
             Id = attendance.Id,
@@ -621,34 +540,26 @@ public class LessonPanelService : ILessonPanelService
             CreatedAt = PolandTime.Now.DateTime
         };
     }
-
     public bool DeleteAttendance(int id)
     {
         var attendance = _dbContext
             .Attendance
             .FirstOrDefault(a => a.Id == id);
-
         if (attendance is null)
             throw new NotFoundException("Attendance not found");
-
         _dbContext.Attendance.Remove(attendance);
         _dbContext.SaveChanges();
-
         return true;
     }
     public void UpdateFlashcardInterval(int studentUserId, int flashcardId, int newInterval)
     {
         var card = _dbContext.Flashcards
             .FirstOrDefault(x => x.Id == flashcardId && x.UserId == studentUserId);
-
         if (card == null)
             throw new NotFoundException("Flashcard not found for this student");
-
         card.Interval = newInterval;
-
         _dbContext.SaveChanges();
     }
-
     public ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd)
     {
         var dueModules = _dbContext.UserModuleAssignments
@@ -656,25 +567,20 @@ public class LessonPanelService : ILessonPanelService
                      && x.DueDate >= weekStart
                      && x.DueDate <= weekEnd)
             .ToList();
-
         double homeworkScore = 0;
         if (dueModules.Any())
         {
             var onTime = dueModules.Count(x => x.IsCompleted);
             homeworkScore = (double)onTime / dueModules.Count * 100;
         }
-
         var startDate = weekStart.ToDateTime(TimeOnly.MinValue);
         var endDate = weekEnd.ToDateTime(TimeOnly.MaxValue);
-
         var attendanceCount = _dbContext.Attendance
             .Where(x => x.UserId == studentUserId
                      && x.CreatedAt >= startDate
                      && x.CreatedAt <= endDate)
             .Count();
-
         double attendanceScore = Math.Min(100, attendanceCount / 2.0 * 100);
-
         var watchingDone = _dbContext.UserModuleAssignments
             .Where(x => x.UserId == studentUserId
                      && x.IsCompleted
@@ -682,51 +588,40 @@ public class LessonPanelService : ILessonPanelService
                      && x.DueDate >= weekStart
                      && x.DueDate <= weekEnd)
             .Count();
-
         var watchingFromMatrix = _dbContext.UserMatrixModuleCompletions
             .Where(x => x.UserId == studentUserId
                      && x.CompletedDate >= weekStart
                      && x.CompletedDate <= weekEnd
                      && x.MatrixModule.Module.Category == "Watching")
             .Count();
-
         double watchingScore = (watchingDone + watchingFromMatrix) > 0 ? 100 : 0;
-
         var fcDays = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId
                      && x.StudyDate >= weekStart
                      && x.StudyDate <= weekEnd)
             .Select(x => x.StudyDate);
-
         var sectionDays = _dbContext.SectionActivityLogs
             .Where(x => x.UserId == studentUserId
                      && x.ActivityDate >= weekStart
                      && x.ActivityDate <= weekEnd)
             .Select(x => x.ActivityDate);
-
         var activeLearningDays = fcDays.Concat(sectionDays).Distinct().Count();
-
         double regularityScore = Math.Min(100, activeLearningDays / 3.0 * 100);
-
         var agenda = _dbContext.Agendas.FirstOrDefault(x => x.UserId == studentUserId);
         var fcTarget = agenda?.FlashcardTarget ?? 50;
-
         var fcDone = _dbContext.FlashcardStudyLogs
             .Where(x => x.UserId == studentUserId
                      && x.StudyDate >= weekStart
                      && x.StudyDate <= weekEnd)
             .Sum(x => (int?)(x.EasyCount + x.HardCount + x.IncorrectCount)) ?? 0;
-
         double flashcardScore = fcTarget > 0
             ? Math.Min(100, (double)fcDone / fcTarget * 100)
             : 0;
-
         var activityPointsSum = _dbContext.ActivityPoints
             .Where(x => x.UserId == studentUserId
                      && x.PointDate >= weekStart
                      && x.PointDate <= weekEnd)
             .Sum(x => (int?)x.Points) ?? 0;
-
         var criteriaScore = (int)Math.Round(
             homeworkScore * 0.30 +
             attendanceScore * 0.20 +
@@ -734,7 +629,6 @@ public class LessonPanelService : ILessonPanelService
             regularityScore * 0.20 +
             flashcardScore * 0.15
         );
-
         return new ActivityScoreDto
         {
             WeekStart = weekStart,
@@ -753,16 +647,13 @@ public class LessonPanelService : ILessonPanelService
             FlashcardTarget = fcTarget
         };
     }
-
     public LessonIrregularVerbSummaryDto GetIrregularVerbSummary(int studentUserId)
     {
         var today = PolandTime.Today;
         var verbs = GetAllIrregularVerbsForUser(studentUserId);
-
         var leeches = verbs.Where(x => x.IsLeech || x.EaseFactor <= 150).ToList();
         var studiedToday = verbs.Where(x => x.LastReviewDate == today).ToList();
         var dueCount = verbs.Count(x => x.NextReviewDate <= today);
-
         return new LessonIrregularVerbSummaryDto
         {
             TotalCards = verbs.Count,
@@ -772,43 +663,33 @@ public class LessonPanelService : ILessonPanelService
             Leeches = leeches
         };
     }
-
     public List<IrregularVerbDto> GetAllIrregularVerbsForUser(int studentUserId)
     {
         EnsureDefaultIrregularVerbsExist(studentUserId, IrregularVerbLevel.Basic);
         EnsureDefaultIrregularVerbsExist(studentUserId, IrregularVerbLevel.Advanced);
-
         var verbs = _dbContext.IrregularVerbs
             .Where(x => x.UserId == studentUserId)
             .OrderBy(x => x.NextReviewDate)
             .ThenBy(x => x.PolishTranslation)
             .ToList();
-
         return _mapper.Map<List<IrregularVerbDto>>(verbs);
     }
-
     public void UpdateIrregularVerbInterval(int studentUserId, int verbId, int newInterval)
     {
         var verb = _dbContext.IrregularVerbs
             .FirstOrDefault(x => x.Id == verbId && x.UserId == studentUserId);
-
         if (verb is null) throw new NotFoundException($"Irregular verb with id {verbId} for user {studentUserId} not found.");
-
         verb.Interval = Math.Max(0, newInterval);
         verb.NextReviewDate = PolandTime.Today.AddDays(verb.Interval);
-
         _dbContext.SaveChanges();
     }
-
     private void EnsureDefaultIrregularVerbsExist(int userId, IrregularVerbLevel level)
     {
         bool exists = _dbContext.IrregularVerbs.Any(x => x.UserId == userId && x.Level == level);
         if (exists) return;
-
         List<(string Polish, string English)> seedData = level == IrregularVerbLevel.Basic
             ? GetBasicDefaultVerbs()
             : GetAdvancedDefaultVerbs();
-
         var entities = seedData.Select(x => new IrregularVerb
         {
             UserId = userId,
@@ -820,11 +701,9 @@ public class LessonPanelService : ILessonPanelService
             IsLeech = false,
             NextReviewDate = PolandTime.Today
         }).ToList();
-
         _dbContext.IrregularVerbs.AddRange(entities);
         _dbContext.SaveChanges();
     }
-
     private static List<(string Polish, string English)> GetBasicDefaultVerbs() => new()
     {
         ("jechać", "drive - drove - driven"),
@@ -897,7 +776,6 @@ public class LessonPanelService : ILessonPanelService
         ("wygrać", "win - won - won"),
         ("pisać", "write - wrote - written")
     };
-
     private static List<(string Polish, string English)> GetAdvancedDefaultVerbs() => new()
     {
         ("powstać / pojawić się", "arise - arose - arisen"),
@@ -984,7 +862,6 @@ public class LessonPanelService : ILessonPanelService
         ("znieść / wytrzymać", "withstand - withstood - withstood"),
         ("wykręcać / ściskać", "wring - wrung - wrung")
     };
-
     private static LessonFlashcardDto MapFlashcard(Flashcard x)
     {
         return new LessonFlashcardDto

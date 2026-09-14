@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.CourseModels;
-
 namespace inzBackend.Models.ProgramModels
 {
     public class ProgramDto

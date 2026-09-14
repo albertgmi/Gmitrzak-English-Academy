@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
 namespace inzBackend.Models.GlobalVocabularyModels
 {
     public class VocabularyAddingRequest

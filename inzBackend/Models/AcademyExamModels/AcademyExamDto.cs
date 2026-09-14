@@ -1,5 +1,4 @@
 using inzBackend.Enums;
-
 namespace inzBackend.Models.AcademyExamModels
 {
     public class AcademyExamDto
@@ -15,7 +14,6 @@ namespace inzBackend.Models.AcademyExamModels
         public DateTime SignupDeadline { get; set; }
         public bool IsActive { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
-
         public bool IsCurrentUserSignedUp { get; set; }
         public ExamSignupStatus? CurrentUserStatus { get; set; }
         public bool CanSignUp { get; set; }

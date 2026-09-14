@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.LearningMaterials;
-
 namespace inzBackend.Entities.SpacedRepetition
 {
     public class Flashcard : AuditableEntity

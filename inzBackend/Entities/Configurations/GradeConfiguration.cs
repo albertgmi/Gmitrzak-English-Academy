@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Gamification;
-
 namespace inzBackend.Models.Configurations
 {
     public class GradeConfiguration : IEntityTypeConfiguration<Grade>

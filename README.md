@@ -15,7 +15,7 @@
 
 ## 📖 What is this?
 
-**Gmitrzak English Academy** is the backend of a full SaaS platform built to run a real, operating language school — replacing spreadsheets and manual tracking with a role-isolated **Student / Admin** system that handles enrollment, lesson delivery, spaced-repetition vocabulary training, AI-assisted writing & pronunciation feedback, gamification, and automated reporting.
+**Gmitrzak English Academy** is the backend of a full SaaS platform built to run a real, operating language school - replacing spreadsheets and manual tracking with a role-isolated **Student / Admin** system that handles enrollment, lesson delivery, spaced-repetition vocabulary training, AI-assisted writing & pronunciation feedback, gamification, and automated reporting.
 
 It's not a tutorial CRUD app. It's a system designed under real constraints: real users, real data integrity requirements, and real operational needs (financial/occupancy-style reporting, bulk data import, file generation, third-party AI services with latency and cost trade-offs).
 
@@ -61,7 +61,7 @@ inzBackend/
 
 **✍️ AI-assisted essay grading & sentence checking** - Groq-backed (Llama 3.3 70B via an OpenAI-compatible client) pipelines evaluate free-text student writing, giving structured, automatable feedback instead of requiring a teacher to manually grade every submission.
 
-**📊 Automated reporting pipeline** - admins can export module/course data as PDF (via QuestPDF) and bulk-import or export structured data via Excel (ClosedXML), with multi-file results streamed back as ZIP archives — no manual spreadsheet wrangling.
+**📊 Automated reporting pipeline** - admins can export module/course data as PDF (via QuestPDF) and bulk-import or export structured data via Excel (ClosedXML), with multi-file results streamed back as ZIP archives - no manual spreadsheet wrangling.
 
 **🎮 Gamification layer** - a credits/points economy, a ranking system with reactions, a content "shop," and streak shields to encourage daily engagement without resorting to dark patterns.
 
@@ -132,4 +132,4 @@ This project keeps secrets out of source control via `dotnet user-secrets` / env
 | `GeminiSettings:ApiKey` | Google Gemini API key (pronunciation scoring) |
 | `CloudinarySettings:CloudName / ApiKey / ApiSecret` | Media storage |
 
-> **Note:** `appsettings.json` ships with placeholder values only — none of the above will work out of the box without your own keys.
+> **Note:** `appsettings.json` ships with placeholder values only - none of the above will work out of the box without your own keys.

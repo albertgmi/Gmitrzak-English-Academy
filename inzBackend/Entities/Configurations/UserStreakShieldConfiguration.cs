@@ -1,7 +1,6 @@
 ﻿using inzBackend.Entities.Gamification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace inzBackend.Entities.Configurations
 {
     public class UserStreakShieldConfiguration : IEntityTypeConfiguration<UserStreakShield>

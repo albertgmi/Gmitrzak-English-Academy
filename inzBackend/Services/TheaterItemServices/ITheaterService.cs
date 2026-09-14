@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.TheaterItemsModels;
-
 namespace inzBackend.Services.TheaterItemServices
 {
     public interface ITheaterService

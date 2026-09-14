@@ -3,7 +3,6 @@ using inzBackend.Entities.Assignments;
 using inzBackend.Entities.Base;
 using inzBackend.Entities.SpacedRepetition;
 using inzBackend.Enums;
-
 namespace inzBackend.Entities.Identity
 {
     public class AppUser : AuditableEntity

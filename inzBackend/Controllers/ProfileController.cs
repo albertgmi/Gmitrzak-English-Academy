@@ -2,7 +2,6 @@ using inzBackend.Models.ProfileModels;
 using inzBackend.Services.ProfileServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/profile")]
@@ -10,19 +9,16 @@ namespace inzBackend.Controllers
     public class ProfileController : ControllerBase
     {
         private readonly IProfileService _profileService;
-
         public ProfileController(IProfileService profileService)
         {
             _profileService = profileService;
         }
-
         [HttpGet("{userId}")]
         [Authorize(Roles ="Admin,User")]
         public ActionResult<ProfileDto> GetProfile([FromRoute] int userId)
         {
             return _profileService.GetProfile(userId);
         }
-
         [HttpPut("{userId}")]
         [Authorize(Roles = "Admin,User")]
         public ActionResult UpdateProfile([FromRoute] int userId, [FromBody] UpdateProfileRequest request)
@@ -30,7 +26,6 @@ namespace inzBackend.Controllers
             _profileService.UpdateProfile(userId, request);
             return NoContent();
         }
-
         [HttpPost("{userId}/avatar")]
         [Authorize(Roles = "Admin,User")]
         public async Task<string> UploadAvatar([FromRoute] int userId, IFormFile file)

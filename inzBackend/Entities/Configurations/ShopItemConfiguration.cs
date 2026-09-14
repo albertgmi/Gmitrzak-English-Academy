@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Gamification;
-
 namespace inzBackend.Entities.Configurations
 {
     public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
@@ -9,18 +8,14 @@ namespace inzBackend.Entities.Configurations
         public void Configure(EntityTypeBuilder<ShopItem> builder)
         {
             builder.HasKey(si => si.Id);
-
             builder.Property(si => si.Name)
                 .IsRequired()
                 .HasMaxLength(150);
-
             builder.Property(si => si.Description)
                 .IsRequired()
                 .HasMaxLength(1000);
-
             builder.Property(si => si.IconEmoji)
                 .HasMaxLength(10);
-
             builder.HasData(
                 new ShopItem { Id = 1, Name = "Skip homework pass", Description = "Lorem ipsum dolor sit amet, skip one assignment without penalty.", CreditCost = 10, IsActive = true, IconEmoji = "📝" },
                 new ShopItem { Id = 2, Name = "Bonus lesson", Description = "Lorem ipsum consectetur, get an extra 30-minute conversation session.", CreditCost = 20, IsActive = true, IconEmoji = "🎓" },

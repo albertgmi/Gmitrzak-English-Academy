@@ -2,7 +2,6 @@
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixAssignmentModels;
 using inzBackend.Models.ModuleAssignmentModels;
-
 namespace inzBackend.Services.AssignmentServices
 {
     public interface IAssignmentService

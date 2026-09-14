@@ -1,6 +1,5 @@
 using inzBackend.Models.AdminLearningModels;
 using Microsoft.AspNetCore.Http;
-
 namespace inzBackend.Services.AdminLearningServices.Memories
 {
     public interface IAdminMemoriesService

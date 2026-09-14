@@ -1,7 +1,6 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Entities.Identity;
-
 namespace inzBackend.Entities.Assignments
 {
     public class UserModuleAssignment : AuditableEntity

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Resources;
-
 namespace inzBackend.Entities.Configurations
 {
     public class TheaterItemConfiguration : IEntityTypeConfiguration<TheaterItem>

@@ -1,6 +1,5 @@
 ﻿using inzBackend.Models.CourseModels;
 using inzBackend.Models.ModuleModels;
-
 namespace inzBackend.Models.MatrixModels
 {
     public class MatrixDto

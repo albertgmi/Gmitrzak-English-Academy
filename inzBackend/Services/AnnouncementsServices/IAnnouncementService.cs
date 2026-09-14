@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.AnnouncementModels;
-
 namespace inzBackend.Services.AnnouncementsServices
 {
     public interface IAnnouncementService

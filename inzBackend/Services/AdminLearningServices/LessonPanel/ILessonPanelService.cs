@@ -3,7 +3,6 @@ using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.CreditModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
-
 namespace inzBackend.Services.AdminLearningServices.LessonPanel
 {
     public interface ILessonPanelService

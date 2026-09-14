@@ -1,5 +1,4 @@
 using inzBackend.Entities.Base;
-
 namespace inzBackend.Entities.Resources
 {
     public class WordfinderCatalogueEntry : BaseEntity

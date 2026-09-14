@@ -1,5 +1,4 @@
 using inzBackend.Enums;
-
 namespace inzBackend.Models.StudentLearningModels.IrregularVerbModels
 {
     public class IrregularVerbDto
@@ -14,13 +13,11 @@ namespace inzBackend.Models.StudentLearningModels.IrregularVerbModels
         public DateOnly NextReviewDate { get; set; }
         public DateOnly? LastReviewDate { get; set; }
     }
-
     public class ReviewIrregularVerbRequest
     {
         public string Quality { get; set; } = string.Empty;
         public int TimeSpentSeconds { get; set; }
     }
-
     public class LessonIrregularVerbSummaryDto
     {
         public int TotalCards { get; set; }

@@ -1,5 +1,4 @@
 using System;
-
 namespace inzBackend.Models.LiveNotepadModels
 {
     public class LiveNoteSummaryDto
@@ -15,7 +14,6 @@ namespace inzBackend.Models.LiveNotepadModels
         public DateTimeOffset? CreatedAt { get; set; }
         public DateTimeOffset? LastModifiedAt { get; set; }
     }
-
     public class LiveNoteDetailDto
     {
         public int Id { get; set; }
@@ -29,19 +27,16 @@ namespace inzBackend.Models.LiveNotepadModels
         public DateTimeOffset? CreatedAt { get; set; }
         public DateTimeOffset? LastModifiedAt { get; set; }
     }
-
     public class CreateLiveNoteRequest
     {
         public string Title { get; set; } = string.Empty;
-        public int? StudentId { get; set; } // If admin, specifies student. If student, defaults to current user.
+        public int? StudentId { get; set; } 
     }
-
     public class SaveLiveNoteRequest
     {
         public string? Title { get; set; }
         public string Content { get; set; } = string.Empty;
     }
-
     public class LiveNoteCollaborativeUserDto
     {
         public string ConnectionId { get; set; } = string.Empty;

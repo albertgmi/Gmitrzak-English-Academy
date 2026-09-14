@@ -15,7 +15,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-
 namespace inzBackend.Services.UserServices
 {
     public class UserService : IUserService
@@ -37,7 +36,6 @@ namespace inzBackend.Services.UserServices
             _userContextService = userContextService;
             _lessonPanelService = lessonPanelService;
         }
-
         public AppUserDto RegisterUser(RegisterUserRequest request)
         {
             var newUser = new AppUser()
@@ -56,7 +54,6 @@ namespace inzBackend.Services.UserServices
             _dbContext.SaveChanges();
             return _mapper.Map<AppUserDto>(newUser);
         }
-
         public string Login(LoginUserRequest request)
         {
             var user = _dbContext
@@ -64,37 +61,27 @@ namespace inzBackend.Services.UserServices
                 .FirstOrDefault(x => x.Username == request.Username);
             if (user is null)
                 throw new BadRequestException("Invalid username or password");
-
-            //if (!user.IsActive)
-            //    throw new BadRequestException("User is not active");
-
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (result == PasswordVerificationResult.Failed)
                 throw new BadRequestException("Invalid username or password");
-
             var claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, $"{user.Username}"),
                 new Claim(ClaimTypes.Role, $"{user.Role.ToString()}")
             };
-
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = PolandTime.DateTimeNow.AddDays(_authenticationSettings.JwtExpireDays);
-
             var token = new JwtSecurityToken(_authenticationSettings.JwtIssuer,
                 _authenticationSettings.JwtIssuer,
                 claims,
                 expires: expires,
                 signingCredentials: cred);
             var tokenhandler = new JwtSecurityTokenHandler();
-
             var today = PolandTime.Today;
-
             var alreadyLoggedToday = _dbContext.UserLoginLogs
                 .Any(x => x.UserId == user.Id && x.LoginDate == today);
-
             if (!alreadyLoggedToday)
             {
                 _dbContext.UserLoginLogs.Add(new UserLoginLog
@@ -104,57 +91,42 @@ namespace inzBackend.Services.UserServices
                     LoginAt = PolandTime.DateTimeNow
                 });
                 _dbContext.SaveChanges();
-
                 var recentLoginDates = _dbContext.UserLoginLogs
                     .Where(x => x.UserId == user.Id)
                     .Select(x => x.LoginDate)
                     .Distinct()
                     .ToHashSet();
-
                 TryConsumeStreakShield(user.Id, recentLoginDates, today);
-
                 var shieldedDates = _dbContext.UserStreakShields
                     .Where(x => x.UserId == user.Id && x.IsUsed && x.ProtectedDate.HasValue)
                     .Select(x => x.ProtectedDate!.Value)
                     .ToHashSet();
-
                 int currentStreak = CalculateStreak(recentLoginDates, today, shieldedDates);
-
                 var pointsToAward = Math.Ceiling((double)currentStreak / 2);
-
                 _lessonPanelService.AddActivityPoints(user.Id, (int)pointsToAward, $"Logging streak - {currentStreak} days in a row!");
-
                 _dbContext.SaveChanges();
             }
-
             user.LastLoginAt = PolandTime.DateTimeNow;
             user.LastActiveAt = PolandTime.DateTimeNow;
             _dbContext.SaveChanges();
-
             return tokenhandler.WriteToken(token);
         }
-
         public List<AppUserDto> GetAllUsers()
         {
             return GetUsers(true);
         }
-
         public List<AppUserDto> GetAllInactiveUsers()
         {
             return GetUsers(false);
         }
-
         public AppUserDto GetUserById()
         {
             var userId = _userContextService.GetUserId;
-
             var user = _dbContext
                 .Users
                 .FirstOrDefault(u => u.Id == userId);
-
             return _mapper.Map<AppUserDto>(user);
         }
-
         public void UpdateUser(UpdateUserRequest request, int userId)
         {
             var user = _dbContext
@@ -171,7 +143,6 @@ namespace inzBackend.Services.UserServices
                 user.PasswordHash = passwordHashed;
             }
             user.IsActive = request.isActive;
-
             var profile = _dbContext.Profiles.FirstOrDefault(p => p.UserId == userId);
             if (profile is null)
             {
@@ -183,10 +154,8 @@ namespace inzBackend.Services.UserServices
                 profile.StreakOverride = request.StreakOverride;
                 profile.StreakOverrideDate = request.StreakOverride.HasValue ? PolandTime.Today : null;
             }
-
             _dbContext.SaveChanges();
         }
-
         public void DeleteUser(int userId)
         {
             var user = _dbContext
@@ -197,20 +166,16 @@ namespace inzBackend.Services.UserServices
             _dbContext.Users.Remove(user);
             _dbContext.SaveChanges();
         }
-
         public void DeleteManyUsers(List<int> userIds)
         {
             var usersToDelete = _dbContext.Users
                 .Where(u => userIds.Contains(u.Id))
                 .ToList();
-
             if (usersToDelete.Count != userIds.Count)
                 throw new NotFoundException("Not all users had been found");
-
             _dbContext.Users.RemoveRange(usersToDelete);
             _dbContext.SaveChanges();
         }
-
         public List<StudentActivityDto> GetStudentsActivity()
         {
             return _dbContext.Users
@@ -226,7 +191,6 @@ namespace inzBackend.Services.UserServices
                 })
                 .ToList();
         }
-
         private List<AppUserDto> GetUsers(bool isActive)
         {
             var today = PolandTime.Today;
@@ -234,25 +198,21 @@ namespace inzBackend.Services.UserServices
                 .Include(u => u.Profile)
                 .Where(u => u.IsActive == isActive)
                 .ToList();
-
             var flashcardLogs = _dbContext.FlashcardStudyLogs
                 .Select(x => new { x.UserId, x.StudyDate })
                 .Distinct()
                 .ToList();
-
             return users.Select(u =>
             {
                 var userDates = flashcardLogs
                     .Where(x => x.UserId == u.Id)
                     .Select(x => x.StudyDate)
                     .ToList();
-
                 int calculatedStreak = StreakHelper.CalculateDynamicStreak(
                     userDates,
                     u.Profile?.StreakOverride,
                     u.Profile?.StreakOverrideDate,
                     today);
-
                 return new AppUserDto
                 {
                     Id = u.Id,
@@ -272,28 +232,22 @@ namespace inzBackend.Services.UserServices
         {
             var streak = 0;
             var expectedDate = today;
-
             while (loginDates.Contains(expectedDate) || shieldedDates.Contains(expectedDate))
             {
                 streak++;
                 expectedDate = expectedDate.AddDays(-1);
             }
-
             return streak;
         }
-
         private void TryConsumeStreakShield(int userId, HashSet<DateOnly> loginDates, DateOnly today)
         {
             var yesterday = today.AddDays(-1);
             if (loginDates.Contains(yesterday)) return;
-
             var shield = _dbContext.UserStreakShields
                 .Where(x => x.UserId == userId && !x.IsUsed)
                 .OrderBy(x => x.CreatedAt)
                 .FirstOrDefault();
-
             if (shield is null) return;
-
             shield.IsUsed = true;
             shield.ProtectedDate = yesterday;
             _dbContext.SaveChanges();

@@ -1,5 +1,4 @@
 using System;
-
 namespace inzBackend.Models.EssayModels
 {
     public class EssayCommentDto
@@ -16,7 +15,6 @@ namespace inzBackend.Models.EssayModels
         public bool IsArchived { get; set; } = false;
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
-
     public class CreateEssayCommentRequest
     {
         public string SelectedText { get; set; } = string.Empty;

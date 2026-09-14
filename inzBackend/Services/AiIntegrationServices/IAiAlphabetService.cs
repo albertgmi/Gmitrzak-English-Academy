@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.StudentLearningModels.AlphabetModels;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public interface IAiAlphabetService

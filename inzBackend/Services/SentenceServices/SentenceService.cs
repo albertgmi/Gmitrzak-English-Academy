@@ -10,14 +10,12 @@ using inzBackend.Models.SentenceSetsModels;
 using inzBackend.Models.SentenceStockModels;
 using inzBackend.Services.AiIntegrationServices;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.SentenceServices
 {
     public class SentenceService : ISentenceService
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IAiTranslationService _aiTranslationService;
-
         public SentenceService(GmitrzakEnglishAcademyDbContext dbContext, IAiTranslationService aiTranslationService)
         {
             _dbContext = dbContext;
@@ -36,7 +34,6 @@ namespace inzBackend.Services.SentenceServices
                 })
                 .ToList();
         }
-
         public void CreateStock(CreateSentenceStockRequest request)
         {
             _dbContext.SentenceStocks.Add(new SentenceStock
@@ -47,27 +44,22 @@ namespace inzBackend.Services.SentenceServices
             });
             _dbContext.SaveChanges();
         }
-
         public void DeleteStock(int id)
         {
             var s = _dbContext.SentenceStocks.FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Sentence not found");
-
             _dbContext.SentenceStocks.Remove(s);
             _dbContext.SaveChanges();
         }
-
         public void UpdateSentenceFromStock(int sentenceId, UpdateSentenceRequest request)
         {
             var sentence = _dbContext
                 .SentenceStocks
                 .FirstOrDefault(s => s.Id == sentenceId)
             ?? throw new NotFoundException("Sentence not found");
-
             sentence.EnglishTranslation = request.NewEnglish;
             _dbContext.SaveChanges();
         }
-
         public async Task<SentenceSetDto> UploadStockFromExcel(IFormFile file)
         {
             using var stream = new MemoryStream();
@@ -76,23 +68,18 @@ namespace inzBackend.Services.SentenceServices
             using var workbook = new XLWorkbook(stream);
             var ws = workbook.Worksheets.First();
             var rows = ws.RangeUsed().RowsUsed().Skip(1).ToList();
-
             var parsedRows = new List<SentenceImportEntry>();
             var seenInFile = new HashSet<string>();
-
             foreach (var row in rows)
             {
                 var english = row.Cell(3).GetValue<string>().Trim();
                 var existingTranslation = row.Cell(4).GetValue<string>().Trim();
                 var category = row.Cell(5).GetValue<string>().Trim();
-
                 if (string.IsNullOrWhiteSpace(english))
                     continue;
-
                 var normalizedEnglish = english.ToLower();
                 if (!seenInFile.Add(normalizedEnglish))
                     continue;
-
                 parsedRows.Add(new SentenceImportEntry
                 {
                     English = english,
@@ -100,14 +87,11 @@ namespace inzBackend.Services.SentenceServices
                     ExistingTranslation = existingTranslation
                 });
             }
-
             if (!parsedRows.Any())
                 throw new BadRequestException("File contains no valid entries");
-
             var existingStockMap = await _dbContext.SentenceStocks
                 .Select(x => new { x.Id, Normalized = x.EnglishTranslation.Trim().ToLower() })
                 .ToDictionaryAsync(x => x.Normalized, x => x.Id);
-
             var rowsNeedingNewStock = new List<(SentenceImportEntry Entry, int Index)>();
             for (int i = 0; i < parsedRows.Count; i++)
             {
@@ -115,35 +99,29 @@ namespace inzBackend.Services.SentenceServices
                 if (!existingStockMap.ContainsKey(normalized))
                     rowsNeedingNewStock.Add((parsedRows[i], i));
             }
-
             var indexesNeedingTranslation = rowsNeedingNewStock
                 .Where(x => string.IsNullOrWhiteSpace(x.Entry.ExistingTranslation))
                 .Select(x => x.Index)
                 .ToList();
-
             var polishByIndex = new Dictionary<int, string>();
             if (indexesNeedingTranslation.Any())
             {
                 var englishTexts = indexesNeedingTranslation
                     .Select(i => parsedRows[i].English)
                     .ToList();
-
                 var polishTranslations = await _aiTranslationService
                     .TranslateBatchAsync(englishTexts, "Polish");
-
                 for (int i = 0; i < indexesNeedingTranslation.Count; i++)
                 {
                     if (i < polishTranslations.Count)
                         polishByIndex[indexesNeedingTranslation[i]] = polishTranslations[i];
                 }
             }
-
             var newStockByIndex = new Dictionary<int, SentenceStock>();
             var newStockEntries = new List<SentenceStock>();
             foreach (var (entry, index) in rowsNeedingNewStock)
             {
                 var polish = polishByIndex.TryGetValue(index, out var p) ? p : entry.ExistingTranslation;
-
                 var stock = new SentenceStock
                 {
                     Polish = polish,
@@ -153,13 +131,11 @@ namespace inzBackend.Services.SentenceServices
                 newStockEntries.Add(stock);
                 newStockByIndex[index] = stock;
             }
-
             if (newStockEntries.Any())
             {
                 _dbContext.SentenceStocks.AddRange(newStockEntries);
                 await _dbContext.SaveChangesAsync();
             }
-
             var stockIdByIndex = new Dictionary<int, int>();
             for (int i = 0; i < parsedRows.Count; i++)
             {
@@ -169,12 +145,9 @@ namespace inzBackend.Services.SentenceServices
                 else if (newStockByIndex.TryGetValue(i, out var newStock))
                     stockIdByIndex[i] = newStock.Id;
             }
-
             var setName = Path.GetFileNameWithoutExtension(file.FileName);
-
             var set = await _dbContext.SentenceSets
                 .FirstOrDefaultAsync(x => x.Name == setName);
-
             if (set is null)
             {
                 var groupName = setName;
@@ -182,7 +155,6 @@ namespace inzBackend.Services.SentenceServices
                     .Where(x => x.GroupName == groupName)
                     .Select(x => (int?)x.Order)
                     .MaxAsync() ?? 0;
-
                 set = new SentenceSet
                 {
                     Name = setName,
@@ -192,21 +164,17 @@ namespace inzBackend.Services.SentenceServices
                 _dbContext.SentenceSets.Add(set);
                 await _dbContext.SaveChangesAsync();
             }
-
             var existingItems = await _dbContext.SentenceSetItems
                 .Where(x => x.SentenceSetId == set.Id)
                 .ToListAsync();
-
             var existingItemStockIds = existingItems.Select(x => x.SentenceStockId).ToHashSet();
             var nextItemOrder = existingItems.Any() ? existingItems.Max(x => x.Order) + 1 : 1;
-
             var itemsToAdd = new List<SentenceSetItem>();
             foreach (var kvp in stockIdByIndex.OrderBy(x => x.Key))
             {
                 var stockId = kvp.Value;
                 if (existingItemStockIds.Contains(stockId))
                     continue;
-
                 itemsToAdd.Add(new SentenceSetItem
                 {
                     SentenceSetId = set.Id,
@@ -215,23 +183,19 @@ namespace inzBackend.Services.SentenceServices
                 });
                 existingItemStockIds.Add(stockId);
             }
-
             if (itemsToAdd.Any())
             {
                 _dbContext.SentenceSetItems.AddRange(itemsToAdd);
                 await _dbContext.SaveChangesAsync();
             }
-
             return GetSet(set.Id);
         }
-
         public List<SentenceSetGroupDto> GetAllSetsGrouped()
         {
             var sets = _dbContext.SentenceSets
                 .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
                 .OrderBy(x => x.GroupName).ThenBy(x => x.Order)
                 .ToList();
-
             return sets
                 .GroupBy(x => x.GroupName)
                 .Select(g => new SentenceSetGroupDto
@@ -256,14 +220,12 @@ namespace inzBackend.Services.SentenceServices
                 })
                 .ToList();
         }
-
         public SentenceSetDto GetSet(int id)
         {
             var set = _dbContext.SentenceSets
                 .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
                 .FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Set not found");
-
             return new SentenceSetDto
             {
                 Id = set.Id,
@@ -281,15 +243,12 @@ namespace inzBackend.Services.SentenceServices
                 }).ToList()
             };
         }
-
         public SentenceSetDto CreateSet(CreateSentenceSetRequest request)
         {
             var nameExists = _dbContext.SentenceSets
                 .Any(x => x.Name == request.Name);
-
             if (nameExists)
                 throw new BadRequestException($"A sentence set named \"{request.Name}\" already exists. Please choose a different name.");
-
             var set = new SentenceSet
             {
                 Name = request.Name,
@@ -298,7 +257,6 @@ namespace inzBackend.Services.SentenceServices
             };
             _dbContext.SentenceSets.Add(set);
             _dbContext.SaveChanges();
-
             var items = request.SentenceStockIds
                 .Select((sid, idx) => new SentenceSetItem
                 {
@@ -306,39 +264,31 @@ namespace inzBackend.Services.SentenceServices
                     SentenceStockId = sid,
                     Order = idx + 1
                 }).ToList();
-
             _dbContext.SentenceSetItems.AddRange(items);
             _dbContext.SaveChanges();
-
             return GetSet(set.Id);
         }
-
         public void DeleteSet(int id)
         {
             var set = _dbContext.SentenceSets
                 .Include(x => x.Items)
                 .FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Set not found");
-
             _dbContext.SentenceSetItems.RemoveRange(set.Items);
             _dbContext.SentenceSets.Remove(set);
             _dbContext.SaveChanges();
         }
-
         public void AssignToUser(AssignSentenceRequest request)
         {
             var stockSentence = _dbContext.SentenceStocks
                 .FirstOrDefault(x => x.Id == request.SentenceStockId)
                 ?? throw new NotFoundException("Sentence stock not found");
-
             var alreadyExists = _dbContext.Sentences
                 .Any(x => x.UserId == request.UserId
                        && x.Translation.Trim().ToLower() == stockSentence.EnglishTranslation.Trim().ToLower());
-
             if (!alreadyExists)
             {
                 var today = PolandTime.Today;
-
                 _dbContext.Sentences.Add(new Sentence
                 {
                     UserId = request.UserId,
@@ -352,7 +302,6 @@ namespace inzBackend.Services.SentenceServices
                     NextReviewDate = today
                 });
             }
-
             _dbContext.UserSentenceAssignments.Add(new UserSentenceAssignment
             {
                 UserId = request.UserId,
@@ -363,15 +312,12 @@ namespace inzBackend.Services.SentenceServices
             });
             _dbContext.SaveChanges();
         }
-
         public void AssignToModule(AssignSetToModuleRequest request)
         {
             var exists = _dbContext.ModuleSentenceSets
                 .Any(x => x.ModuleId == request.ModuleId && x.SentenceSetId == request.SentenceSetId);
-
             if (exists)
                 throw new BadRequestException("This sentence set is already assigned to this module.");
-
             _dbContext.ModuleSentenceSets.Add(new ModuleSentenceSet
             {
                 ModuleId = request.ModuleId,
@@ -379,14 +325,12 @@ namespace inzBackend.Services.SentenceServices
             });
             _dbContext.SaveChanges();
         }
-
         public List<SentenceSetDto> GetSetsForModule(int moduleId)
         {
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.SentenceSetId)
                 .ToList();
-
             return _dbContext.SentenceSets
                 .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
                 .Where(x => setIds.Contains(x.Id))
@@ -408,64 +352,50 @@ namespace inzBackend.Services.SentenceServices
                 })
                 .ToList();
         }
-
         public void RemoveSetFromModule(int moduleId, int setId)
         {
             var link = _dbContext.ModuleSentenceSets
                 .FirstOrDefault(x => x.ModuleId == moduleId && x.SentenceSetId == setId)
                 ?? throw new NotFoundException("Assignment between module and set was not found");
-
             _dbContext.ModuleSentenceSets.Remove(link);
             _dbContext.SaveChanges();
         }
-
         public void UpdateStock(int id, UpdateSentenceStockRequest request)
         {
             var stock = _dbContext.SentenceStocks.FirstOrDefault(x => x.Id == id)
                 ?? throw new NotFoundException("Sentence not found");
-
             var cleanPolish = RemovePunctuation(stock.Polish.ToLower().Trim());
             var cleanEnglish = RemovePunctuation(stock.EnglishTranslation.ToLower().Trim());
-
             var stockInSentences = _dbContext.Sentences
                 .Where(x => x.Content.ToLower().Trim()
                     .Replace(".", "").Replace("?", "").Replace("!", "").Replace(",", "") == cleanPolish
                     && x.Translation.ToLower().Trim()
                     .Replace(".", "").Replace("?", "").Replace("!", "").Replace(",", "") == cleanEnglish)
                 .FirstOrDefault();
-
             if (stockInSentences is not null)
                 stockInSentences.Content = request.Polish;
-
             stock.Polish = request.Polish;
             _dbContext.SaveChanges();
         }
-
         public async Task<List<SearchSentenceResultDto>> SearchSentence(string query, int studentId)
         {
             var normalizedQuery = query.Trim().ToLower();
-
             var globalSentences = _dbContext.SentenceStocks
                 .Where(s => s.EnglishTranslation.ToLower().Contains(normalizedQuery) ||
                             s.Polish.ToLower().Contains(normalizedQuery))
                 .ToList();
-
             var studentSentences = _dbContext.Sentences
                 .Where(s => s.UserId == studentId)
                 .Select(s => new { Content = s.Content.ToLower(), Translation = s.Translation.ToLower() })
                 .ToList();
-
             var results = new List<SearchSentenceResultDto>();
-
             if (globalSentences.Any())
             {
                 foreach (var globalSentence in globalSentences)
                 {
                     var globalEnglish = globalSentence.EnglishTranslation.ToLower();
                     var globalPolish = globalSentence.Polish.ToLower();
-
                     bool isAssigned = studentSentences.Any(s => s.Content == globalPolish || s.Translation == globalEnglish);
-
                     results.Add(new SearchSentenceResultDto
                     {
                         Id = globalSentence.Id,
@@ -480,13 +410,10 @@ namespace inzBackend.Services.SentenceServices
             else
             {
                 bool isAssigned = studentSentences.Any(s => s.Content.Contains(normalizedQuery) || s.Translation.Contains(normalizedQuery));
-
                 List<string> queryList = new List<string>();
                 queryList.Add(query);
-
                 var autoTranslation = _aiTranslationService
                     .TranslateBatchAsync(queryList);
-
                 results.Add(new SearchSentenceResultDto
                 {
                     Id = null,
@@ -497,37 +424,28 @@ namespace inzBackend.Services.SentenceServices
                     AlreadyAssignedToStudent = isAssigned
                 });
             }
-
             return results;
         }
-
         public void AssignSentenceSetToUser(AssignSentenceSetToStudentRequest request)
         {
             var set = _dbContext.SentenceSets
                 .Include(x => x.Items).ThenInclude(i => i.SentenceStock)
                 .FirstOrDefault(x => x.Id == request.SentenceSetId)
                 ?? throw new NotFoundException("Sentence set not found");
-
             if (!set.Items.Any())
                 throw new BadRequestException("This sentence set has no items to assign.");
-
             var dueDate = DateOnly.Parse(request.DueDate);
             var today = PolandTime.Today;
-
             var stockItems = set.Items.Select(i => i.SentenceStock).ToList();
-
             var existingTranslations = _dbContext.Sentences
                 .Where(x => x.UserId == request.UserId)
                 .Select(x => x.Translation.Trim().ToLower())
                 .ToHashSet();
-
             var sentencesToAdd = new List<Sentence>();
             var assignmentsToAdd = new List<UserSentenceAssignment>();
-
             foreach (var stock in stockItems)
             {
                 var normalizedTranslation = stock.EnglishTranslation.Trim().ToLower();
-
                 if (!existingTranslations.Contains(normalizedTranslation))
                 {
                     sentencesToAdd.Add(new Sentence
@@ -542,10 +460,8 @@ namespace inzBackend.Services.SentenceServices
                         IsLeech = false,
                         NextReviewDate = today
                     });
-
                     existingTranslations.Add(normalizedTranslation);
                 }
-
                 assignmentsToAdd.Add(new UserSentenceAssignment
                 {
                     UserId = request.UserId,
@@ -555,15 +471,11 @@ namespace inzBackend.Services.SentenceServices
                     IsCompleted = false
                 });
             }
-
             if (sentencesToAdd.Any())
                 _dbContext.Sentences.AddRange(sentencesToAdd);
-
             _dbContext.UserSentenceAssignments.AddRange(assignmentsToAdd);
-
             _dbContext.SaveChanges();
         }
-
         string RemovePunctuation(string input)
         {
             return new string(input.Where(c => !char.IsPunctuation(c)).ToArray());

@@ -1,6 +1,5 @@
 ﻿using inzBackend.Models.MatrixModels;
 using inzBackend.Models.ProgramModels;
-
 namespace inzBackend.Models.CourseModels
 {
     public class CourseDto

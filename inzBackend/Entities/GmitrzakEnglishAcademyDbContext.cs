@@ -11,7 +11,6 @@ using inzBackend.Helpers;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using System;
-
 namespace inzBackend.Models
 {
     public class GmitrzakEnglishAcademyDbContext : DbContext
@@ -78,32 +77,26 @@ namespace inzBackend.Models
         public DbSet<AcademyExam> AcademyExams { get; set; }
         public DbSet<AcademyExamSignup> AcademyExamSignups { get; set; }
         public DbSet<IrregularVerb> IrregularVerbs { get; set; }
-
         public override int SaveChanges()
         {
             ApplyAuditInfo();
             return base.SaveChanges();
         }
-
         private void ApplyAuditInfo()
         {
             var entries = ChangeTracker
                 .Entries<AuditableEntity>()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
-
             var currentUsername = _userContextService.GetUserName ?? "System";
             var now = PolandTime.DateTimeNow;
-
             foreach (var entityEntry in entries)
             {
                 entityEntry.Entity.LastModifiedAt = now;
                 entityEntry.Entity.LastModifiedBy = currentUsername;
-
                 if (entityEntry.State == EntityState.Added)
                     entityEntry.Entity.CreatedBy = currentUsername;
             }
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

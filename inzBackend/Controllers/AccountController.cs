@@ -2,7 +2,6 @@
 using inzBackend.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/auth")]
@@ -14,7 +13,6 @@ namespace inzBackend.Controllers
         {
             _userService = userService;
         }
-
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
         public ActionResult<AppUserDto> Register([FromBody] RegisterUserRequest request)
@@ -22,7 +20,6 @@ namespace inzBackend.Controllers
             var user = _userService.RegisterUser(request);
             return user;
         }
-
         [HttpPost("login")]
         [AllowAnonymous]
         public ActionResult<string> Login([FromBody] LoginUserRequest request)

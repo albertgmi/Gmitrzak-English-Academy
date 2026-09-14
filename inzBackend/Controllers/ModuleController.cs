@@ -3,7 +3,6 @@ using inzBackend.Models.ModuleModels;
 using inzBackend.Services.ModuleServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace inzBackend.Controllers
 {
     [Route("api/module")]
@@ -16,46 +15,39 @@ namespace inzBackend.Controllers
         {
             _moduleService = moduleService;
         }
-
         [HttpGet]
         public ActionResult<List<ModuleDto>> GetAllModules()
         {
             return _moduleService.GetAllModules();
         }
-
         [HttpGet("student/{studentId}/sentences")]
         public ActionResult<List<ModuleDto>> GetSentenceModulesForStudent([FromRoute] int studentId)
         {
             return Ok(_moduleService.GetSentenceModulesForStudent(studentId));
         }
-
         [HttpPost]
         public ActionResult<Module> CreateModule([FromBody] CreateModuleRequest request)
         {
             return Ok(_moduleService.CreateModule(request));
         }
-
         [HttpPut("{moduleId}")]
         public ActionResult UpdateModule([FromRoute] int moduleId, [FromBody] UpdateModuleRequest request)
         {
             _moduleService.UpdateModule(moduleId, request);
             return Ok();
         }
-
         [HttpDelete("{moduleId}")]
         public ActionResult DeleteModule([FromRoute] int moduleId)
         {
             _moduleService.DeleteModule(moduleId);
             return NoContent();
         }
-
         [HttpPost("{moduleId}/matrix/{matrixId}")]
         public ActionResult AssignMatrix([FromRoute] int moduleId, [FromRoute] int matrixId, [FromBody] AssignModuleToMatrixRequest request)
         {
             _moduleService.AssignMatrix(moduleId, matrixId, request);
             return Ok();
         }
-
         [HttpDelete("{moduleId}/matrix/{matrixId}")]
         public ActionResult DetachMatrix([FromRoute] int moduleId, [FromRoute] int matrixId)
         {

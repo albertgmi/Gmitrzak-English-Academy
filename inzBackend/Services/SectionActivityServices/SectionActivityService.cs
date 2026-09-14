@@ -7,7 +7,6 @@ using inzBackend.Models.ModuleModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.CreditServices;
 using inzBackend.Services.UserServices;
-
 namespace inzBackend.Services.SectionActivityServices
 {
     public class SectionActivityService : ISectionActivityService
@@ -16,7 +15,6 @@ namespace inzBackend.Services.SectionActivityServices
         private readonly IUserContextService _userContextService;
         private readonly ILessonPanelService _lessonPanelService;
         private readonly ICreditService _creditService;
-
         public SectionActivityService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
             ILessonPanelService lessonPanelService, ICreditService creditService)
         {
@@ -25,21 +23,17 @@ namespace inzBackend.Services.SectionActivityServices
             _lessonPanelService = lessonPanelService;
             _creditService = creditService;
         }
-
         public void LogActivity(LogActivityRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
-
             var validSections = new[] { "memories", "pronunciation", "alphabet", "sentenceflashcards", "flashcards" };
             if (!validSections.Contains(request.Section.ToLower()))
                 throw new BadRequestException("No valid sections");
-
             var exists = _dbContext.SectionActivityLogs.Any(x =>
                 x.UserId == userId &&
                 x.Section == request.Section.ToLower() &&
                 x.ActivityDate == today);
-
             if (!exists)
             {
                 _dbContext.SectionActivityLogs.Add(new SectionActivityLog
@@ -48,7 +42,6 @@ namespace inzBackend.Services.SectionActivityServices
                     Section = request.Section.ToLower(),
                     ActivityDate = today
                 });
-
                 var points = request.Section.ToLower() switch
                 {
                     "memories" => 3,
@@ -58,12 +51,9 @@ namespace inzBackend.Services.SectionActivityServices
                     "flashcards" => 2,
                     _ => 1
                 };
-
                 _lessonPanelService.AddActivityPoints(
                     userId, points, $"Daily visit: {request.Section.ToLower()}");
-
                 _dbContext.SaveChanges();
-
                 if (request.Section.ToLower() == "flashcards" ||
                     request.Section.ToLower() == "sentenceflashcards")
                 {

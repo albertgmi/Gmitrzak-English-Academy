@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Curriculum;
-
 namespace inzBackend.Entities.LearningMaterials
 {
     public class ModuleSentenceSet : BaseEntity

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Models.Configurations
 {
     public class ProgramConfiguration : IEntityTypeConfiguration<Entities.Curriculum.Program>

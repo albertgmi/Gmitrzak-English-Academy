@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.LearningMaterials;
-
 namespace inzBackend.Entities.Configurations
 {
     public class SentenceSetConfiguration : IEntityTypeConfiguration<SentenceSet>

@@ -7,7 +7,6 @@ namespace inzBackend.Models.StudentLearningModels.WeeklyMoviesModels
         public int TotalWatchedCount { get; set; }
         public int UniqueViewersCount { get; set; }
     }
-
     public class TopWatcherDto
     {
         public int Rank { get; set; }
@@ -16,7 +15,6 @@ namespace inzBackend.Models.StudentLearningModels.WeeklyMoviesModels
         public string? AvatarUrl { get; set; }
         public int TotalWatchedCount { get; set; }
     }
-
     public class WeeklyMoviesResponseDto
     {
         public DateOnly WeekStartDate { get; set; }

@@ -1,6 +1,5 @@
 using inzBackend.Enums;
 using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
-
 namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
 {
     public interface IIrregularVerbsService

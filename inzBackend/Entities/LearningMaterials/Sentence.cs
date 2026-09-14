@@ -1,6 +1,5 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Helpers;
-
 namespace inzBackend.Entities.LearningMaterials
 {
     public class Sentence : AuditableEntity

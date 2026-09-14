@@ -8,7 +8,6 @@ using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.CreditServices;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
-
 namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
 {
     public class IrregularVerbsService : IIrregularVerbsService
@@ -18,7 +17,6 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
         private readonly IMapper _mapper;
         private readonly ILessonPanelService _lessonPanelService;
         private readonly ICreditService _creditService;
-
         public IrregularVerbsService(
             GmitrzakEnglishAcademyDbContext dbContext,
             IUserContextService userContextService,
@@ -32,95 +30,73 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
             _lessonPanelService = lessonPanelService;
             _creditService = creditService;
         }
-
         public List<IrregularVerbDto> GetIrregularVerbsByLevel(IrregularVerbLevel level)
         {
             var userId = _userContextService.GetUserId;
             if (userId is null) return new List<IrregularVerbDto>();
-
             EnsureDefaultVerbsExist(userId.Value, level);
-
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value && x.Level == level)
                 .OrderBy(x => x.NextReviewDate)
                 .ThenBy(x => x.PolishTranslation)
                 .ToList();
-
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
         }
-
         public List<IrregularVerbDto> GetAllIrregularVerbs()
         {
             var userId = _userContextService.GetUserId;
             if (userId is null) return new List<IrregularVerbDto>();
-
             EnsureDefaultVerbsExist(userId.Value, IrregularVerbLevel.Basic);
             EnsureDefaultVerbsExist(userId.Value, IrregularVerbLevel.Advanced);
-
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value)
                 .OrderBy(x => x.NextReviewDate)
                 .ThenBy(x => x.PolishTranslation)
                 .ToList();
-
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
         }
-
         public List<IrregularVerbDto> GetLeeches()
         {
             var userId = _userContextService.GetUserId;
             if (userId is null) return new List<IrregularVerbDto>();
-
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value && (x.IsLeech || x.EaseFactor <= 150))
                 .OrderBy(x => x.EaseFactor)
                 .ToList();
-
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
         }
-
         public List<IrregularVerbDto> GetStudiedToday()
         {
             var userId = _userContextService.GetUserId;
             if (userId is null) return new List<IrregularVerbDto>();
-
             var today = PolandTime.Today;
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value && x.LastReviewDate == today)
                 .OrderByDescending(x => x.NextReviewDate)
                 .ToList();
-
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
         }
-
         public List<IrregularVerbDto> SearchIrregularVerbs(string query)
         {
             var userId = _userContextService.GetUserId;
             if (userId is null || string.IsNullOrWhiteSpace(query)) return new List<IrregularVerbDto>();
-
             var q = query.Trim().ToLower();
             var verbs = _dbContext.IrregularVerbs
                 .Where(x => x.UserId == userId.Value &&
                             (x.PolishTranslation.ToLower().Contains(q) || x.EnglishForms.ToLower().Contains(q)))
                 .OrderBy(x => x.PolishTranslation)
                 .ToList();
-
             return _mapper.Map<List<IrregularVerbDto>>(verbs);
         }
-
         public void ReviewIrregularVerb(int id, ReviewIrregularVerbRequest request)
         {
             var userId = _userContextService.GetUserId;
             if (userId is null) return;
-
             var card = _dbContext.IrregularVerbs
                 .FirstOrDefault(x => x.Id == id && x.UserId == userId.Value);
-
             if (card is null) return;
-
             var today = PolandTime.Today;
             card.LastReviewDate = today;
-
             switch (request.Quality.ToLower())
             {
                 case "easy":
@@ -128,13 +104,11 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                     card.NextReviewDate = today.AddDays(card.Interval);
                     card.EaseFactor = Math.Min(card.EaseFactor + 10, 300);
                     break;
-
                 case "hard":
                     card.Interval = 1;
                     card.NextReviewDate = today.AddDays(1);
                     card.EaseFactor = Math.Max(card.EaseFactor - 15, 130);
                     break;
-
                 case "incorrect":
                 case "again_1m":
                     card.Interval = 0;
@@ -142,25 +116,19 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                     card.EaseFactor = Math.Max(card.EaseFactor - 20, 130);
                     break;
             }
-
             card.IsLeech = card.EaseFactor <= 150;
-
             _lessonPanelService.AddActivityPoints(userId.Value, 2, "Irregular verb flashcard done");
             _creditService.CheckAndAwardDailyChallenge(userId.Value);
             _creditService.CheckAndAwardWeeklyChallenge(userId.Value);
-
             _dbContext.SaveChanges();
         }
-
         private void EnsureDefaultVerbsExist(int userId, IrregularVerbLevel level)
         {
             bool exists = _dbContext.IrregularVerbs.Any(x => x.UserId == userId && x.Level == level);
             if (exists) return;
-
             List<(string Polish, string English)> seedData = level == IrregularVerbLevel.Basic
                 ? GetBasicDefaultVerbs()
                 : GetAdvancedDefaultVerbs();
-
             var today = PolandTime.Today;
             var entities = seedData.Select(item => new IrregularVerb
             {
@@ -173,11 +141,9 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 IsLeech = false,
                 NextReviewDate = today
             }).ToList();
-
             _dbContext.IrregularVerbs.AddRange(entities);
             _dbContext.SaveChanges();
         }
-
         private static List<(string Polish, string English)> GetBasicDefaultVerbs()
         {
             return new List<(string, string)>
@@ -252,7 +218,6 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 ("pisać", "write, wrote, written")
             };
         }
-
         private static List<(string Polish, string English)> GetAdvancedDefaultVerbs()
         {
             return new List<(string, string)>

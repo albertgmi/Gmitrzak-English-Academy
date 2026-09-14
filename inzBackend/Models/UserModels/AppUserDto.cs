@@ -1,6 +1,5 @@
 using inzBackend.Enums;
 using inzBackend.Helpers;
-
 namespace inzBackend.Models.UserModels
 {
     public class AppUserDto

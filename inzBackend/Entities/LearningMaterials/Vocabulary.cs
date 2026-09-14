@@ -1,7 +1,6 @@
 ﻿using inzBackend.Entities.Base;
 using inzBackend.Entities.Resources;
 using inzBackend.Entities.SpacedRepetition;
-
 namespace inzBackend.Entities.LearningMaterials
 {
     public class Vocabulary : AuditableEntity

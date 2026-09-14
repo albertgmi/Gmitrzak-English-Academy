@@ -1,5 +1,4 @@
 ﻿using inzBackend.Models.RankingModels;
-
 namespace inzBackend.Services.RankingServices
 {
     public interface IRankingService

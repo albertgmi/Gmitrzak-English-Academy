@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Gamification;
-
 namespace inzBackend.Entities.Configurations
 {
     public class RankingReactionConfiguration : IEntityTypeConfiguration<RankingReaction>

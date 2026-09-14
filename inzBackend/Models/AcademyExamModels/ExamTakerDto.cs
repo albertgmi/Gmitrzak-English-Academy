@@ -1,5 +1,4 @@
 using inzBackend.Enums;
-
 namespace inzBackend.Models.AcademyExamModels
 {
     public class ExamTakerDto

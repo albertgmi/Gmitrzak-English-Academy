@@ -2,7 +2,6 @@
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using AutoMapper;
-
 namespace inzBackend.Services.StudentCourseServices.Grade
 {
     public class GradesService : IGradesService
@@ -10,7 +9,6 @@ namespace inzBackend.Services.StudentCourseServices.Grade
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly IMapper _mapper;
-
         public GradesService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService,
             IMapper mapper)
         {
@@ -18,17 +16,14 @@ namespace inzBackend.Services.StudentCourseServices.Grade
             _userContextService = userContextService;
             _mapper = mapper;
         }
-
         public List<GradeDto> GetGrades()
         {
             var userId = _userContextService.GetUserId;
-
             var grades =_dbContext
                 .Grades
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.GradeDate)
                 .ToList();
-
             return _mapper.Map<List<GradeDto>>(grades);
         }
     }

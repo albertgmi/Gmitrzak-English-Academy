@@ -16,7 +16,6 @@ using OpenXmlDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Entities.Assignments;
 using inzBackend.Services.ReportServices;
-
 namespace inzBackend.Services.EssayServices
 {
     public class EssayService : IEssayService
@@ -24,7 +23,6 @@ namespace inzBackend.Services.EssayServices
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
         private readonly ILessonPanelService _lessonPanelService;
-
         public EssayService(
             GmitrzakEnglishAcademyDbContext dbContext,
             IUserContextService userContextService,
@@ -34,20 +32,15 @@ namespace inzBackend.Services.EssayServices
             _userContextService = userContextService;
             _lessonPanelService = lessonPanelService;
         }
-
         public EssayModuleDto GetEssayModule(int moduleId)
         {
             var userId = _userContextService.GetUserId!.Value;
-
             var module = _dbContext.Modules
                 .FirstOrDefault(x => x.Id == moduleId && x.Category == "Essay")
                 ?? throw new NotFoundException("Essay module not found");
-
             var activeAssignment = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId && !x.IsCompleted);
-
             UserEssay? existing = null;
-
             if (activeAssignment != null)
             {
                 existing = _dbContext.UserEssays
@@ -62,7 +55,6 @@ namespace inzBackend.Services.EssayServices
                     .OrderByDescending(x => x.Id)
                     .FirstOrDefault();
             }
-
             return new EssayModuleDto
             {
                 ModuleId = module.Id,
@@ -71,21 +63,16 @@ namespace inzBackend.Services.EssayServices
                 ExistingEssay = existing is null ? null : MapToDto(existing, module)
             };
         }
-
         public UserEssayDto SubmitEssay(SubmitEssayRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
             var today = PolandTime.Today;
-
             var module = _dbContext.Modules
                 .FirstOrDefault(x => x.Id == request.ModuleId)
                 ?? throw new NotFoundException("Module not found");
-
             var activeAssignment = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.UserId == userId && x.ModuleId == request.ModuleId && !x.IsCompleted);
-
             UserEssay newOrExistingEssay;
-
             if (activeAssignment != null)
             {
                 var alreadySubmitted = _dbContext.UserEssays
@@ -93,10 +80,8 @@ namespace inzBackend.Services.EssayServices
                            && x.ModuleId == request.ModuleId
                            && x.UserModuleAssignmentId == activeAssignment.Id
                            && x.IsSubmitted);
-
                 if (alreadySubmitted)
                     throw new BadRequestException("Essay already submitted for this assignment.");
-
                 newOrExistingEssay = new UserEssay
                 {
                     UserId = userId,
@@ -120,17 +105,12 @@ namespace inzBackend.Services.EssayServices
                 };
                 _dbContext.UserEssays.Add(newOrExistingEssay);
             }
-
             _dbContext.SaveChanges();
-
             CompleteModuleForUser(userId, request.ModuleId);
-
             _lessonPanelService.AddActivityPoints(
                 userId, 15, $"Essay submitted: {module.Name}");
-
             return MapToDto(newOrExistingEssay, module);
         }
-
         public List<UserEssayDto> GetAllEssaysForAdmin()
         {
             return _dbContext.UserEssays
@@ -155,13 +135,11 @@ namespace inzBackend.Services.EssayServices
                 })
                 .ToList();
         }
-
         public List<UserEssayDto> GetMyEssays()
         {
             var userId = _userContextService.GetUserId!.Value;
             return GetEssaysForStudent(userId);
         }
-
         public List<UserEssayDto> GetEssaysForStudent(int studentId)
         {
             return _dbContext.UserEssays
@@ -186,7 +164,6 @@ namespace inzBackend.Services.EssayServices
                 })
                 .ToList();
         }
-
         public UserEssayDto ReviewEssay(int essayId, ReviewEssayRequest request)
         {
             var essay = _dbContext.UserEssays
@@ -194,16 +171,12 @@ namespace inzBackend.Services.EssayServices
                 .Include(x => x.Module)
                 .FirstOrDefault(x => x.Id == essayId)
                 ?? throw new NotFoundException("Essay not found");
-
             essay.AdminContent = request.AdminContent;
             essay.IsReviewed = true;
             essay.ReviewedDate = PolandTime.Today;
-
             _dbContext.SaveChanges();
-
             return MapToDto(essay, essay.Module);
         }
-
         public byte[] ExportEssayToDocx(int essayId)
         {
             var essay = _dbContext.UserEssays
@@ -211,27 +184,21 @@ namespace inzBackend.Services.EssayServices
                 .Include(x => x.Module)
                 .FirstOrDefault(x => x.Id == essayId)
                 ?? throw new NotFoundException("Essay not found");
-
             using var stream = new MemoryStream();
-
             using (var doc = WordprocessingDocument.Create(
                 stream, WordprocessingDocumentType.Document, true))
             {
                 var mainPart = DocxHelper.InitDocument(doc);
                 var body = new Body();
-
                 body.Append(DocxHelper.CreateParagraph("Essay Review", bold: true, fontSize: 32, spaceAfter: 160));
                 body.Append(DocxHelper.CreateParagraph($"Student: {essay.User.Username}", bold: true, spaceAfter: 60));
                 body.Append(DocxHelper.CreateParagraph(
-                    $"Submitted: {essay.SubmittedDate?.ToString("d MMM yyyy") ?? "—"}", spaceAfter: 200));
-
+                    $"Submitted: {essay.SubmittedDate?.ToString("d MMM yyyy") ?? "-"}", spaceAfter: 200));
                 body.Append(DocxHelper.CreateSectionHeader("Essay Prompt", "2E74B5"));
                 body.Append(DocxHelper.CreateParagraph(essay.Module.EssayPrompt ?? string.Empty, italic: true, spaceAfter: 200));
-
                 if (!string.IsNullOrWhiteSpace(essay.AdminContent))
                 {
                     body.Append(DocxHelper.CreateSectionHeader("CORRECTIONS", "375623"));
-
                     var adminText = StripHtml(essay.AdminContent);
                     foreach (var line in SplitIntoLines(adminText))
                         body.Append(DocxHelper.CreateParagraph(line, color: "375623", spaceAfter: 120));
@@ -241,16 +208,12 @@ namespace inzBackend.Services.EssayServices
                     body.Append(DocxHelper.CreateSectionHeader("CORRECTIONS", "7F7F7F"));
                     body.Append(DocxHelper.CreateParagraph("No corrections yet.", italic: true, color: "7F7F7F", spaceAfter: 120));
                 }
-
                 body.Append(DocxHelper.CreateSectionProperties());
-
                 mainPart.Document.Append(body);
                 mainPart.Document.Save();
             }
-
             return stream.ToArray();
         }
-
         public byte[] ExportAllReviewedEssaysToZip()
         {
             var reviewedEssays = _dbContext.UserEssays
@@ -259,9 +222,7 @@ namespace inzBackend.Services.EssayServices
                 .Where(x => x.IsSubmitted && x.IsReviewed)
                 .OrderByDescending(x => x.ReviewedDate)
                 .ToList();
-
             using var zipStream = new MemoryStream();
-
             using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
             {
                 foreach (var essay in reviewedEssays)
@@ -269,56 +230,45 @@ namespace inzBackend.Services.EssayServices
                     var username = string.Join("_", (essay.User?.Username ?? "student").Split(Path.GetInvalidFileNameChars()));
                     var moduleName = string.Join("_", (essay.Module?.Name ?? "module").Split(Path.GetInvalidFileNameChars()));
                     var fileName = $"essay_{essay.Id}_{username}_{moduleName}.docx";
-
                     var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
                     var docxBytes = ExportEssayToDocx(essay.Id);
-
                     using var entryStream = zipEntry.Open();
                     entryStream.Write(docxBytes, 0, docxBytes.Length);
                 }
             }
-
             return zipStream.ToArray();
         }
-
         private static IEnumerable<string> SplitIntoLines(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return [""];
-
             return text
                 .Split('\n')
                 .Select(l => l.Trim())
                 .Where(l => l.Length > 0)
-                .DefaultIfEmpty("—");
+                .DefaultIfEmpty("-");
         }
-
         private void CompleteModuleForUser(int userId, int moduleId)
         {
             var direct = _dbContext.UserModuleAssignments
                 .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
-
             if (direct is not null && !direct.IsCompleted)
             {
                 direct.IsCompleted = true;
                 _dbContext.SaveChanges();
             }
-
             var userMatrixIds = _dbContext.UserMatrixAssignments
                 .Where(x => x.UserId == userId)
                 .Select(x => x.MatrixId)
                 .ToList();
-
             var matrixModules = _dbContext.MatrixModules
                 .Where(x => x.ModuleId == moduleId && userMatrixIds.Contains(x.MatrixId))
                 .Select(x => x.Id)
                 .ToList();
-
             foreach (var mmId in matrixModules)
             {
                 var alreadyDone = _dbContext.UserMatrixModuleCompletions
                     .Any(x => x.UserId == userId && x.MatrixModuleId == mmId);
-
                 if (!alreadyDone)
                 {
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
@@ -329,10 +279,8 @@ namespace inzBackend.Services.EssayServices
                     });
                 }
             }
-
             _dbContext.SaveChanges();
         }
-
         private static UserEssayDto MapToDto(UserEssay x, Module module) => new()
         {
             Id = x.Id,
@@ -347,7 +295,6 @@ namespace inzBackend.Services.EssayServices
             ReviewedDate = x.ReviewedDate,
             Username = string.Empty
         };
-
         public List<EssayCommentDto> GetCommentsForEssay(int essayId)
         {
             return _dbContext.EssayComments
@@ -370,14 +317,11 @@ namespace inzBackend.Services.EssayServices
                 })
                 .ToList();
         }
-
         public EssayCommentDto AddComment(int essayId, CreateEssayCommentRequest request)
         {
             var userId = _userContextService.GetUserId!.Value;
-
             var essay = _dbContext.UserEssays.FirstOrDefault(e => e.Id == essayId)
                 ?? throw new NotFoundException("Essay not found");
-
             var comment = new EssayComment
             {
                 UserEssayId = essayId,
@@ -388,12 +332,9 @@ namespace inzBackend.Services.EssayServices
                 IsArchived = false,
                 CreatedAt = PolandTime.DateTimeNow
             };
-
             _dbContext.EssayComments.Add(comment);
             _dbContext.SaveChanges();
-
             var author = _dbContext.Users.Include(u => u.Profile).FirstOrDefault(u => u.Id == userId);
-
             return new EssayCommentDto
             {
                 Id = comment.Id,
@@ -409,16 +350,13 @@ namespace inzBackend.Services.EssayServices
                 Timestamp = comment.CreatedAt
             };
         }
-
         public void ArchiveComment(int commentId)
         {
             var comment = _dbContext.EssayComments.FirstOrDefault(c => c.Id == commentId)
                 ?? throw new NotFoundException("Comment not found");
-
             comment.IsArchived = true;
             _dbContext.SaveChanges();
         }
-
         private static string StripHtml(string html)
         {
             if (string.IsNullOrWhiteSpace(html)) return string.Empty;

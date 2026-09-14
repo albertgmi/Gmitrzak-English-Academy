@@ -2,7 +2,6 @@
 using inzBackend.Entities.LearningMaterials;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace inzBackend.Entities.Configurations
 {
     public class PronunciationAttemptConfiguration : IEntityTypeConfiguration<PronunciationAttempt>

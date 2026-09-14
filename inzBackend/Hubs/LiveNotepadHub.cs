@@ -5,18 +5,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using inzBackend.Models.LiveNotepadModels;
 using Microsoft.AspNetCore.SignalR;
-
 namespace inzBackend.Hubs
 {
     public class LiveNotepadHub : Hub
     {
         private static readonly ConcurrentDictionary<string, List<LiveNoteCollaborativeUserDto>> RoomUsers = new();
-
         public async Task JoinNoteRoom(int noteId, string username, string role, string? avatarUrl)
         {
             var roomName = GetRoomName(noteId);
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
-
             var user = new LiveNoteCollaborativeUserDto
             {
                 ConnectionId = Context.ConnectionId,
@@ -25,23 +22,19 @@ namespace inzBackend.Hubs
                 AvatarUrl = avatarUrl,
                 JoinedAt = DateTime.UtcNow
             };
-
             var users = RoomUsers.GetOrAdd(roomName, _ => new List<LiveNoteCollaborativeUserDto>());
             lock (users)
             {
                 users.RemoveAll(u => u.ConnectionId == Context.ConnectionId);
                 users.Add(user);
             }
-
             await Clients.Group(roomName).SendAsync("UserJoined", user);
             await Clients.Caller.SendAsync("ActiveUsersList", users.ToList());
         }
-
         public async Task LeaveNoteRoom(int noteId)
         {
             var roomName = GetRoomName(noteId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
-
             if (RoomUsers.TryGetValue(roomName, out var users))
             {
                 lock (users)
@@ -51,7 +44,6 @@ namespace inzBackend.Hubs
                 await Clients.Group(roomName).SendAsync("UserLeft", Context.ConnectionId);
             }
         }
-
         public async Task SendContentChange(int noteId, string content, string senderUsername, string? deltaJson = null)
         {
             var roomName = GetRoomName(noteId);
@@ -64,7 +56,6 @@ namespace inzBackend.Hubs
                 timestamp = DateTime.UtcNow
             });
         }
-
         public async Task SendSelectionChange(int noteId, int index, int length, string senderUsername, string role)
         {
             var roomName = GetRoomName(noteId);
@@ -77,7 +68,6 @@ namespace inzBackend.Hubs
                 role
             });
         }
-
         public async Task SendTypingStatus(int noteId, bool isTyping, string senderUsername)
         {
             var roomName = GetRoomName(noteId);
@@ -88,7 +78,6 @@ namespace inzBackend.Hubs
                 senderUsername
             });
         }
-
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             foreach (var kvp in RoomUsers)
@@ -100,16 +89,13 @@ namespace inzBackend.Hubs
                 {
                     removed = users.RemoveAll(u => u.ConnectionId == Context.ConnectionId) > 0;
                 }
-
                 if (removed)
                 {
                     await Clients.Group(roomName).SendAsync("UserLeft", Context.ConnectionId);
                 }
             }
-
             await base.OnDisconnectedAsync(exception);
         }
-
         private static string GetRoomName(int noteId) => $"live_note_{noteId}";
     }
 }

@@ -1,23 +1,19 @@
 ﻿using inzBackend.Models.AiSpellCheckingModels;
 using OpenAI.Chat;
 using System.Text.Json;
-
 namespace inzBackend.Services.AiIntegrationServices
 {
     public class AiSpellCheckService : IAiSpellCheckService
     {
         private readonly ChatClient _chatClient;
-
         public AiSpellCheckService(ChatClient chatClient)
         {
             _chatClient = chatClient;
         }
-
         public async Task<SpellCheckResult> CheckTextAsync(string text, string language = "English")
         {
             if (string.IsNullOrWhiteSpace(text))
                 return new SpellCheckResult { HasError = false };
-
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateSystemMessage(
@@ -34,32 +30,25 @@ namespace inzBackend.Services.AiIntegrationServices
                 ),
                 ChatMessage.CreateUserMessage($"Language: {language}. Text: \"{text}\"")
             };
-
             var options = new ChatCompletionOptions
             {
                 ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
                 Temperature = 0.1f
             };
-
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
             string responseText = completion.Content[0].Text;
-
             var result = JsonSerializer.Deserialize<SpellCheckResult>(responseText,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
             return result ?? new SpellCheckResult { HasError = false };
         }
-
         public async Task<List<SpellCheckResult>> CheckBatchAsync(List<SpellCheckRequestItem> items)
         {
             if (items == null || !items.Any())
                 return new List<SpellCheckResult>();
-
             var jsonInput = JsonSerializer.Serialize(new
             {
                 items = items.Select(i => new { text = i.Text, language = i.Language })
             });
-
             var messages = new List<ChatMessage>
             {
                 ChatMessage.CreateSystemMessage(
@@ -74,19 +63,15 @@ namespace inzBackend.Services.AiIntegrationServices
                 ),
                 ChatMessage.CreateUserMessage($"Input JSON: {jsonInput}")
             };
-
             var options = new ChatCompletionOptions
             {
                 ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
                 Temperature = 0.1f
             };
-
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
             string responseText = completion.Content[0].Text;
-
             var result = JsonSerializer.Deserialize<SpellCheckBatchResult>(responseText,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
             return result?.Results ?? new List<SpellCheckResult>();
         }
     }
