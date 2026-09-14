@@ -13,6 +13,7 @@ namespace inzBackend.Services.EssayServices
         byte[] ExportAllReviewedEssaysToZip();
         List<EssayCommentDto> GetCommentsForEssay(int essayId);
         EssayCommentDto AddComment(int essayId, CreateEssayCommentRequest request);
+        EssayCommentDto UpdateComment(int commentId, UpdateEssayCommentRequest request);
         void ArchiveComment(int commentId);
     }
 }

@@ -594,6 +594,33 @@ namespace inzBackend.Services.UserAnswerServices
                 IsArchived = comment.IsArchived
             };
         }
+        public inzBackend.Models.SentenceModels.SentenceAnswerCommentDto UpdateSentenceAnswerComment(int commentId, inzBackend.Models.SentenceModels.UpdateSentenceAnswerCommentRequest request)
+        {
+            var user = _userContextService.User;
+            if (user != null && (user.IsInRole("Admin") || user.IsInRole("Teacher")))
+            {
+                throw new BadRequestException("Only students are allowed to edit comments.");
+            }
+
+            var comment = _dbContext.UserSentenceAnswerComments
+                .FirstOrDefault(x => x.Id == commentId)
+                ?? throw new NotFoundException($"Comment {commentId} not found");
+
+            comment.NoteContent = request.NoteContent;
+            _dbContext.SaveChanges();
+
+            return new inzBackend.Models.SentenceModels.SentenceAnswerCommentDto
+            {
+                Id = comment.Id,
+                UserSentenceAnswerId = comment.UserSentenceAnswerId,
+                SelectedText = comment.SelectedText,
+                NoteContent = comment.NoteContent,
+                Category = comment.Category,
+                Author = comment.Author,
+                Timestamp = comment.Timestamp,
+                IsArchived = comment.IsArchived
+            };
+        }
         public void ArchiveSentenceAnswerComment(int commentId)
         {
             var comment = _dbContext.UserSentenceAnswerComments

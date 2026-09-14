@@ -73,6 +73,11 @@ namespace inzBackend.Controllers
         {
             return Ok(_essayService.AddComment(essayId, request));
         }
+        [HttpPut("comments/{commentId}")]
+        public ActionResult<EssayCommentDto> UpdateComment(int commentId, [FromBody] UpdateEssayCommentRequest request)
+        {
+            return Ok(_essayService.UpdateComment(commentId, request));
+        }
         [HttpPut("comments/{commentId}/archive")]
         public ActionResult ArchiveComment(int commentId)
         {

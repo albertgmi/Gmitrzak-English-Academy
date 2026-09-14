@@ -350,6 +350,37 @@ namespace inzBackend.Services.EssayServices
                 Timestamp = comment.CreatedAt
             };
         }
+        public EssayCommentDto UpdateComment(int commentId, UpdateEssayCommentRequest request)
+        {
+            var user = _userContextService.User;
+            if (user != null && (user.IsInRole("Admin") || user.IsInRole("Teacher")))
+            {
+                throw new BadRequestException("Only students are allowed to edit comments.");
+            }
+
+            var comment = _dbContext.EssayComments
+                .Include(c => c.Author).ThenInclude(a => a.Profile)
+                .FirstOrDefault(c => c.Id == commentId)
+                ?? throw new NotFoundException("Comment not found");
+
+            comment.NoteContent = request.NoteContent;
+            _dbContext.SaveChanges();
+
+            return new EssayCommentDto
+            {
+                Id = comment.Id,
+                NoteId = $"note_{comment.Id}",
+                UserEssayId = comment.UserEssayId,
+                AuthorId = comment.AuthorId,
+                Author = comment.Author?.Username ?? "User",
+                AvatarUrl = comment.Author?.Profile?.AvatarUrl,
+                SelectedText = comment.SelectedText,
+                NoteContent = comment.NoteContent,
+                Category = comment.Category,
+                IsArchived = comment.IsArchived,
+                Timestamp = comment.CreatedAt
+            };
+        }
         public void ArchiveComment(int commentId)
         {
             var comment = _dbContext.EssayComments.FirstOrDefault(c => c.Id == commentId)

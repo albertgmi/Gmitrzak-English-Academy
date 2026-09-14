@@ -119,6 +119,11 @@ namespace inzBackend.Controllers
         {
             return Ok(_service.AddCommentToSentenceAnswer(answerId, request));
         }
+        [HttpPut("live-room/comments/{commentId}")]
+        public ActionResult<inzBackend.Models.SentenceModels.SentenceAnswerCommentDto> UpdateSentenceComment([FromRoute] int commentId, [FromBody] inzBackend.Models.SentenceModels.UpdateSentenceAnswerCommentRequest request)
+        {
+            return Ok(_service.UpdateSentenceAnswerComment(commentId, request));
+        }
         [HttpPut("live-room/comments/{commentId}/archive")]
         public ActionResult ArchiveSentenceComment([FromRoute] int commentId)
         {

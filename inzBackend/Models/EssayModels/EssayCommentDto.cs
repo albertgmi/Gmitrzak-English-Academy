@@ -21,4 +21,8 @@ namespace inzBackend.Models.EssayModels
         public string NoteContent { get; set; } = string.Empty;
         public string Category { get; set; } = "Grammar";
     }
+    public class UpdateEssayCommentRequest
+    {
+        public string NoteContent { get; set; } = string.Empty;
+    }
 }

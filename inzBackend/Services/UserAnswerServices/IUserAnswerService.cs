@@ -17,6 +17,7 @@ namespace inzBackend.Services.UserAnswerServices
         inzBackend.Models.SentenceModels.SentenceAnswerLiveDto SaveSentenceReview(int answerId, inzBackend.Models.SentenceModels.SaveSentenceReviewRequest request);
         List<inzBackend.Models.SentenceModels.SentenceAnswerCommentDto> GetCommentsForSentenceAnswer(int answerId);
         inzBackend.Models.SentenceModels.SentenceAnswerCommentDto AddCommentToSentenceAnswer(int answerId, inzBackend.Models.SentenceModels.CreateSentenceAnswerCommentRequest request);
+        inzBackend.Models.SentenceModels.SentenceAnswerCommentDto UpdateSentenceAnswerComment(int commentId, inzBackend.Models.SentenceModels.UpdateSentenceAnswerCommentRequest request);
         void ArchiveSentenceAnswerComment(int commentId);
     }
 }

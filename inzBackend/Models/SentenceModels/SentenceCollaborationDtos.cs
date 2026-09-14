@@ -67,4 +67,8 @@ namespace inzBackend.Models.SentenceModels
         public string NoteContent { get; set; } = string.Empty;
         public string Category { get; set; } = "Grammar";
     }
+    public class UpdateSentenceAnswerCommentRequest
+    {
+        public string NoteContent { get; set; } = string.Empty;
+    }
 }
