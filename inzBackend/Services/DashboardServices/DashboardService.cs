@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.DashboardModels;
+using inzBackend.Models.DashboardModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
@@ -175,26 +175,18 @@ namespace inzBackend.Services.DashboardServices
             var criteriaMet = lastWeekPoints >= (agenda?.ActivityPointTarget ?? 500)
                            && lastWeekFlashcards >= (agenda?.FlashcardTarget ?? 50)
                            && lastWeekListening >= (agenda?.ListeningEpisodeTarget ?? 1);
-            var loginDates = _dbContext.UserLoginLogs
+            var userEntity = _dbContext.Users.Include(u => u.Profile).FirstOrDefault(u => u.Id == userId);
+            var studyDates = _dbContext.FlashcardStudyLogs
                 .Where(x => x.UserId == userId)
-                .Select(x => x.LoginDate)
+                .Select(x => x.StudyDate)
                 .Distinct()
                 .OrderByDescending(x => x)
                 .ToList();
-            var streak = 0;
-            var check = today;
-            foreach (var date in loginDates)
-            {
-                if (date == check)
-                {
-                    streak++;
-                    check = check.AddDays(-1);
-                }
-                else if (date < check)
-                {
-                    break;
-                }
-            }
+            int streak = StreakHelper.CalculateDynamicStreak(
+                studyDates,
+                userEntity?.Profile?.StreakOverride,
+                userEntity?.Profile?.StreakOverrideDate,
+                today);
             return new StudentDashboardDto
             {
                 Username = user?.Username ?? string.Empty,

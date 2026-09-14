@@ -121,6 +121,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
             if (userId is null)
                 return new FlashcardStreakDto { Streak = 0, StudiedToday = false };
             var today = PolandTime.Today;
+            var user = _dbContext.Users.Include(u => u.Profile).FirstOrDefault(u => u.Id == userId);
             var dates = _dbContext.SectionActivityLogs
                 .Where(x => x.UserId == userId && x.Section == "sentenceflashcards")
                 .Select(x => x.ActivityDate)
@@ -128,7 +129,11 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                 .OrderByDescending(x => x)
                 .ToList();
             bool studiedToday = dates.Contains(today);
-            int streak = CountConsecutiveStreak(dates, today);
+            int streak = StreakHelper.CalculateDynamicStreak(
+                dates,
+                user?.Profile?.StreakOverride,
+                user?.Profile?.StreakOverrideDate,
+                today);
             return new FlashcardStreakDto
             {
                 Streak = streak,

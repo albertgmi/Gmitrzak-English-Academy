@@ -29,8 +29,17 @@ namespace inzBackend.Helpers
                 }
                 return streak;
             }
-            var overrideBaseDate = streakOverrideDate ?? today;
             var lastStudyDate = sortedDates.FirstOrDefault();
+            DateOnly overrideBaseDate;
+            if (streakOverrideDate.HasValue)
+            {
+                overrideBaseDate = streakOverrideDate.Value;
+            }
+            else
+            {
+                overrideBaseDate = lastStudyDate != default ? lastStudyDate : today.AddDays(-2);
+            }
+
             var anchorDate = lastStudyDate > overrideBaseDate ? lastStudyDate : overrideBaseDate;
             if (anchorDate < today.AddDays(-1))
             {
