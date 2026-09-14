@@ -1,4 +1,4 @@
-﻿using inzBackend.Exceptions;
+using inzBackend.Exceptions;
 using inzBackend.Models.CatalogueModels;
 using inzBackend.Models;
 using inzBackend.Services.UserServices;
@@ -202,14 +202,27 @@ namespace inzBackend.Services.CatalogueServices
                 .Catalogues
                 .Include(x => x.Entries)
                 .FirstOrDefault(x => x.Id == catalogueId);
+
             if (catalogue is null)
                 throw new NotFoundException("Catalogue not found");
+
             var relatedVocabulary = _dbContext.Vocabulary
                 .Where(x => x.CatalogueId == catalogueId)
                 .ToList();
+
+            var relatedVocabIds = relatedVocabulary.Select(v => v.Id).ToList();
+            if (relatedVocabIds.Any())
+            {
+                var relatedFlashcards = _dbContext.Flashcards
+                    .Where(f => relatedVocabIds.Contains(f.VocabularyId))
+                    .ToList();
+                _dbContext.Flashcards.RemoveRange(relatedFlashcards);
+            }
+
             _dbContext.CatalogueEntries.RemoveRange(catalogue.Entries);
             _dbContext.Vocabulary.RemoveRange(relatedVocabulary);
             _dbContext.Catalogues.Remove(catalogue);
+
             _dbContext.SaveChanges();
         }
         public void UpdateTranslation(UpdateTranslationRequest request, int entryId)
