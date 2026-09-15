@@ -3,6 +3,8 @@ using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.CreditModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
+using inzBackend.Models.StudentLearningModels.SentenceModels;
+
 namespace inzBackend.Services.AdminLearningServices.LessonPanel
 {
     public interface ILessonPanelService
@@ -26,6 +28,9 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         LessonIrregularVerbSummaryDto GetIrregularVerbSummary(int studentUserId);
         List<IrregularVerbDto> GetAllIrregularVerbsForUser(int studentUserId);
         void UpdateIrregularVerbInterval(int studentUserId, int verbId, int newInterval);
+        LessonSentenceSummaryDto GetSentenceSummary(int studentUserId);
+        List<SentenceDto> GetAllSentencesForUser(int studentUserId);
+        void UpdateSentence(int studentUserId, int sentenceId, UpdateSentenceAdminRequest request);
         ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
         void DeleteFlashcardsBulk(int studentUserId, List<int> flashcardIds);
         byte[] ExportFlashcardsToPdf(int userId);

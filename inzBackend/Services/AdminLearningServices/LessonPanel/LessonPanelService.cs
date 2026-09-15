@@ -13,6 +13,7 @@ using inzBackend.Models.CreditModels;
 using inzBackend.Entities.LearningMaterials;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
+using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using inzBackend.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
@@ -874,5 +875,77 @@ public class LessonPanelService : ILessonPanelService
             IsLeech = x.IsLeech,
             NextReviewDate = x.NextReviewDate
         };
+    }
+
+    public LessonSentenceSummaryDto GetSentenceSummary(int studentUserId)
+    {
+        var today = PolandTime.Today;
+        var sentences = GetAllSentencesForUser(studentUserId);
+        var leeches = sentences.Where(x => x.IsLeech || x.EaseFactor <= 150).ToList();
+        var studiedToday = sentences.Where(x => x.IsReviewed == true).ToList();
+        var dueCount = sentences.Count(x => x.NextReviewDate <= today);
+        return new LessonSentenceSummaryDto
+        {
+            TotalCards = sentences.Count,
+            DueCount = dueCount,
+            StudiedTodayCount = studiedToday.Count,
+            LeechCount = leeches.Count,
+            Leeches = leeches,
+            StudiedToday = studiedToday
+        };
+    }
+
+    public List<SentenceDto> GetAllSentencesForUser(int studentUserId)
+    {
+        var sentences = _dbContext.Sentences
+            .Where(x => x.UserId == studentUserId)
+            .OrderBy(x => x.NextReviewDate)
+            .ThenBy(x => x.Content)
+            .Select(x => new SentenceDto
+            {
+                Id = x.Id,
+                Content = x.Content,
+                Translation = x.Translation,
+                Notes = x.Notes,
+                IsReviewed = x.IsReviewed,
+                IsPrivate = true,
+                EaseFactor = x.EaseFactor,
+                Interval = x.Interval,
+                IsLeech = x.IsLeech,
+                NextReviewDate = x.NextReviewDate ?? PolandTime.Today
+            })
+            .ToList();
+        return sentences;
+    }
+
+    public void UpdateSentence(int studentUserId, int sentenceId, UpdateSentenceAdminRequest request)
+    {
+        var sentence = _dbContext.Sentences
+            .FirstOrDefault(x => x.Id == sentenceId && x.UserId == studentUserId);
+        if (sentence is null)
+            throw new NotFoundException($"Sentence with id {sentenceId} for user {studentUserId} not found.");
+
+        if (!string.IsNullOrWhiteSpace(request.Translation))
+        {
+            sentence.Translation = request.Translation.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Content))
+        {
+            sentence.Content = request.Content.Trim();
+        }
+
+        if (request.Notes != null)
+        {
+            sentence.Notes = request.Notes;
+        }
+
+        if (request.Interval.HasValue)
+        {
+            sentence.Interval = Math.Max(0, request.Interval.Value);
+            sentence.NextReviewDate = PolandTime.Today.AddDays(sentence.Interval);
+        }
+
+        _dbContext.SaveChanges();
     }
 }

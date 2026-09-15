@@ -2,6 +2,7 @@ using inzBackend.Models.AdminLearningModels;
 using inzBackend.Models.AttendanceModels;
 using inzBackend.Models.StudentLearningModels.FlashcardModels;
 using inzBackend.Models.StudentLearningModels.IrregularVerbModels;
+using inzBackend.Models.StudentLearningModels.SentenceModels;
 using inzBackend.Services.AdminLearningServices.LessonPanel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -138,6 +139,22 @@ namespace inzBackend.Controllers
         {
             _service.UpdateIrregularVerbInterval(studentUserId, verbId, interval);
             return NoContent();
+        }
+        [HttpGet("sentences/{studentUserId}")]
+        public ActionResult<LessonSentenceSummaryDto> GetSentences([FromRoute] int studentUserId)
+        {
+            return _service.GetSentenceSummary(studentUserId);
+        }
+        [HttpGet("sentences/all/{studentUserId}")]
+        public ActionResult<List<SentenceDto>> GetAllSentencesForUser(int studentUserId)
+        {
+            return _service.GetAllSentencesForUser(studentUserId);
+        }
+        [HttpPut("sentences/{studentUserId}/{sentenceId}")]
+        public ActionResult UpdateSentence([FromRoute] int studentUserId, [FromRoute] int sentenceId, [FromBody] UpdateSentenceAdminRequest request)
+        {
+            _service.UpdateSentence(studentUserId, sentenceId, request);
+            return Ok();
         }
     }
 }
