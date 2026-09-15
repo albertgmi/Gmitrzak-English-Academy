@@ -21,10 +21,14 @@ namespace inzBackend.Services.DashboardServices
             var today = PolandTime.Today;
             var daysFromMonday = ((int)PolandTime.DateTimeNow.DayOfWeek + 6) % 7;
             var weekStart = today.AddDays(-daysFromMonday);
-            var totalStudents = _dbContext.Users
-                .Count(x => x.Role == Enums.UserRole.User && x.IsActive);
+            var studentUserIds = _dbContext.Users
+                .Where(x => x.Role == Enums.UserRole.User && x.IsActive)
+                .Select(x => x.Id)
+                .ToList();
+
+            var totalStudents = studentUserIds.Count;
             var activeStudentsThisWeek = _dbContext.UserLoginLogs
-                .Where(x => x.LoginDate >= weekStart)
+                .Where(x => x.LoginDate >= weekStart && studentUserIds.Contains(x.UserId))
                 .Select(x => x.UserId)
                 .Distinct()
                 .Count();
@@ -61,6 +65,7 @@ namespace inzBackend.Services.DashboardServices
                 })
                 .ToList();
             var allPoints = _dbContext.ActivityPoints
+                .Where(x => studentUserIds.Contains(x.UserId))
                 .GroupBy(x => x.UserId)
                 .Select(g => new
                 {
@@ -71,9 +76,9 @@ namespace inzBackend.Services.DashboardServices
                 .OrderByDescending(x => x.ThisWeek)
                 .Take(5)
                 .ToList();
-            var userIds = allPoints.Select(x => x.UserId).ToList();
+            var topUserIds = allPoints.Select(x => x.UserId).ToList();
             var users = _dbContext.Users
-                .Where(x => userIds.Contains(x.Id))
+                .Where(x => topUserIds.Contains(x.Id))
                 .ToDictionary(x => x.Id, x => x.Username);
             var topStudents = allPoints.Select(x => new StudentPointsDto
             {
