@@ -59,10 +59,10 @@ namespace inzBackend.Services.StudentLearningServices.Assignment
                         continue;
                     var unlockDate = MatrixModuleDateHelper.ComputeDeadline(
                         ma.StartDate, mm.WeekNumber, mm.DayOfWeek, ma.Matrix.RefreshIntervalDays);
-                    if (unlockDate > weekEnd)
-                        continue;
                     var deadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : unlockDate;
                     var isOverdue = deadline < today;
+                    if (!isOverdue && unlockDate > weekEnd)
+                        continue;
                     result.Add(new AssignmentStudentDto
                     {
                         Id = mm.Id,
