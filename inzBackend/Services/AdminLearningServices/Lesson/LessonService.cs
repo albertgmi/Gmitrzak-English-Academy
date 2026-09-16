@@ -201,10 +201,11 @@ namespace inzBackend.Services.AdminLearningServices.Lesson
                 {
                     var unlockDate = MatrixModuleDateHelper.ComputeDeadline(
                         ma.StartDate, mm.WeekNumber, mm.DayOfWeek, ma.Matrix.RefreshIntervalDays);
-                    if (unlockDate > weekEnd) continue;
-                    var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
-                    if (unlockDate < weekStart && isCompleted) continue;
                     var deadline = dueDateOverrides.TryGetValue(mm.Id, out var ov) ? ov : unlockDate;
+                    var isCompleted = completedMatrixModuleIds.Contains(mm.Id);
+                    var isOverdue = deadline < today && !isCompleted;
+                    if (!isOverdue && unlockDate > weekEnd) continue;
+                    if (unlockDate < weekStart && isCompleted) continue;
                     result.Add(new HomeworkItemDto
                     {
                         Id = -mm.Id,

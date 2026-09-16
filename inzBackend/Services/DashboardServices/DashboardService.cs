@@ -60,6 +60,7 @@ namespace inzBackend.Services.DashboardServices
                 {
                     Id = x.Id,
                     ModuleName = x.Module.Name,
+                    Category = x.Module.Category,
                     DueDate = x.DueDate,
                     IsOverdue = false
                 })
@@ -125,6 +126,7 @@ namespace inzBackend.Services.DashboardServices
                 {
                     Id = x.Id,
                     ModuleName = x.Module.Name,
+                    Category = x.Module.Category,
                     DueDate = x.DueDate,
                     IsOverdue = x.DueDate < today
                 })
