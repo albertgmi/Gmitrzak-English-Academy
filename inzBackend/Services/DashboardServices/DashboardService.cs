@@ -187,13 +187,17 @@ namespace inzBackend.Services.DashboardServices
                 .Where(x => x.UserId == userId)
                 .Select(x => x.StudyDate)
                 .Distinct()
-                .OrderByDescending(x => x)
+                .ToList();
+            var shieldedDates = _dbContext.UserStreakShields
+                .Where(x => x.UserId == userId && x.IsUsed && x.ProtectedDate.HasValue)
+                .Select(x => x.ProtectedDate!.Value)
                 .ToList();
             int streak = StreakHelper.CalculateDynamicStreak(
                 studyDates,
                 userEntity?.Profile?.StreakOverride,
                 userEntity?.Profile?.StreakOverrideDate,
-                today);
+                today,
+                shieldedDates);
             return new StudentDashboardDto
             {
                 Username = user?.Username ?? string.Empty,

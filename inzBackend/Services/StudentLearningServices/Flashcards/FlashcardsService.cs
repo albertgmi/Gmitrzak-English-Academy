@@ -167,14 +167,18 @@ namespace inzBackend.Services.StudentLearningServices.Flashcards
                 .Where(x => x.UserId == userId)
                 .Select(x => x.StudyDate)
                 .Distinct()
-                .OrderByDescending(x => x)
+                .ToList();
+            var shieldedDates = _dbContext.UserStreakShields
+                .Where(x => x.UserId == userId && x.IsUsed && x.ProtectedDate.HasValue)
+                .Select(x => x.ProtectedDate!.Value)
                 .ToList();
             bool studiedToday = dates.Contains(today);
             int streak = StreakHelper.CalculateDynamicStreak(
                 dates,
                 user?.Profile?.StreakOverride,
                 user?.Profile?.StreakOverrideDate,
-                today);
+                today,
+                shieldedDates);
             return new FlashcardStreakDto
             {
                 Streak = streak,

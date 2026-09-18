@@ -199,20 +199,29 @@ namespace inzBackend.Services.UserServices
                 .Where(u => u.IsActive == isActive)
                 .ToList();
             var flashcardLogs = _dbContext.FlashcardStudyLogs
-                .Select(x => new { x.UserId, x.StudyDate })
+                .Select(x => new { x.UserId, Date = x.StudyDate })
                 .Distinct()
+                .ToList();
+            var allShieldedDates = _dbContext.UserStreakShields
+                .Where(x => x.IsUsed && x.ProtectedDate.HasValue)
+                .Select(x => new { x.UserId, ProtectedDate = x.ProtectedDate!.Value })
                 .ToList();
             return users.Select(u =>
             {
                 var userDates = flashcardLogs
                     .Where(x => x.UserId == u.Id)
-                    .Select(x => x.StudyDate)
+                    .Select(x => x.Date)
+                    .ToList();
+                var shieldedDates = allShieldedDates
+                    .Where(x => x.UserId == u.Id)
+                    .Select(x => x.ProtectedDate)
                     .ToList();
                 int calculatedStreak = StreakHelper.CalculateDynamicStreak(
                     userDates,
                     u.Profile?.StreakOverride,
                     u.Profile?.StreakOverrideDate,
-                    today);
+                    today,
+                    shieldedDates);
                 return new AppUserDto
                 {
                     Id = u.Id,

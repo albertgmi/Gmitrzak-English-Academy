@@ -65,8 +65,12 @@ namespace inzBackend.Services.RankingServices
                 .Select(x => new { x.ToUserId, x.Emoji })
                 .ToList();
             var allFlashcardLogs = _dbContext.FlashcardStudyLogs
-                .Select(x => new { x.UserId, x.StudyDate })
+                .Select(x => new { x.UserId, Date = x.StudyDate })
                 .Distinct()
+                .ToList();
+            var allShieldedDates = _dbContext.UserStreakShields
+                .Where(x => x.IsUsed && x.ProtectedDate.HasValue)
+                .Select(x => new { x.UserId, ProtectedDate = x.ProtectedDate!.Value })
                 .ToList();
             var entries = users.Select(u =>
             {
@@ -82,13 +86,18 @@ namespace inzBackend.Services.RankingServices
                     .ToDictionary(r => r.Emoji, r => r.Count);
                 var userDates = allFlashcardLogs
                     .Where(x => x.UserId == u.Id)
-                    .Select(x => x.StudyDate)
+                    .Select(x => x.Date)
+                    .ToList();
+                var shieldedDates = allShieldedDates
+                    .Where(x => x.UserId == u.Id)
+                    .Select(x => x.ProtectedDate)
                     .ToList();
                 int streak = StreakHelper.CalculateDynamicStreak(
                     userDates,
                     u.Profile?.StreakOverride,
                     u.Profile?.StreakOverrideDate,
-                    today);
+                    today,
+                    shieldedDates);
                 return new RankingEntryDto
                 {
                     UserId = u.Id,
