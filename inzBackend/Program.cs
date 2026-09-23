@@ -188,8 +188,17 @@ namespace inzBackend
             {
                 options.AddPolicy("AngularCorsPolicy", policy =>
                 {
-                    var frontendUrl = builder.Configuration["FrontendUrl"] ?? "http://localhost:4200";
-                    policy.WithOrigins(frontendUrl, "http://localhost:4200", "https://localhost:4200")
+                    var rawOrigins = builder.Configuration["AllowedOrigins"]
+                        ?? builder.Configuration["ALLOWED_ORIGINS"]
+                        ?? builder.Configuration["FrontendUrl"]
+                        ?? "http://localhost:4200,https://localhost:4200";
+
+                    var allowedOrigins = rawOrigins
+                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Distinct()
+                        .ToArray();
+
+                    policy.WithOrigins(allowedOrigins)
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();
