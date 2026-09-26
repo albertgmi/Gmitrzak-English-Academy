@@ -73,6 +73,12 @@ namespace inzBackend.Controllers
             _service.DeleteFlashcardsBulk(studentUserId, request.FlashcardIds);
             return Ok();
         }
+        [HttpPost("sentences/{studentUserId}/delete-bulk")]
+        public ActionResult DeleteSentencesBulk([FromRoute] int studentUserId, [FromBody] BulkDeleteSentencesRequest request)
+        {
+            _service.DeleteSentencesBulk(studentUserId, request.SentenceIds);
+            return Ok();
+        }
         [HttpGet("study-time/{studentUserId}")]
         public ActionResult<StudentStudyTimeDto> GetStudyTime([FromRoute] int studentUserId)
         {

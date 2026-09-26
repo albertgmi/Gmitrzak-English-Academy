@@ -948,4 +948,20 @@ public class LessonPanelService : ILessonPanelService
 
         _dbContext.SaveChanges();
     }
+
+    public void DeleteSentencesBulk(int studentUserId, List<int> sentenceIds)
+    {
+        if (sentenceIds == null || !sentenceIds.Any())
+            return;
+
+        var sentencesToDelete = _dbContext.Sentences
+            .Where(s => s.UserId == studentUserId && sentenceIds.Contains(s.Id))
+            .ToList();
+
+        if (!sentencesToDelete.Any())
+            return;
+
+        _dbContext.Sentences.RemoveRange(sentencesToDelete);
+        _dbContext.SaveChanges();
+    }
 }

@@ -33,6 +33,7 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         void UpdateSentence(int studentUserId, int sentenceId, UpdateSentenceAdminRequest request);
         ActivityScoreDto CalculateActivityScore(int studentUserId, DateOnly weekStart, DateOnly weekEnd);
         void DeleteFlashcardsBulk(int studentUserId, List<int> flashcardIds);
+        void DeleteSentencesBulk(int studentUserId, List<int> sentenceIds);
         byte[] ExportFlashcardsToPdf(int userId);
         byte[] ExportFlashcardsToExcel(int userId);
     }
