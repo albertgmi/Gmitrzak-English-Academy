@@ -154,6 +154,7 @@ namespace inzBackend.Services.UserServices
                 profile.StreakOverride = request.StreakOverride;
                 profile.StreakOverrideDate = request.StreakOverride.HasValue ? PolandTime.Today : null;
             }
+            profile.AutoAddSentenceFlashcards = request.AutoAddSentenceFlashcards;
             _dbContext.SaveChanges();
         }
         public void DeleteUser(int userId)
@@ -231,6 +232,7 @@ namespace inzBackend.Services.UserServices
                     IsActive = u.IsActive,
                     Streak = calculatedStreak,
                     StreakOverride = u.Profile?.StreakOverride,
+                    AutoAddSentenceFlashcards = u.Profile?.AutoAddSentenceFlashcards ?? true,
                     AvatarUrl = u.Profile?.AvatarUrl,
                     LastLoginAt = u.LastLoginAt,
                     LastActiveAt = u.LastActiveAt

@@ -11,6 +11,7 @@ namespace inzBackend.Entities.Identity
         public int? CurrentSemester { get; set; }
         public int? StreakOverride { get; set; }
         public DateOnly? StreakOverrideDate { get; set; }
+        public bool AutoAddSentenceFlashcards { get; set; } = true;
         public bool Semester1 { get; set; }
         public bool Semester2 { get; set; }
         public bool Semester3 { get; set; }

@@ -1,4 +1,4 @@
-﻿using inzBackend.Entities.Base;
+using inzBackend.Entities.Base;
 using inzBackend.Entities.Resources;
 namespace inzBackend.Entities.Curriculum
 {
@@ -8,6 +8,7 @@ namespace inzBackend.Entities.Curriculum
         public string? Description { get; set; } = string.Empty;
         public bool? IsHidden { get; set; }
         public string Category { get; set; } = string.Empty;
+        public bool AddToFlashcards { get; set; } = true;
         public ICollection<MatrixModule> MatrixModules { get; set; } = new List<MatrixModule>();
         public int? TheaterItemId { get; set; }
         public string? EssayPrompt { get; set; }

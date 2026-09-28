@@ -69,22 +69,27 @@ namespace inzBackend.Services.UserAnswerServices
                 };
                 _dbContext.UserSentenceAnswers.Add(existingAnswer);
             }
-            var alreadyExists = await _dbContext.Sentences
-                .AnyAsync(x => x.UserId == userId
-                && x.Content.ToLower().Trim() == sentence.Polish.ToLower().Trim());
-            if (!alreadyExists)
+            var profile = await _dbContext.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            var autoAdd = profile?.AutoAddSentenceFlashcards ?? true;
+            if (autoAdd)
             {
-                var isCorrectOrPartial = sentenceCheckResult.Result == "Correct" || sentenceCheckResult.Result == "Partial";
-                _dbContext.Sentences.Add(new Sentence
+                var alreadyExists = await _dbContext.Sentences
+                    .AnyAsync(x => x.UserId == userId
+                    && x.Content.ToLower().Trim() == sentence.Polish.ToLower().Trim());
+                if (!alreadyExists)
                 {
-                    UserId = userId,
-                    Content = sentence.Polish,
-                    Translation = sentence.EnglishTranslation,
-                    NextReviewDate = isCorrectOrPartial ? PolandTime.Today.AddDays(3) : PolandTime.Today,
-                    CreatedBy = "System",
-                    LastModifiedAt = PolandTime.Now,
-                    LastModifiedBy = user?.Username ?? "System"
-                });
+                    var isCorrectOrPartial = sentenceCheckResult.Result == "Correct" || sentenceCheckResult.Result == "Partial";
+                    _dbContext.Sentences.Add(new Sentence
+                    {
+                        UserId = userId,
+                        Content = sentence.Polish,
+                        Translation = sentence.EnglishTranslation,
+                        NextReviewDate = isCorrectOrPartial ? PolandTime.Today.AddDays(3) : PolandTime.Today,
+                        CreatedBy = "System",
+                        LastModifiedAt = PolandTime.Now,
+                        LastModifiedBy = user?.Username ?? "System"
+                    });
+                }
             }
             await _dbContext.SaveChangesAsync();
             await TryCompleteModuleAsync(userId, request.ModuleId);

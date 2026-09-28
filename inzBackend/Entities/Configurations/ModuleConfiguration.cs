@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Curriculum;
 namespace inzBackend.Models.Configurations
@@ -9,6 +9,7 @@ namespace inzBackend.Models.Configurations
         {
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            builder.Property(x => x.AddToFlashcards).HasDefaultValue(true);
             builder.HasOne(m => m.TheaterItem)
                 .WithMany()
                 .HasForeignKey(m => m.TheaterItemId)

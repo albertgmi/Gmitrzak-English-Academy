@@ -1,4 +1,4 @@
-﻿namespace inzBackend.Models.ModuleModels
+namespace inzBackend.Models.ModuleModels
 {
     public class UpdateModuleRequest
     {
@@ -10,5 +10,6 @@
         public string? PresentationUrl { get; set; }
         public string? PresentationText { get; set; }
         public string? EssayPrompt { get; set; }
+        public bool? AddToFlashcards { get; set; }
     }
 }

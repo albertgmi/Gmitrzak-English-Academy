@@ -11,6 +11,7 @@ namespace inzBackend.Models.UserModels
         public bool IsActive { get; set; } = true;
         public int Streak { get; set; }
         public int? StreakOverride { get; set; }
+        public bool AutoAddSentenceFlashcards { get; set; } = true;
         public string? AvatarUrl { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public DateTime? LastActiveAt { get; set; }
