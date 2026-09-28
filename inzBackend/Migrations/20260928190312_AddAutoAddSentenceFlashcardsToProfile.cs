@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -16,7 +16,9 @@ namespace inzBackend.Migrations
                 table: "Profiles",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
+
+            migrationBuilder.Sql("UPDATE \"Profiles\" SET \"AutoAddSentenceFlashcards\" = true;");
 
             migrationBuilder.AddColumn<bool>(
                 name: "AddToFlashcards",

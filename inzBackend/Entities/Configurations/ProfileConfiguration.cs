@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Identity;
 namespace inzBackend.Entities.Configurations
@@ -11,6 +11,7 @@ namespace inzBackend.Entities.Configurations
             builder.Property(x => x.AvatarUrl).HasMaxLength(500);
             builder.Property(x => x.EnglishLevel).HasConversion<string>().HasMaxLength(20);
             builder.Property(x => x.CurrentSemester).HasDefaultValue(1);
+            builder.Property(x => x.AutoAddSentenceFlashcards).HasDefaultValue(true);
             builder.HasOne(x => x.User)
                    .WithOne(x => x.Profile)
                    .HasForeignKey<Profile>(x => x.UserId)
