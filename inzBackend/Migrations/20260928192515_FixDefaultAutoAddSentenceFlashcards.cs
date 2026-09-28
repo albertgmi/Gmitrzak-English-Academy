@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -19,6 +19,8 @@ namespace inzBackend.Migrations
                 defaultValue: true,
                 oldClrType: typeof(bool),
                 oldType: "boolean");
+
+            migrationBuilder.Sql("UPDATE \"Profiles\" SET \"AutoAddSentenceFlashcards\" = true;");
 
             migrationBuilder.UpdateData(
                 table: "ShopItems",
