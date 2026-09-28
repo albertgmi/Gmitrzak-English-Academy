@@ -49,7 +49,7 @@ namespace inzBackend.Services.UserServices
             newUser.PasswordHash = passwordHashed;
             _dbContext.Users.Add(newUser);
             _dbContext.SaveChanges();
-            var profile = new Entities.Identity.Profile { UserId = newUser.Id, CurrentSemester = 1, EnglishLevel = Enums.EnglishLevel.Communicative };
+            var profile = new Entities.Identity.Profile { UserId = newUser.Id, CurrentSemester = 1, EnglishLevel = Enums.EnglishLevel.Communicative, AutoAddSentenceFlashcards = true };
             _dbContext.Profiles.Add(profile);
             _dbContext.SaveChanges();
             return _mapper.Map<AppUserDto>(newUser);
@@ -146,7 +146,7 @@ namespace inzBackend.Services.UserServices
             var profile = _dbContext.Profiles.FirstOrDefault(p => p.UserId == userId);
             if (profile is null)
             {
-                profile = new Entities.Identity.Profile { UserId = userId };
+                profile = new Entities.Identity.Profile { UserId = userId, AutoAddSentenceFlashcards = true };
                 _dbContext.Profiles.Add(profile);
             }
             if (profile.StreakOverride != request.StreakOverride)
