@@ -1,4 +1,4 @@
-﻿using inzBackend.Models.AssignmentModels;
+using inzBackend.Models.AssignmentModels;
 using inzBackend.Models.CourseModels;
 using inzBackend.Models.MatrixAssignmentModels;
 using inzBackend.Models.ModuleAssignmentModels;
@@ -35,6 +35,13 @@ namespace inzBackend.Controllers
             _assignmentService.DeleteMatrixAssignment(id);
             return NoContent();
         }
+        [HttpDelete("matrix/bulk")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<int> DeleteBulkMatrixAssignments([FromBody] DeleteBulkMatrixAssignmentsRequest request)
+        {
+            var count = _assignmentService.DeleteBulkMatrixAssignments(request);
+            return Ok(count);
+        }
         [HttpGet("module")]
         [Authorize(Roles = "Admin")]
         public ActionResult<List<ModuleAssignmentDto>> GetAllModuleAssignments()
@@ -53,6 +60,12 @@ namespace inzBackend.Controllers
         {
             _assignmentService.CreateModuleAssignment(request);
             return Created();
+        }
+        [HttpPost("module/bulk")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<BulkAssignmentResultDto> CreateBulkModuleAssignment([FromBody] CreateBulkModuleAssignmentRequest request)
+        {
+            return _assignmentService.CreateBulkModuleAssignment(request);
         }
         [HttpDelete("module/{id}")]
         [Authorize(Roles = "Admin")]

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using inzBackend.Entities.Assignments;
 using inzBackend.Entities.Curriculum;
 using inzBackend.Exceptions;
@@ -128,6 +128,19 @@ namespace inzBackend.Services.AssignmentServices
             _dbContext.UserMatrixAssignments.Remove(assignment);
             _dbContext.SaveChanges();
         }
+        public int DeleteBulkMatrixAssignments(DeleteBulkMatrixAssignmentsRequest request)
+        {
+            if (request?.AssignmentIds is null || !request.AssignmentIds.Any())
+                return 0;
+            var assignments = _dbContext.UserMatrixAssignments
+                .Where(x => request.AssignmentIds.Contains(x.Id))
+                .ToList();
+            if (!assignments.Any())
+                return 0;
+            _dbContext.UserMatrixAssignments.RemoveRange(assignments);
+            _dbContext.SaveChanges();
+            return assignments.Count;
+        }
         public List<ModuleAssignmentDto> GetAllModuleAssignments()
         {
             return _dbContext.UserModuleAssignments
@@ -165,6 +178,33 @@ namespace inzBackend.Services.AssignmentServices
             };
             _dbContext.UserModuleAssignments.Add(assignment);
             _dbContext.SaveChanges();
+        }
+        public BulkAssignmentResultDto CreateBulkModuleAssignment(CreateBulkModuleAssignmentRequest request)
+        {
+            var module = _dbContext.Modules.FirstOrDefault(x => x.Id == request.ModuleId);
+            if (module is null)
+                throw new NotFoundException("Module not found");
+            var parsedDueDate = DateOnly.Parse(request.DueDate);
+            var result = new BulkAssignmentResultDto();
+            foreach (var userId in request.UserIds.Distinct())
+            {
+                var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+                if (user is null)
+                {
+                    result.Skipped.Add($"User #{userId}: not found");
+                    continue;
+                }
+                _dbContext.UserModuleAssignments.Add(new UserModuleAssignment
+                {
+                    UserId = userId,
+                    ModuleId = request.ModuleId,
+                    DueDate = parsedDueDate,
+                    IsCompleted = false
+                });
+                result.AssignedUsernames.Add(user.Username);
+            }
+            _dbContext.SaveChanges();
+            return result;
         }
         public void DeleteModuleAssignment(int id)
         {
