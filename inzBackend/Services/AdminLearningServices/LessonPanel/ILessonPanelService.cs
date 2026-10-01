@@ -36,5 +36,6 @@ namespace inzBackend.Services.AdminLearningServices.LessonPanel
         void DeleteSentencesBulk(int studentUserId, List<int> sentenceIds);
         byte[] ExportFlashcardsToPdf(int userId);
         byte[] ExportFlashcardsToExcel(int userId);
+        byte[] ExportSentencesToPdf(int userId);
     }
 }

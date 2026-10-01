@@ -156,6 +156,12 @@ namespace inzBackend.Controllers
         {
             return _service.GetAllSentencesForUser(studentUserId);
         }
+        [HttpGet("sentences/{studentUserId}/pdf")]
+        public ActionResult ExportSentencesPdf([FromRoute] int studentUserId)
+        {
+            var bytes = _service.ExportSentencesToPdf(studentUserId);
+            return File(bytes, "application/pdf", $"sentences_{studentUserId}.pdf");
+        }
         [HttpPut("sentences/{studentUserId}/{sentenceId}")]
         public ActionResult UpdateSentence([FromRoute] int studentUserId, [FromRoute] int sentenceId, [FromBody] UpdateSentenceAdminRequest request)
         {

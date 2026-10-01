@@ -279,6 +279,81 @@ public class LessonPanelService : ILessonPanelService
         workbook.SaveAs(stream);
         return stream.ToArray();
     }
+    public byte[] ExportSentencesToPdf(int userId)
+    {
+        var sentences = GetAllSentencesForUser(userId);
+        var user = _dbContext.Users.FirstOrDefault(u => u.Id == userId)
+            ?? throw new NotFoundException($"User with id: {userId} was not found");
+
+        QuestPDF.Settings.License = LicenseType.Community;
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(30);
+                page.DefaultTextStyle(x => x.FontSize(10));
+                page.Header().Column(col =>
+                {
+                    col.Item().Text($"Sentence Flashcards - {user.Username}")
+                        .FontSize(18).Bold();
+                    col.Item().Text($"Generated: {PolandTime.Now:yyyy-MM-dd HH:mm}")
+                        .FontSize(9).FontColor(Colors.Grey.Medium);
+                    col.Item().PaddingTop(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                });
+                page.Content().PaddingTop(10).Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.ConstantColumn(30);
+                        columns.RelativeColumn(3);
+                        columns.RelativeColumn(3);
+                        columns.RelativeColumn(1.5f);
+                        columns.ConstantColumn(45);
+                        columns.ConstantColumn(50);
+                        columns.ConstantColumn(75);
+                        columns.ConstantColumn(45);
+                    });
+                    table.Header(header =>
+                    {
+                        void HeaderCell(string text) => header.Cell()
+                            .Background(Colors.Blue.Darken1)
+                            .Padding(5)
+                            .Text(text).FontColor(Colors.White).Bold();
+                        HeaderCell("No.");
+                        HeaderCell("Sentence (EN)");
+                        HeaderCell("Translation (PL)");
+                        HeaderCell("Notes");
+                        HeaderCell("Ease");
+                        HeaderCell("Interval");
+                        HeaderCell("Next review");
+                        HeaderCell("Leech");
+                    });
+                    int i = 1;
+                    foreach (var s in sentences)
+                    {
+                        var bg = i % 2 == 0 ? Colors.Grey.Lighten4 : Colors.White;
+                        table.Cell().Background(bg).Padding(5).Text(i.ToString());
+                        table.Cell().Background(bg).Padding(5).Text(s.Content ?? string.Empty);
+                        table.Cell().Background(bg).Padding(5).Text(s.Translation ?? string.Empty);
+                        table.Cell().Background(bg).Padding(5).Text(s.Notes ?? string.Empty);
+                        table.Cell().Background(bg).Padding(5).Text(s.EaseFactor.ToString());
+                        table.Cell().Background(bg).Padding(5).Text($"{s.Interval}d");
+                        table.Cell().Background(bg).Padding(5).Text(s.NextReviewDate.ToString("yyyy-MM-dd"));
+                        table.Cell().Background(bg).Padding(5).Text(s.IsLeech ? "YES" : "");
+                        i++;
+                    }
+                });
+                page.Footer().AlignCenter().Text(x =>
+                {
+                    x.CurrentPageNumber();
+                    x.Span(" / ");
+                    x.TotalPages();
+                });
+            });
+        });
+        return document.GeneratePdf();
+    }
     public void DeleteFlashcardsBulk(int studentUserId, List<int> flashcardIds)
     {
         if (flashcardIds == null || !flashcardIds.Any())
