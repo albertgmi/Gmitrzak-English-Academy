@@ -44,25 +44,73 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
                 .ToList();
             return allSentences;
         }
-        public ModuleSentenceSessionDto GetModuleSentences(int moduleId)
+        public ModuleSentenceSessionDto GetModuleSentences(int moduleId, int? userModuleAssignmentId = null)
         {
             var userId = _userContextService.GetUserId!.Value;
-            var directAssignment = _dbContext.UserModuleAssignments
-                .Include(x => x.Module)
-                .FirstOrDefault(x => x.UserId == userId && x.ModuleId == moduleId);
-            var moduleName = directAssignment?.Module.Name ?? "Module";
+            Entities.Assignments.UserModuleAssignment? directAssignment = null;
+            if (userModuleAssignmentId.HasValue)
+            {
+                directAssignment = _dbContext.UserModuleAssignments
+                    .Include(x => x.Module)
+                    .FirstOrDefault(x => x.Id == userModuleAssignmentId.Value && x.UserId == userId);
+            }
+
+            if (directAssignment is null)
+            {
+                directAssignment = _dbContext.UserModuleAssignments
+                    .Include(x => x.Module)
+                    .Where(x => x.UserId == userId && x.ModuleId == moduleId && !x.IsCompleted)
+                    .OrderByDescending(x => x.CreatedAt)
+                    .FirstOrDefault();
+            }
+
+            var moduleName = directAssignment?.Module?.Name 
+                ?? _dbContext.Modules.FirstOrDefault(m => m.Id == moduleId)?.Name 
+                ?? "Module";
+
             var setIds = _dbContext.ModuleSentenceSets
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.SentenceSetId)
                 .ToList();
+
             var sentences = _dbContext.SentenceSetItems
                 .Include(x => x.SentenceStock)
                 .Where(x => setIds.Contains(x.SentenceSetId))
                 .OrderBy(x => x.SentenceSetId).ThenBy(x => x.Order)
                 .ToList();
-            var existingAnswers = _dbContext.UserSentenceAnswers
-                .Where(x => x.UserId == userId && x.ModuleId == moduleId)
-                .ToDictionary(x => x.SentenceStockId);
+
+            Dictionary<int, Entities.Assignments.UserSentenceAnswer> existingAnswers;
+            if (directAssignment is not null)
+            {
+                var targetAssignmentId = directAssignment.Id;
+                var answersList = _dbContext.UserSentenceAnswers
+                    .Where(x => x.UserId == userId && x.ModuleId == moduleId && x.UserModuleAssignmentId == targetAssignmentId)
+                    .ToList();
+
+                if (!directAssignment.IsCompleted && !answersList.Any())
+                {
+                    var hasOlderCompleted = _dbContext.UserModuleAssignments
+                        .Any(x => x.UserId == userId && x.ModuleId == moduleId && x.IsCompleted && x.Id != targetAssignmentId);
+                    if (!hasOlderCompleted)
+                    {
+                        answersList = _dbContext.UserSentenceAnswers
+                            .Where(x => x.UserId == userId && x.ModuleId == moduleId && x.UserModuleAssignmentId == null)
+                            .ToList();
+                    }
+                }
+
+                existingAnswers = answersList
+                    .GroupBy(x => x.SentenceStockId)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.LastModifiedAt ?? x.CreatedAt).First());
+            }
+            else
+            {
+                existingAnswers = _dbContext.UserSentenceAnswers
+                    .Where(x => x.UserId == userId && x.ModuleId == moduleId)
+                    .GroupBy(x => x.SentenceStockId)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.LastModifiedAt ?? x.CreatedAt).First());
+            }
+
             return new ModuleSentenceSessionDto
             {
                 ModuleId = moduleId,

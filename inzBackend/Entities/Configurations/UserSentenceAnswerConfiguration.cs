@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using inzBackend.Entities.Assignments;
 namespace inzBackend.Entities.Configurations
@@ -14,6 +14,8 @@ namespace inzBackend.Entities.Configurations
                 .HasForeignKey(x => x.ModuleId).OnDelete(DeleteBehavior.Cascade);
             builder.HasOne(x => x.SentenceStock).WithMany()
                 .HasForeignKey(x => x.SentenceStockId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(x => x.UserModuleAssignment).WithMany()
+                .HasForeignKey(x => x.UserModuleAssignmentId).OnDelete(DeleteBehavior.SetNull);
             builder.HasQueryFilter(x => !x.IsDeleted);
         }
     }

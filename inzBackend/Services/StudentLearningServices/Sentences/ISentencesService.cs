@@ -6,7 +6,7 @@ namespace inzBackend.Services.StudentLearningServices.Sentences
     public interface ISentencesService
     {
         List<SentenceDto> GetAllSentences();
-        ModuleSentenceSessionDto GetModuleSentences(int moduleId);
+        ModuleSentenceSessionDto GetModuleSentences(int moduleId, int? userModuleAssignmentId = null);
         void ReviewSentence(int id, ReviewSentenceRequest request);
         FlashcardStreakDto GetStreak();
     }

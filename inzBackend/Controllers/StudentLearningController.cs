@@ -165,9 +165,9 @@ namespace inzBackend.Controllers
             return _flashcardsService.GetStreak();
         }
         [HttpGet("module/{moduleId}/sentences")]
-        public ActionResult<ModuleSentenceSessionDto> GetModuleSentences([FromRoute] int moduleId)
+        public ActionResult<ModuleSentenceSessionDto> GetModuleSentences([FromRoute] int moduleId, [FromQuery] int? userModuleAssignmentId = null)
         {
-            return _sentencesService.GetModuleSentences(moduleId);
+            return _sentencesService.GetModuleSentences(moduleId, userModuleAssignmentId);
         }
         [HttpPatch("sentences/{id}/review")]
         public ActionResult ReviewSentence([FromRoute] int id, [FromBody] ReviewSentenceRequest request)

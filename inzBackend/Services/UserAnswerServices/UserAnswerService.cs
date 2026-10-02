@@ -42,10 +42,34 @@ namespace inzBackend.Services.UserAnswerServices
                 ?? throw new NotFoundException("Sentence not found");
             var sentenceCheckResult = await _aiService.CheckAnswerAsync(
                 sentence.Polish, sentence.EnglishTranslation, request.UserAnswer);
-            var existingAnswer = await _dbContext.UserSentenceAnswers
-                .FirstOrDefaultAsync(x => x.UserId == userId
-                                       && x.ModuleId == request.ModuleId
-                                       && x.SentenceStockId == request.SentenceStockId);
+            int? assignmentId = request.UserModuleAssignmentId;
+            if (!assignmentId.HasValue)
+            {
+                var activeUncompleted = await _dbContext.UserModuleAssignments
+                    .Where(x => x.UserId == userId && x.ModuleId == request.ModuleId && !x.IsCompleted)
+                    .OrderByDescending(x => x.CreatedAt)
+                    .FirstOrDefaultAsync();
+                assignmentId = activeUncompleted?.Id;
+            }
+
+            UserSentenceAnswer? existingAnswer = null;
+            if (assignmentId.HasValue)
+            {
+                existingAnswer = await _dbContext.UserSentenceAnswers
+                    .FirstOrDefaultAsync(x => x.UserId == userId
+                                           && x.ModuleId == request.ModuleId
+                                           && x.SentenceStockId == request.SentenceStockId
+                                           && x.UserModuleAssignmentId == assignmentId.Value);
+            }
+            if (existingAnswer is null)
+            {
+                existingAnswer = await _dbContext.UserSentenceAnswers
+                    .FirstOrDefaultAsync(x => x.UserId == userId
+                                           && x.ModuleId == request.ModuleId
+                                           && x.SentenceStockId == request.SentenceStockId
+                                           && x.UserModuleAssignmentId == null);
+            }
+
             if (existingAnswer is not null)
             {
                 existingAnswer.UserAnswer = request.UserAnswer;
@@ -54,6 +78,7 @@ namespace inzBackend.Services.UserAnswerServices
                 existingAnswer.TeacherOverride = null;
                 existingAnswer.TeacherExplanation = null;
                 existingAnswer.TeacherReviewed = sentenceCheckResult.Result == "Correct";
+                existingAnswer.UserModuleAssignmentId = assignmentId;
             }
             else
             {
@@ -62,6 +87,7 @@ namespace inzBackend.Services.UserAnswerServices
                     UserId = userId,
                     ModuleId = request.ModuleId,
                     SentenceStockId = request.SentenceStockId,
+                    UserModuleAssignmentId = assignmentId,
                     UserAnswer = request.UserAnswer,
                     AiResult = sentenceCheckResult.Result,
                     AiExplanation = sentenceCheckResult.Explanation,
@@ -92,7 +118,7 @@ namespace inzBackend.Services.UserAnswerServices
                 }
             }
             await _dbContext.SaveChangesAsync();
-            await TryCompleteModuleAsync(userId, request.ModuleId);
+            await TryCompleteModuleAsync(userId, request.ModuleId, assignmentId);
             await _dbContext.SaveChangesAsync();
             return new AnswerResultDto
             {
@@ -279,7 +305,7 @@ namespace inzBackend.Services.UserAnswerServices
                 })
                 .ToList();
         }
-        private async Task TryCompleteModuleAsync(int userId, int moduleId)
+        private async Task TryCompleteModuleAsync(int userId, int moduleId, int? userModuleAssignmentId = null)
         {
             var totalSentences = await _dbContext.ModuleSentenceSets
                 .Include(x => x.SentenceSet).ThenInclude(s => s.Items)
@@ -287,18 +313,43 @@ namespace inzBackend.Services.UserAnswerServices
                 .SelectMany(x => x.SentenceSet.Items)
                 .CountAsync();
             if (totalSentences == 0) return;
-            var answeredCount = await _dbContext.UserSentenceAnswers
-                .CountAsync(x => x.UserId == userId && x.ModuleId == moduleId);
+
+            int answeredCount;
+            if (userModuleAssignmentId.HasValue)
+            {
+                answeredCount = await _dbContext.UserSentenceAnswers
+                    .CountAsync(x => x.UserId == userId && x.ModuleId == moduleId && x.UserModuleAssignmentId == userModuleAssignmentId.Value);
+            }
+            else
+            {
+                answeredCount = await _dbContext.UserSentenceAnswers
+                    .CountAsync(x => x.UserId == userId && x.ModuleId == moduleId);
+            }
+
             if (answeredCount < totalSentences) return;
-            var directAssignment = await _dbContext.UserModuleAssignments
-                .FirstOrDefaultAsync(x => x.UserId == userId
-                                       && x.ModuleId == moduleId);
+
+            UserModuleAssignment? directAssignment = null;
+            if (userModuleAssignmentId.HasValue)
+            {
+                directAssignment = await _dbContext.UserModuleAssignments
+                    .FirstOrDefaultAsync(x => x.Id == userModuleAssignmentId.Value);
+            }
+
+            if (directAssignment is null)
+            {
+                directAssignment = await _dbContext.UserModuleAssignments
+                    .FirstOrDefaultAsync(x => x.UserId == userId
+                                           && x.ModuleId == moduleId
+                                           && !x.IsCompleted);
+            }
+
             if (directAssignment is not null && !directAssignment.IsCompleted)
             {
-                await AssignModuleCompletionPointsAsync(userId, moduleId, directAssignment);
+                await AssignModuleCompletionPointsAsync(userId, moduleId, directAssignment, userModuleAssignmentId);
                 directAssignment.IsCompleted = true;
                 await _dbContext.SaveChangesAsync();
             }
+
             var matrixModules = await _dbContext.MatrixModules
                 .Where(x => x.ModuleId == moduleId)
                 .Select(x => x.Id)
@@ -328,7 +379,7 @@ namespace inzBackend.Services.UserAnswerServices
                             DueDate = dueDate,
                             IsCompleted = false
                         };
-                        await AssignModuleCompletionPointsAsync(userId, moduleId, fakeAssignment);
+                        await AssignModuleCompletionPointsAsync(userId, moduleId, fakeAssignment, userModuleAssignmentId);
                     }
                     _dbContext.UserMatrixModuleCompletions.Add(new UserMatrixModuleCompletion
                     {
@@ -340,11 +391,17 @@ namespace inzBackend.Services.UserAnswerServices
             }
             await _dbContext.SaveChangesAsync();
         }
-        private async Task AssignModuleCompletionPointsAsync(int userId, int moduleId, UserModuleAssignment? assignment)
+
+        private async Task AssignModuleCompletionPointsAsync(int userId, int moduleId, UserModuleAssignment? assignment, int? userModuleAssignmentId = null)
         {
-            var answers = await _dbContext.UserSentenceAnswers
-                .Where(x => x.UserId == userId && x.ModuleId == moduleId)
-                .ToListAsync();
+            var query = _dbContext.UserSentenceAnswers
+                .Where(x => x.UserId == userId && x.ModuleId == moduleId);
+            if (userModuleAssignmentId.HasValue)
+            {
+                query = query.Where(x => x.UserModuleAssignmentId == userModuleAssignmentId.Value);
+            }
+            var answers = await query.ToListAsync();
+
             var module = await _dbContext.Modules
                 .FirstOrDefaultAsync(x => x.Id == moduleId);
             var moduleName = module?.Name ?? "Unknown Module";

@@ -12,6 +12,8 @@ namespace inzBackend.Entities.Assignments
         public Module Module { get; set; } = null!;
         public int SentenceStockId { get; set; }
         public SentenceStock SentenceStock { get; set; } = null!;
+        public int? UserModuleAssignmentId { get; set; }
+        public UserModuleAssignment? UserModuleAssignment { get; set; }
         public string UserAnswer { get; set; } = string.Empty;
         public string AiResult { get; set; } = string.Empty;
         public string AiExplanation { get; set; } = string.Empty;
