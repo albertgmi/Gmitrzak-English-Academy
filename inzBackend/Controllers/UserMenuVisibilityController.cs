@@ -16,6 +16,13 @@ namespace inzBackend.Controllers
             _menuVisibilityService = menuVisibilityService;
         }
 
+        [HttpGet("students")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<List<AppUserDto>> GetStudentsForMenuVisibility()
+        {
+            return Ok(_menuVisibilityService.GetStudentsForMenuVisibility());
+        }
+
         [HttpGet("{userId}")]
         [Authorize(Roles = "Admin")]
         public ActionResult<List<string>> GetHiddenMenuItemsForUser([FromRoute] int userId)

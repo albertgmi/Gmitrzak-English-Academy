@@ -1,6 +1,8 @@
 using inzBackend.Entities.Identity;
+using inzBackend.Enums;
 using inzBackend.Exceptions;
 using inzBackend.Models;
+using inzBackend.Models.UserModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace inzBackend.Services.UserServices
@@ -9,11 +11,24 @@ namespace inzBackend.Services.UserServices
     {
         private readonly GmitrzakEnglishAcademyDbContext _dbContext;
         private readonly IUserContextService _userContextService;
+        private readonly IUserService _userService;
 
-        public UserMenuVisibilityService(GmitrzakEnglishAcademyDbContext dbContext, IUserContextService userContextService)
+        public UserMenuVisibilityService(
+            GmitrzakEnglishAcademyDbContext dbContext,
+            IUserContextService userContextService,
+            IUserService userService)
         {
             _dbContext = dbContext;
             _userContextService = userContextService;
+            _userService = userService;
+        }
+
+        public List<AppUserDto> GetStudentsForMenuVisibility()
+        {
+            return _userService.GetAllUsers()
+                .Where(u => u.Role == UserRole.User)
+                .OrderBy(u => u.Username)
+                .ToList();
         }
 
         public List<string> GetHiddenMenuItemsForUser(int userId)
