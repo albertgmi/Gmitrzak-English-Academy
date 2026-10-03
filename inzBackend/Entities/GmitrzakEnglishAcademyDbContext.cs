@@ -77,6 +77,7 @@ namespace inzBackend.Models
         public DbSet<AcademyExam> AcademyExams { get; set; }
         public DbSet<AcademyExamSignup> AcademyExamSignups { get; set; }
         public DbSet<IrregularVerb> IrregularVerbs { get; set; }
+        public DbSet<UserMenuVisibility> UserMenuVisibilities { get; set; }
         public override int SaveChanges()
         {
             ApplyAuditInfo();

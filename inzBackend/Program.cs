@@ -130,6 +130,7 @@ namespace inzBackend
             );
             builder.Services.AddSingleton(new Cloudinary(cloudinaryAccount));
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IUserMenuVisibilityService, UserMenuVisibilityService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<IProgramService, ProgramService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
