@@ -122,34 +122,170 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
             _creditService.CheckAndAwardWeeklyChallenge(userId.Value);
             _dbContext.SaveChanges();
         }
-        private void EnsureDefaultVerbsExist(int userId, IrregularVerbLevel level)
+        public void EnsureDefaultVerbsExist(int userId, IrregularVerbLevel level)
         {
-            bool exists = _dbContext.IrregularVerbs.Any(x => x.UserId == userId && x.Level == level);
-            if (exists) return;
-            List<(string Polish, string English)> seedData = level == IrregularVerbLevel.Basic
-                ? GetBasicDefaultVerbs()
-                : GetAdvancedDefaultVerbs();
-            var today = PolandTime.Today;
-            var entities = seedData.Select(item => new IrregularVerb
-            {
-                UserId = userId,
-                PolishTranslation = item.Polish,
-                EnglishForms = item.English,
-                Level = level,
-                EaseFactor = 250,
-                Interval = 0,
-                IsLeech = false,
-                NextReviewDate = today
-            }).ToList();
-            _dbContext.IrregularVerbs.AddRange(entities);
-            _dbContext.SaveChanges();
+            SyncAndCleanUserVerbs(userId);
         }
-        private static List<(string Polish, string English)> GetBasicDefaultVerbs()
+        public void SyncAndCleanUserVerbs(int userId)
+        {
+            var existingVerbs = _dbContext.IrregularVerbs
+                .Where(x => x.UserId == userId)
+                .ToList();
+
+            var basicDefaults = GetBasicDefaultVerbs();
+            var advancedDefaults = GetAdvancedDefaultVerbs();
+
+            var basicMap = basicDefaults.ToDictionary(
+                v => GetBaseVerbKey(v.English),
+                v => v,
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            var advancedMap = advancedDefaults.ToDictionary(
+                v => GetBaseVerbKey(v.English),
+                v => v,
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            bool changed = false;
+            var today = PolandTime.Today;
+
+            var grouped = existingVerbs
+                .GroupBy(x => GetBaseVerbKey(x.EnglishForms))
+                .ToList();
+
+            var verbsToKeep = new List<IrregularVerb>();
+            var verbsToRemove = new List<IrregularVerb>();
+
+            foreach (var group in grouped)
+            {
+                var key = group.Key;
+                if (string.IsNullOrEmpty(key)) continue;
+
+                IrregularVerbLevel targetLevel;
+                if (advancedMap.ContainsKey(key))
+                {
+                    targetLevel = IrregularVerbLevel.Advanced;
+                }
+                else if (basicMap.ContainsKey(key))
+                {
+                    targetLevel = IrregularVerbLevel.Basic;
+                }
+                else
+                {
+                    verbsToKeep.Add(group.First());
+                    verbsToRemove.AddRange(group.Skip(1));
+                    continue;
+                }
+
+                var best = group
+                    .OrderByDescending(x => x.Interval)
+                    .ThenByDescending(x => x.EaseFactor)
+                    .First();
+
+                if (best.Level != targetLevel)
+                {
+                    best.Level = targetLevel;
+                    changed = true;
+                }
+
+                verbsToKeep.Add(best);
+
+                var duplicates = group.Where(x => x.Id != best.Id).ToList();
+                if (duplicates.Count > 0)
+                {
+                    verbsToRemove.AddRange(duplicates);
+                    changed = true;
+                }
+            }
+
+            if (verbsToRemove.Count > 0)
+            {
+                _dbContext.IrregularVerbs.RemoveRange(verbsToRemove);
+                changed = true;
+            }
+
+            var existingKeys = verbsToKeep
+                .Select(x => GetBaseVerbKey(x.EnglishForms))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var newEntities = new List<IrregularVerb>();
+
+            foreach (var b in basicDefaults)
+            {
+                var key = GetBaseVerbKey(b.English);
+                if (!existingKeys.Contains(key))
+                {
+                    newEntities.Add(new IrregularVerb
+                    {
+                        UserId = userId,
+                        PolishTranslation = b.Polish,
+                        EnglishForms = b.English,
+                        Level = IrregularVerbLevel.Basic,
+                        EaseFactor = 250,
+                        Interval = 0,
+                        IsLeech = false,
+                        NextReviewDate = today
+                    });
+                    changed = true;
+                }
+            }
+
+            foreach (var a in advancedDefaults)
+            {
+                var key = GetBaseVerbKey(a.English);
+                if (!existingKeys.Contains(key))
+                {
+                    newEntities.Add(new IrregularVerb
+                    {
+                        UserId = userId,
+                        PolishTranslation = a.Polish,
+                        EnglishForms = a.English,
+                        Level = IrregularVerbLevel.Advanced,
+                        EaseFactor = 250,
+                        Interval = 0,
+                        IsLeech = false,
+                        NextReviewDate = today
+                    });
+                    changed = true;
+                }
+            }
+
+            if (newEntities.Count > 0)
+            {
+                _dbContext.IrregularVerbs.AddRange(newEntities);
+            }
+
+            if (changed)
+            {
+                _dbContext.SaveChanges();
+            }
+        }
+        private static string GetBaseVerbKey(string englishForms)
+        {
+            if (string.IsNullOrWhiteSpace(englishForms)) return string.Empty;
+            return englishForms.Split(new[] { ',', '-', '/' }, StringSplitOptions.RemoveEmptyEntries)[0].Trim().ToLower();
+        }
+        public static List<(string Polish, string English)> GetBasicDefaultVerbs()
         {
             return new List<(string, string)>
             {
-                ("jechać", "drive, drove, driven"),
+                ("być", "be, was/were, been"),
+                ("stawać się", "become, became, become"),
+                ("zaczynać", "begin, began, begun"),
+                ("łamać / tłuc", "break, broke, broken"),
+                ("przynosić", "bring, brought, brought"),
+                ("budować", "build, built, built"),
+                ("kupować", "buy, bought, bought"),
+                ("łapać", "catch, caught, caught"),
+                ("wybierać", "choose, chose, chosen"),
+                ("przychodzić", "come, came, come"),
+                ("kosztować", "cost, cost, cost"),
+                ("ciąć / kroić", "cut, cut, cut"),
+                ("robić", "do, did, done"),
+                ("rysować", "draw, drew, drawn"),
                 ("wypić", "drink, drank, drunk"),
+                ("jechać / prowadzić", "drive, drove, driven"),
                 ("jeść", "eat, ate, eaten"),
                 ("spadać", "fall, fell, fallen"),
                 ("czuć", "feel, felt, felt"),
@@ -170,7 +306,7 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 ("uderzyć", "hit, hit, hit"),
                 ("trzymać", "hold, held, held"),
                 ("boleć", "hurt, hurt, hurt"),
-                ("trzymać", "keep, kept, kept"),
+                ("trzymać / zachować", "keep, kept, kept"),
                 ("wiedzieć", "know, knew, known"),
                 ("kłaść", "lay, laid, laid"),
                 ("prowadzić", "lead, led, led"),
@@ -200,58 +336,62 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 ("tonąć", "sink, sank, sunk"),
                 ("siedzieć", "sit, sat, sat"),
                 ("spać", "sleep, slept, slept"),
-                ("mówić", "speak, spoke, spoken"),
+                ("mówić (w języku)", "speak, spoke, spoken"),
                 ("spędzać", "spend, spent, spent"),
                 ("stać", "stand, stood, stood"),
-                ("śmierdzieć", "stink, stank, stunk"),
                 ("pływać", "swim, swam, swum"),
                 ("brać", "take, took, taken"),
                 ("uczyć kogoś", "teach, taught, taught"),
                 ("rozerwać", "tear, tore, torn"),
-                ("powiedzieć", "tell, told, told"),
+                ("powiedzieć komuś", "tell, told, told"),
                 ("myśleć", "think, thought, thought"),
                 ("rzucić", "throw, threw, thrown"),
                 ("zrozumieć", "understand, understood, understood"),
                 ("budzić", "wake, woke, woken"),
-                ("nosić", "wear, wore, worn"),
+                ("nosić (ubranie)", "wear, wore, worn"),
                 ("wygrać", "win, won, won"),
                 ("pisać", "write, wrote, written")
             };
         }
-        private static List<(string Polish, string English)> GetAdvancedDefaultVerbs()
+        public static List<(string Polish, string English)> GetAdvancedDefaultVerbs()
         {
             return new List<(string, string)>
             {
                 ("powstawać, pojawiać się", "arise, arose, arisen"),
                 ("budzić się, obudzić się", "awake, awoke, awoken"),
                 ("znosić, wytrzymywać", "bear, bore, borne"),
+                ("bić, pokonać", "beat, beat, beaten"),
                 ("począć, spłodzić", "beget, begot, begotten"),
                 ("oglądać, ujrzeć", "beheld, beheld, beheld"),
+                ("ginać, zginać", "bend, bent, bent"),
                 ("oblegać, nękać", "beset, beset, beset"),
+                ("założyć się", "bet, bet, bet"),
+                ("licytować, rozkazywać", "bid, bid, bid"),
                 ("wiązać", "bind, bound, bound"),
+                ("gryźć", "bite, bit, bitten"),
+                ("krwawić", "bleed, bled, bled"),
+                ("dąć, dmuchać", "blow, blew, blown"),
                 ("hodować, rozmnażać", "breed, bred, bred"),
-                ("rzucać (np. zaklęcie); obsadzać (kogoś w filmie)", "cast, cast, cast"),
+                ("nadawać (program)", "broadcast, broadcast, broadcast"),
+                ("palić, płonąć", "burn, burned/burnt, burned/burnt"),
+                ("pękać, wybuchać", "burst, burst, burst"),
+                ("rzucać, obsadzać (w filmie)", "cast, cast, cast"),
                 ("czepiać się, przylgnąć", "cling, clung, clung"),
                 ("skradać się, pełzać", "creep, crept, crept"),
                 ("radzić sobie, zajmować się", "deal, dealt, dealt"),
+                ("kopać (w ziemi)", "dig, dug, dug"),
+                ("śnić, marzyć", "dream, dreamed/dreamt, dreamed/dreamt"),
                 ("mieszkać, przebywać", "dwell, dwelt, dwelt"),
                 ("uciekać", "flee, fled, fled"),
                 ("cisnąć, rzucać", "fling, flung, flung"),
                 ("zabraniać", "forbid, forbade, forbidden"),
                 ("prognozować, przewidywać", "forecast, forecast, forecast"),
-                ("przewidywać (nie: predict)", "foresee, foresaw, foreseen"),
+                ("przewidywać", "foresee, foresaw, foreseen"),
                 ("porzucać, wyrzekać się", "forsake, forsook, forsaken"),
-                ("marznąć, zamrażać", "freeze, froze, frozen"),
                 ("mielić, szlifować", "grind, ground, ground"),
-                ("rosnąć, uprawiać", "grow, grew, grown"),
-                ("wieszać, zawieszać", "hang, hung, hung"),
                 ("rąbać (drewno)", "hew, hewed, hewn"),
-                ("ukrywać", "hide, hid, hidden"),
                 ("klękać", "kneel, knelt, knelt"),
-                ("kłaść, odkładać", "lay, laid, laid"),
-                ("prowadzić, kierować (np. spotkanie)", "lead, led, led"),
-                ("skakać (nie: jump)", "leap, leapt, leapt"),
-                ("leżeć", "lie, lay, lain"),
+                ("skakać", "leap, leapt, leapt"),
                 ("oświetlać, zapalać", "light, lit, lit"),
                 ("wprowadzać w błąd", "mislead, misled, misled"),
                 ("mylić, pomylić", "mistake, mistook, mistaken"),
@@ -259,20 +399,20 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 ("przesadzać, robić za dużo", "overdo, overdid, overdone"),
                 ("nadzorować", "oversee, oversaw, overseen"),
                 ("wyprzedzać, doganiać", "overtake, overtook, overtaken"),
-                ("błagać, przyznawać (winę)", "plead, pled, pled"),
+                ("błagać, przyznawać winę", "plead, pled, pled"),
                 ("udowadniać", "prove, proved, proven"),
                 ("rezygnować, przestawać", "quit, quit, quit"),
                 ("odbudowywać", "rebuild, rebuilt, rebuilt"),
                 ("spłacać", "repay, repaid, repaid"),
-                ("ponownie przejmować, odzyskiwać", "retake, retook, retaken"),
+                ("ponownie przejmować", "retake, retook, retaken"),
                 ("pozbywać się, uwalniać", "rid, rid, rid"),
-                ("dzwonić, dzwonić telefonem", "ring, rang, rung"),
                 ("szukać, poszukiwać", "seek, sought, sought"),
                 ("szyć", "sew, sewed, sewn"),
                 ("potrząsać, wstrząsać", "shake, shook, shaken"),
                 ("rzucać, zrzucać", "shed, shed, shed"),
+                ("świecić", "shine, shone, shone"),
+                ("strzelać", "shoot, shot, shot"),
                 ("kurczyć się, maleć", "shrink, shrank, shrunk"),
-                ("tonąć, zatapiać", "sink, sank, sunk"),
                 ("zabijać, uśmiercać", "slay, slew, slain"),
                 ("ślizgać się, przesuwać", "slide, slid, slid"),
                 ("rzucać, ciskać", "sling, slung, slung"),
@@ -282,8 +422,9 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 ("pluć", "spit, spat, spat"),
                 ("dzielić, rozłupywać", "split, split, split"),
                 ("skakać, wyskakiwać", "spring, sprang, sprung"),
+                ("kraść", "steal, stole, stolen"),
+                ("przyklejać, wtykać", "stick, stuck, stuck"),
                 ("żądać, kłuć", "sting, stung, stung"),
-                ("śmierdzieć", "stink, stank, stunk"),
                 ("kroczyć", "stride, strode, stridden"),
                 ("starać się, usiłować", "strive, strove, striven"),
                 ("przysięgać", "swear, swore, sworn"),
@@ -292,7 +433,7 @@ namespace inzBackend.Services.StudentLearningServices.IrregularVerbs
                 ("pchać, wpychać", "thrust, thrust, thrust"),
                 ("stąpać, deptać", "tread, trod, trodden"),
                 ("przechodzić przez, doświadczać", "undergo, underwent, undergone"),
-                ("podejmować się, zobowiązywać się", "undertake, undertook, undertaken"),
+                ("podejmować się", "undertake, undertook, undertaken"),
                 ("tkać", "weave, wove, woven"),
                 ("opierać się, wytrzymywać", "withstand, withstood, withstood")
             };
